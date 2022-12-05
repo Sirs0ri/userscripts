@@ -18,6 +18,7 @@
  *   - Emojis in a username work in chrome, but not in Firefox
  *   - Emojis in a user's bio are still clipped by some `pverflow: hidden`
  *   - the :has() CSS selector is relatively new and not yet fully supported in FF (as of 2022-12-06)
+ *   - doesn't work for "X now follows you" notifications
  */
 
 (function() {
