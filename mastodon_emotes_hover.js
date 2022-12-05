@@ -13,11 +13,17 @@
  * Add a hover-preview for emojione emotes.
  * This straight up removes overflow: hidden on the emoji's parents,
  * I'd be surprised if that *doesn't* break something!
+ *
+ * Known Issues:
+ *   - Emojis in a username work in chrome, but not in Firefox
+ *   - Emojis in a user's bio are still clipped by some `pverflow: hidden`
+ *   - the :has() CSS selector is relatively new and not yet fully supported in FF (as of 2022-12-06)
  */
 
 (function() {
     'use strict';
 
+    // Use TamperMonkeys helper to inject CSS:
     GM_addStyle(`
 :is(
   .status__content,
