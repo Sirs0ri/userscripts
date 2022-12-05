@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  Improve icons' visibility on hover
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -17,6 +17,8 @@
  *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag
  *
  * ==CHANGES==
+ * 0.3: The "one more thing" update
+      - Add a selector I missed for the currently selected DM/Toot
  * 0.2: The "all the small things I missed" patch
  *    - Add support for DMs, Boots, Notifications, Profiles
  *    - In addition to zooming, make sure hovered icons are in front of other content and fully opaque
@@ -45,6 +47,8 @@
 
     /* DMs */
     .conversation__content__names,
+    .detailed-status__display-name,
+    .detailed-status__display-name strong,
     .conversation__content__info,
     .conversation__content,
 
