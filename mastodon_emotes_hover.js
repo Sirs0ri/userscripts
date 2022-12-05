@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.4
 // @description  Improve icons' visibility on hover
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -17,8 +17,10 @@
  *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag
  *
  * ==CHANGES==
+ * 0.4: The "I'm testing in production" hotfix
+ *    - Increased emoji's z-index to 2, to pull them on top of embedded images in toots
  * 0.3: The "one more thing" update
-      - Add a selector I missed for the currently selected DM/Toot
+ *    - Add a selector I missed for the currently selected DM/Toot
  * 0.2: The "all the small things I missed" patch
  *    - Add support for DMs, Boots, Notifications, Profiles
  *    - In addition to zooming, make sure hovered icons are in front of other content and fully opaque
@@ -81,7 +83,7 @@
   :not(.emoji-button)>img.emojione:hover {
     transform: scale(5);
     opacity: 1;
-    z-index: 1;
+    z-index: 2;
     position: relative;
   }
 }
