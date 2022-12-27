@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  Improve icons' visibility on hover
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -17,6 +17,7 @@
  *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag
  *
  * ==CHANGES==
+ * 0.6: Disable zoom on account name of a person you're draftign a reply to
  * 0.5: A couple more fixes to correctly enable zoom on:
  *    - Poll Options
  *    - Profile Info
@@ -51,7 +52,7 @@
   :where(
     /* Toots */
     .status__content,
-    .display-name,
+    :not(.reply-indicator__display-name)>.display-name,
     .status__display-name,
 
     /* Poll Option */
@@ -80,9 +81,7 @@
     .account__header__fields dd,
     .account__header__fields dt,
 
-    /* Replying to a toot */
-    .reply-indicator__display-name,
-    .reply-indicator__header,
+    /* Replying to a toot - body only */
     .reply-indicator,
     .reply-indicator__content,
     .status__content,
