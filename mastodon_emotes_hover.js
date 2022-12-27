@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      0.6
+// @version      0.7
 // @description  Improve icons' visibility on hover
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -17,6 +17,8 @@
  *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag
  *
  * ==CHANGES==
+ * 0.7: The "I've not had enough coffee yet" update
+ *    - part 2 of the 0.6 update, I missed some things.
  * 0.6: Disable zoom on account name of a person you're draftign a reply to
  * 0.5: A couple more fixes to correctly enable zoom on:
  *    - Poll Options
@@ -94,13 +96,9 @@
     overflow: revert;
   }
 
-  /* X when drafting a response, this is by default 25.x px high and would cause a layout shift with changed overflow */
-  .reply-indicator__cancel {
-    height: 24px
-  }
-
   /* Add Transition to make it look nice */
   :not(
+    .reply-indicator__header strong,
     .emoji-button,
     .reactions-bar__item__emoji
   )>img.emojione {
@@ -110,6 +108,7 @@
   }
   /* Finally, scale emojis on hover and make sure they're fully visible */
   :not(
+    .reply-indicator__header strong,
     .emoji-button,
     .reactions-bar__item__emoji
   )>img.emojione:hover {
