@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @description  Improve icons' visibility on hover
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -17,6 +17,12 @@
  *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag
  *
  * ==CHANGES==
+ * 0.5: A couple more fixes to correctly enable zoom on:
+ *    - Poll Options
+ *    - Profile Info
+ *    - Replies
+ *    - Picture-in-picture player
+ *    - Response-draft
  * 0.4: The "I'm testing in production" hotfix
  *    - Increased emoji's z-index to 2, to pull them on top of embedded images in toots
  * 0.3: The "one more thing" update
@@ -39,6 +45,7 @@
     // The :where(...):has(...) statement is used to select a bunch of wrappers that
     // would otherwise have overflow: hidden, and remove that while an image is hovered.
     GM_addStyle(`
+/* Hover-Zoom for emotes */
 @supports selector(:has(a, b)) {
   /* Temporarily disable overflow on elements restraining the images while hovering */
   :where(
@@ -46,6 +53,9 @@
     .status__content,
     .display-name,
     .status__display-name,
+
+    /* Poll Option */
+    label.poll__option,
 
     /* DMs */
     .conversation__content__names,
@@ -68,19 +78,42 @@
 
     /* Profile Info Table */
     .account__header__fields dd,
-    .account__header__fields dt
+    .account__header__fields dt,
+
+    /* Replying to a toot */
+    .reply-indicator__display-name,
+    .reply-indicator__header,
+    .reply-indicator,
+    .reply-indicator__content,
+    .status__content,
+
+    /* Picture in picture player */
+    .picture-in-picture__header__account,
+    .picture-in-picture__header .display-name span,
+    .picture-in-picture__header .display-name strong
   ):has(img.emojione:hover) {
     overflow: revert;
   }
 
+  /* X when drafting a response, this is by default 25.x px high and would cause a layout shift with changed overflow */
+  .reply-indicator__cancel {
+    height: 24px
+  }
+
   /* Add Transition to make it look nice */
-  :not(.emoji-button)>img.emojione {
+  :not(
+    .emoji-button,
+    .reactions-bar__item__emoji
+  )>img.emojione {
     transition:
       transform 200ms,
       opacity 200ms;
   }
   /* Finally, scale emojis on hover and make sure they're fully visible */
-  :not(.emoji-button)>img.emojione:hover {
+  :not(
+    .emoji-button,
+    .reactions-bar__item__emoji
+  )>img.emojione:hover {
     transform: scale(5);
     opacity: 1;
     z-index: 2;
