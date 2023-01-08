@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      0.7
-// @description  Improve icons' visibility on hover
+// @version      0.8
+// @description  Improve how media is shown on Mastodon
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=corteximplant.com
@@ -17,6 +17,7 @@
  *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag
  *
  * ==CHANGES==
+ * 0.8: Alt-Text improvements: you'll now see an [alt] badge in the top-right corner of media with alt text
  * 0.7: The "I've not had enough coffee yet" update
  *    - part 2 of the 0.6 update, I missed some things.
  * 0.6: Disable zoom on account name of a person you're draftign a reply to
@@ -45,6 +46,33 @@
 
     // Use TamperMonkey's helper to inject CSS
     // This heavily relies on :has(), without it the styling has no effect due to the @supports query.
+    
+    GM_addStyle(`
+/* Add "alt" indicator on images, gifs... */
+.media-gallery__item:has(img[alt]):after,
+.media-gallery__item:has(video[aria-label]):after{
+    content: "alt";
+    background: rgba(0 0 0 / 0.6);
+    color: hsla(0,0%,100%,.7);
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 1;
+    padding: 0 5px;
+    border-radius: 4px;
+    height: 27.1429px;
+    display: flex;
+    align-items: center;
+}
+/* ...and audio, videos */
+.audio-player:has(canvas.audio-player__canvas[aria-label]) .video-player__buttons.right:before,
+.video-player:has(video[aria-label]) .video-player__buttons.right:before{
+    content: "alt";
+    color: hsla(0,0%,100%,.7);
+    padding: 0 5px;
+}
+`)
+ 
     // The :where(...):has(...) statement is used to select a bunch of wrappers that
     // would otherwise have overflow: hidden, and remove that while an image is hovered.
     GM_addStyle(`
