@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -356,10 +356,12 @@ header:hover border
         background: hsl(224deg 16% 19%);
     }
 
+    #tabs-bar__portal>button,
     .column-header__wrapper {
         border-radius: 8px
     }
 
+    #tabs-bar__portal>button:after,
     .column-header__wrapper:after {
         content: "";
         position: absolute;
@@ -370,14 +372,17 @@ header:hover border
         pointer-events: none;
     }
 
+    #tabs-bar__portal>button,
     .column-header__wrapper {
         backdrop-filter: blur(3px);
         background: hsla(227deg 16% 23% / 0.8);
         transition: box-shadow 200ms;
     }
-   .column-header__wrapper:hover {
+    #tabs-bar__portal>button:hover,
+    .column-header__wrapper:hover {
         box-shadow: var(--neon-box-shadow-small);
     }
+    #tabs-bar__portal>button:hover:after,
     .column-header__wrapper:hover:after {
         border-color: hsl(227deg 16% 51%);
     }
