@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -13,11 +13,11 @@
 /*
  * == KNOWN ISSUES ==
  *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag.
- *      The general restyling shouldn't be affected. 
+ *      The general restyling shouldn't be affected.
  *      The animated notifications menu entry should work with the aforementioned flag enabled.
  *      The [alt] indicator on media unfortunately doesn#t seem to work in FF at all.
  *      Affected parts of this stylesheet have a notice at the start.
- *    - If you're on my git, this incorporates found in mastodon_media_improvements.js
+ *    - If you're on my git, this incorporates the changes found in mastodon_media_improvements.js
  *      Use one of the two userscripts. If you're not on my git, ignore this.
  */
 
@@ -26,6 +26,9 @@
 
     // Use TamperMonkey's helper to inject CSS
     // see https://codepen.io/mattgrosswork/pen/VwprebG
+
+    // alpha mask of the people and the logo from the header image
+    const footerImgMask = "data:image/avif;base64,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"
 
     GM_addStyle(`
 
@@ -45,8 +48,7 @@ a.button {
     }
 
     .compose-form {
-        padding-left: 0;
-        padding-right: 0;
+        padding: 10px 0;
         overflow-y: revert !important;
     }
 
@@ -82,6 +84,10 @@ a.button {
 .status__info a {
     z-index: 1;
     position: relative;
+}
+
+#mastodon[data-props='{"locale":"de"}'] .compose-form__publish-button-wrapper > .button::after {
+    content: "Cybertrööt!"
 }
 `)
 
@@ -207,6 +213,10 @@ header:hover border
 
      /* I'm not *quite* happy with these colors. Waiting for more inspiration */
 
+     :is(#fakeId, .compose-form__warning) {
+         border-radius: 8px;
+     }
+
     :is(#fakeId, .compose-form__autosuggest-wrapper) {
         border-radius: 8px;
         border: 1px solid hsl(227deg 16% 51%);
@@ -214,6 +224,7 @@ header:hover border
         /* Make sure this is above the autosuggest window at z 99 */
         z-index: 100;
         transition: box-shadow 200ms;
+        background: white;
     }
     :is(#fakeId, .compose-form__autosuggest-wrapper):focus-within {
         box-shadow: var(--neon-box-shadow-small);
@@ -226,6 +237,10 @@ header:hover border
     .compose-form .emoji-picker-dropdown {
         top: 6px;
         right: 2px;
+    }
+    /* make sure this isn't covered by the compose area in advanced mode*/
+    .emoji-picker-dropdown__menu {
+        z-index: 100;
     }
 
     /* Suggestions box */
@@ -284,6 +299,7 @@ header:hover border
         height: 69px; /* nice */
     }
 
+    /* ===== right side menu ===== */
 
     /* Adjust Horizontal align of the first <hr> with the first post in a feed */
     .navigation-panel__logo hr {
@@ -340,29 +356,29 @@ header:hover border
         background: hsl(224deg 16% 19%);
     }
 
-    #tabs-bar__portal:not(:empty) {
+    .column-header__wrapper {
         border-radius: 8px
     }
 
-    #tabs-bar__portal:not(:empty):after {
+    .column-header__wrapper:after {
         content: "";
         position: absolute;
         inset: 0px;
         border-radius: inherit;
         border: 1px solid hsl(227deg 16% 31%);
-        z-index: 1;
+        z-index: 2;
         pointer-events: none;
     }
 
-    #tabs-bar__portal:not(:empty) {
+    .column-header__wrapper {
         backdrop-filter: blur(3px);
         background: hsla(227deg 16% 23% / 0.8);
         transition: box-shadow 200ms;
     }
-    #tabs-bar__portal:not(:empty):hover {
+   .column-header__wrapper:hover {
         box-shadow: var(--neon-box-shadow-small);
     }
-    #tabs-bar__portal:not(:empty):hover:after {
+    .column-header__wrapper:hover:after {
         border-color: hsl(227deg 16% 51%);
     }
 
@@ -384,6 +400,37 @@ header:hover border
     .column-header__collapsible-inner,
     .column-header__back-button {
         background: none;
+    }
+
+    .column-header__button,
+    .column-header__back-button {
+        position: relative;
+        min-width: 48px;
+    }
+
+    .column-header__back-button:last-child {
+        padding: 0 15px;
+    }
+
+    .column-header__button:hover,
+    .column-header__back-button:hover {
+        color: white;
+    }
+
+    .column-header__button:before,
+    .column-header__back-button:before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 8px;
+        background: none;
+        transition: background 200ms, color 200ms;
+        z-index: -1;
+    }
+
+    .column-header__button:hover:before,
+    .column-header__back-button:hover:before {
+        background: hsla(227deg 16% 41% / 1);
     }
 
     .column-header__button.active {
@@ -501,6 +548,37 @@ header:hover border
         border-radius: inherit;
     }
 
+    .notification__filter-bar button span,
+    .notification__filter-bar button i {
+        transition: color 200ms
+    }
+    .notification__filter-bar button:hover span,
+    .notification__filter-bar button:hover i {
+        color: white;
+    }
+
+    .notification__filter-bar button i:before {
+        z-index: 1;
+        position: relative;
+    }
+    .notification__filter-bar button span:before {
+        mix-blend-mode: screen;
+    }
+    .notification__filter-bar button span:before,
+    .notification__filter-bar button i:after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        background: transparent;
+        border-radius: 8px;
+        transition: background 200ms;
+        z-index: 0;
+    }
+    .notification__filter-bar button:hover span:before,
+    .notification__filter-bar button:hover i:after {
+        background-color: hsla(227deg 16% 41% / 1);
+    }
+
     /* Mentions use .status__wrapper directly, all other notifications are wrapped in a .notification div */
     .status__wrapper.unread:after,
     .notification.unread:after {
@@ -589,7 +667,7 @@ header:hover border
         padding: 20px 0px;
     }
 
-    .scrollable.about:before {
+    body:not(.layout-multiple-columns) .scrollable.about:before {
         content: "";
         display: block;
         position: relative;
@@ -604,6 +682,10 @@ header:hover border
         border-right: 1px solid;
         border-color: hsl(227deg 16% 51%);
         clip-path: polygon(0 0, 5% 0%, 3% 85%, 5% 85%, 7% 0%, 9% 0%, 7% 85%, 9% 85%, 11% 0%, 100% 0, 100% 100%, 95% 100%, 97% 15%, 95% 15%, 93% 100%, 91% 100%, 93% 15%, 91% 15%, 89% 100%, 13% 100%, 14% 57.5%, 16% 57.5%, 15% 100%, 15% 85%, 88% 85%, 87% 100%, 89% 15%, 13% 15%, 11% 100%, 0 100%);
+    }
+
+    body.layout-multiple-columns .scrollable.about {
+        padding-top: 0;
     }
 
     .about__header__hero.loaded.image {
@@ -744,7 +826,7 @@ header:hover border
 
     ::-webkit-scrollbar-track {
         border: 0 #fff;
-        border-radius: 0;
+        border-radius: 8px;
         background: rgba(0,0,0,.1);
     }
 
@@ -757,6 +839,139 @@ header:hover border
     ::-webkit-scrollbar-corner {
         background: transparent:
     }
+
+    /* ====================
+     *    Advanced View
+     * ==================== */
+
+    /* ===== General Changes ===== */
+
+    .columns-area .drawer,
+    .columns-area .drawer__inner:not(.darker)
+    {
+        overflow: revert;
+    }
+    .columns-area .drawer__pager {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    .columns-area .drawer__inner {
+        height: auto;
+        min-height: 100%;
+    }
+
+    .column, .drawer {
+        padding: 10px;
+    }
+
+
+    /* Center the columns when space permits it, instead of having them left-aligned */
+    body.layout-multiple-columns .columns-area>*:first-child {
+        margin-left: auto;
+        width: 350px;
+    }
+    body.layout-multiple-columns .columns-area>*:last-child {
+        margin-right: auto;
+    }
+
+    /* ===== First column - search, Profile, compose form ===== */
+
+    /* nav menu at the top of 1st column */
+    body.layout-multiple-columns .drawer__header,
+    body.layout-multiple-columns .drawer__header a,
+    body.layout-multiple-columns .drawer__inner {
+        border-radius: 8px;
+    }
+
+    body.layout-multiple-columns .drawer__header {
+        border: 1px solid hsl(224deg 16% 35%);
+    }
+
+    body.layout-multiple-columns .drawer__inner {
+        background: linear-gradient(180deg, transparent 50%, hsl(223deg 16% 32%));
+    }
+
+    /* The CI Theme hides the mastodon usually displayed here - let's replace it with something more thematically fitting */
+    body.layout-multiple-columns .drawer__inner__mastodon {
+        background: none;
+        content: url(https://cdn.masto.host/corteximplantcom/site_uploads/files/000/000/006/@1x/68f324b193475041.png);
+        object-fit: contain;
+        min-height: auto;
+        object-position: bottom;
+        display: revert;
+        border-radius: inherit;
+        -webkit-mask-image: url(${footerImgMask});
+        -webkit-mask-size: contain;
+        -webkit-mask-position: bottom;
+        -webkit-mask-repeat: no-repeat
+    }
+    body.layout-multiple-columns .drawer__inner__mastodon img {
+        display: none;
+    }
+
+    /* user profile info in the 1st column */
+    body.layout-multiple-columns .drawer__inner .navigation-bar {
+        background: hsl(223deg 16% 32%);
+        border-radius: inherit;
+    }
+
+    body.layout-multiple-columns .column-header {
+        background: hsl(227deg 16% 23%);
+        border-radius: 8px;
+    }
+
+    /* Spacing between other columns' headers / content */
+    body.layout-multiple-columns .column .scrollable {
+        border-radius: 8px;
+    }
+    body.layout-multiple-columns .column .scrollable:not(:first-child) {
+        margin-top: 10px;
+    }
+
+    /* "getting started" page */
+    body.layout-multiple-columns .getting-started,
+    .getting-started__wrapper,
+    .getting-started .flex-spacer,
+    .getting-started .column-link {
+        background: none;
+    }
+
+    .getting-started .column-link {
+        color: #d9e1e8;
+        position: relative;
+    }
+    .getting-started .column-link:hover {
+        color: white;
+    }
+
+    .getting-started .column-link:hover span:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to right, rgba(255 255 255 / 0.05), rgba(255 255 255 / 0.1));
+        border-radius: 8px;
+
+        animation:  200ms ease-out 0s 1 flickerIn;
+    }
+    .getting-started .column-link:hover span:after {
+        content: "";
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: 1px;
+        background: white;
+        box-shadow: var(--neon-box-shadow);
+
+        animation: 200ms ease-out 0s 1 flickerIn;
+    }
+
+
+    .getting-started .link-footer {
+        margin-top: auto;
+        border-radius: inherit;
+    }
+
 }
 `)
 
