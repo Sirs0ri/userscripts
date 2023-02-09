@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.3.1
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -510,6 +510,27 @@ header:hover border
         background: hsl(227deg 16% 19%);
         border-radius: 8px;
     }
+
+    .explore__search-results>button {
+        margin-bottom: 20px;
+        border: 1px solid hsl(227deg 16% 27%);
+        border-radius: 8px;
+    }
+    .explore__search-results>button:hover {
+        box-shadow: var(--neon-box-shadow-small);
+        color: white;
+    }
+
+    .explore__search-results .trends__item {
+        border-bottom: none;
+    }
+    .explore__search-results .trends__item+div[tabindex="-1"] {
+        margin-top: 20px
+    }
+    .explore__search-results .trends__item+.trends__item {
+        border- : 1px solid hsl(224deg 16% 27%);
+    }
+
     /* give the selected post in single-post-view a lighter background */
     .columns-area--mobile .scrollable>div[tabindex="-1"] {
         box-shadow: var(--neon-box-shadow-small);
@@ -697,7 +718,7 @@ header:hover border
         border-top-right-radius: 8px;
     }
 
-    .account__header__bio .account__header__fields dl:last-child {
+    :is(#fake, .account__header__bio .account__header__fields dl:last-child) {
         border-bottom-left-radius: 8px;
         border-bottom-right-radius: 8px;
     }
