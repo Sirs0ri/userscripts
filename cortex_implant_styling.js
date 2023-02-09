@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -189,7 +189,7 @@ header:hover border
     }
 
     /* Profile Menu */
-    .dropdown-menu.bottom {
+    .dropdown-menu {
         border-radius: 8px;
         padding: 8px 0;
     }
@@ -413,7 +413,7 @@ header:hover border
         min-width: 48px;
     }
 
-    .column-header__back-button:last-child {
+    :is(#fake, .column-header__back-button) {
         padding: 0 15px;
     }
 
@@ -443,8 +443,18 @@ header:hover border
     }
 
     .column-header__collapsible {
-        border-radius: 0 0 8px 8px;
         background: hsl(227deg 16% 31%);
+    }
+    .column-header__collapsible,
+    .announcements {
+        border-radius: 0 0 8px 8px;
+    }
+    .announcements .announcements__mastodon {
+        border-bottom-left-radius: inherit;
+    }
+    .column-header__collapsible:not(.collapsed)+.announcements {
+        border-radius: 8px;
+        margin-top: 20px;
     }
 
     /* The header has a z-index of 2, make sure this is in
@@ -460,9 +470,24 @@ header:hover border
         contain: style;
         margin-top: 20px;
     }
+    .explore__search-results,
+    .explore__links {
+        margin-top: 20px;
+    }
     .columns-area--mobile {
         padding: 0 10px 10px;
         box-sizing: border-box;
+    }
+
+    .dismissable-banner {
+        margin-top: 20px;
+        border-radius: 8px;
+        border: 1px solid hsl(224deg 16% 27%);
+    }
+
+    .dismissable-banner__action button {
+        min-width: 40px;
+        min-height: 40px;
     }
 
     /* ===== Posts styling ===== /*
@@ -472,7 +497,13 @@ header:hover border
     /* the main post in post-detail-view */
     .columns-area--mobile .scrollable>div[tabindex="-1"],
     /* and preceeding and following posts in post-detail-view */
-    .columns-area--mobile .scrollable>div>div[tabindex="-1"]
+    .columns-area--mobile .scrollable>div>div[tabindex="-1"],
+
+    /* not technically posts, but these explore / search result items should have the same styles */
+    .explore__search-results .account,
+    .explore__search-results .empty-column-indicator,
+    .explore__links .dismissable-banner,
+    .regeneration-indicator
     {
         margin-bottom: 20px;
         border: 1px solid hsl(227deg 16% 27%);
@@ -491,9 +522,28 @@ header:hover border
            .columns-area--mobile .scrollable>div[tabindex="-1"],
            .columns-area--mobile .scrollable>div>div[tabindex="-1"]
     ) .status,
+    /* follow notifications */
+    .notification .account,
     /* and the "load more" button */
     .load-gap {
         border-bottom: none;
+        border-radius: inherit;
+    }
+
+    .status__action-bar {
+        margin-top: 8px;
+        margin-bottom: -8px;
+    }
+
+    .status__action-bar,
+    .detailed-status__action-bar {
+        height: 40px;
+    }
+
+    :where(.status__action-bar, .detailed-status__action-bar) :is(button, .status__action-bar__dropdown) {
+        height: 100% !important;
+        min-width: 40px !important;
+        border-radius: 8px;
     }
 
     /* Make sure everything inside a post follows the border radius */
@@ -510,8 +560,6 @@ header:hover border
         border: none;
     }
 
-
-    /* Lists are still TODO because I don't use them */
     .column-subheading {
         background: none;
     }
@@ -538,25 +586,27 @@ header:hover border
         background: none;
     }
 
-    /* Notifications */
+    /* Notifications / explore */
 
-    .notification__filter-bar,
-    .account__section-headline {
+    .account__section-headline,
+    .notification__filter-bar {
         margin-top: -20px;
         padding-top: 40px;
         border-radius: 8px;
         border: 1px solid #393f4f;
     }
 
+    .account__section-headline :is(button, a),
     .notification__filter-bar button {
-        /* background: none;*/
         border-radius: inherit;
     }
 
+    .account__section-headline :is(button, a) span,
     .notification__filter-bar button span,
     .notification__filter-bar button i {
         transition: color 200ms
     }
+    .account__section-headline :is(button, a):hover span,
     .notification__filter-bar button:hover span,
     .notification__filter-bar button:hover i {
         color: white;
@@ -566,9 +616,11 @@ header:hover border
         z-index: 1;
         position: relative;
     }
+    .account__section-headline :is(button, a) span:before,
     .notification__filter-bar button span:before {
         mix-blend-mode: screen;
     }
+    .account__section-headline :is(button, a) span:before,
     .notification__filter-bar button span:before,
     .notification__filter-bar button i:after {
         content: "";
@@ -579,6 +631,7 @@ header:hover border
         transition: background 200ms;
         z-index: 0;
     }
+    .account__section-headline :is(button, a):hover span:before,
     .notification__filter-bar button:hover span:before,
     .notification__filter-bar button:hover i:after {
         background-color: hsla(227deg 16% 41% / 1);
@@ -631,9 +684,31 @@ header:hover border
         border-radius: inherit;
     }
 
+    .account__header__bio .account__header__fields {
+        border-radius: 8px;
+    }
+
+    .account__header__bio .account__header__fields dl {
+        border-radius: 2px;
+    }
+
+    .account__header__bio .account__header__fields dl:first-child {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+
+    .account__header__bio .account__header__fields dl:last-child {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
     .account__section-headline:not(:first-child) {
         background: none;
         border: none;
+    }
+
+    .empty-column-indicator {
+        border-radius: 8px;
     }
 
     /* discover */
@@ -641,11 +716,6 @@ header:hover border
         margin-top: -40px;
         padding-top: 39px;
         background: #1f232b;
-    }
-
-    /* Link previews */
-    .status-card {
-        border-radius: 8px;
     }
 
     /* DMs */
@@ -663,6 +733,11 @@ header:hover border
         outline: 1px solid hsl(224deg 16% 27%);
         outline-offset: -1px;
         border-radius: 8px;
+    }
+
+    /* XY not found indicator */
+    .regeneration-indicator {
+        margin-top: 20px;
     }
 
     /* ===== About page ===== */
@@ -768,6 +843,16 @@ header:hover border
         transition: filter 100ms;
     }
 
+    .media-gallery__item img {
+        background: transparent;
+        transition: background 200ms;
+    }
+
+    /* the preview only gets --hidden once the img is fully loaded */
+    .media-gallery__preview--hidden + .media-gallery__item-thumbnail img {
+        background: #393f4f;
+    }
+
     /* Duplicate the rule in case :has isn't properly supported. */
     .media-gallery__item:has(canvas+div) canvas,
     .media-gallery__item:has(canvas+a) canvas {
@@ -795,6 +880,55 @@ header:hover border
         mix-blend-mode: plus-lighter;
         pointer-events: none;
     }
+
+    /* YT Video Embeds & other link image previews */
+    .status-card  {
+        border-radius: inherit;
+        overflow: revert;
+    }
+    .status-card__image {
+        border-radius: inherit;
+        position: relative;
+    }
+    canvas.status-card__image-preview {
+        border-radius: inherit;
+        z-index: unset;
+        filter: blur(4px);
+    }
+    .status-card__image iframe {
+        border-radius: inherit
+    }
+    canvas.status-card__image-preview--hidden {
+        display: revert;
+    }
+    :is(#fake, .status-card__image-image) {
+        border-radius: inherit;
+        max-width: 100%;
+        position: relative;
+    }
+    .status-card__image:after {
+        content: "";
+        outline: 3px solid rgba(128 128 128 / 0.1);
+        outline-offset: -2px;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: inherit;
+        mix-blend-mode: plus-lighter;
+        pointer-events: none;
+    }
+
+    /* better format alt-text on failed-to-load images - BUT this also matches loading images at the moment. */
+    /*
+    .spoiler-button--minified ~ .media-gallery__item canvas:not(.media-gallery__preview--hidden) + .media-gallery__item-thumbnail img {
+        display: flex;
+        font-family: monospace;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    */
+
+
 
     /* ====================
      *     Scrollbars
