@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
+// @version      1.4.2
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -21,7 +21,6 @@
  *      Use one of the two userscripts. If you're not on my git, ignore this.
  *    - The glow-on-media might look off on glitch-fork with certain settings. I recommend the following options:
  *      (under App Aettings -> Media)
- *        - [off] Letterbox Media
  *        - [off] Full-width media previews
  *        - [on ] Inline preview cards for external links
  *      Alternatively, you can turn off the glow effect entirely via the CONFIGURABLE OPTIONS section below.
@@ -45,6 +44,15 @@
     // This will turn on/off the glow on media content embedded in posts. Use this option e.g. if you're experiencing issues with glitch's layout options and my changes.
     const enableGlowOnMedia = true
 
+    // This will enable full-sized images inposts / disable cropping images to 16/9
+    const showImagesUncropped = true
+
+    // Add a visible red bar underneath media without an alt-text
+    const highlightMediaWithoutAlt = true
+
+    // Make the compose box larger when focussed. This will have no effect in the Advanced View.
+    const popoutComposeBox = false
+
     // Use TamperMonkey's helper to inject CSS
     // see https://codepen.io/mattgrosswork/pen/VwprebG
 
@@ -65,14 +73,15 @@
     animation: none !important;
 }
 .no-reduce-motion .icon-button.star-icon>.fa-star {
-    transition: transform 500ms ease-in-out, color 500ms;
+    transition: transform 750ms cubic-bezier(0.82, 0.35, 0.31, 1.1), color 750ms;
     animation: none !important;
 }
 .no-reduce-motion .icon-button.star-icon.deactivate>.fa-star {
     transform: rotate(0turn);
 }
+.no-reduce-motion .icon-button.star-icon.active>.fa-star,
 .no-reduce-motion .icon-button.star-icon.activate>.fa-star {
-    transform: rotate(2turn);
+    transform: rotate(2.4turn);
 }
 
 /* improve visibility of mentions */
@@ -80,6 +89,23 @@ a.mention {
     background: rgba(255 255 255 / 0.1);
     border-radius: 4px;
     padding: 0 2px;
+}
+`)
+
+    showImagesUncropped && GM_addStyle(`
+/* Forge all images to be in their original aspect ratio, not 16/9 */
+
+.status {
+    display: flex;
+    flex-direction: column;
+}
+
+.status .media-gallery:not(:has(.media-gallery__item + .media-gallery__item)):has(.spoiler-button--minified) {
+    height: auto !important;
+}
+
+.status .media-gallery:not(:has(.media-gallery__item + .media-gallery__item)) img {
+    display: block;
 }
 `)
 
@@ -92,8 +118,6 @@ a.mention {
 
  it's HIGHLY recommended to disable the following
  options in the "app settings" (left sidebar):
-
-   - Letterbox Media
    - full-width media previews
  */
 
@@ -205,6 +229,170 @@ canvas.status-card__image-preview--hidden {
     mix-blend-mode: plus-lighter;
     pointer-events: none;
 }
+
+/* Show thumbnails in un-spoilered posts */
+.status__content__spoiler--visible + .status-card .status-card__image-image {
+        visibility: visible !important;
+}
+    `)
+
+    highlightMediaWithoutAlt && GM_addStyle(`
+/* inspired von chaos.social:
+markiere medien ohne alt-text*/
+.audio-player__canvas:not([title]),
+.audio-player__canvas[title=""],
+.media-gallery__gifv video:not([title]),
+.media-gallery__gifv video[title=""],
+.media-gallery__item-thumbnail img:not([alt]),
+.media-gallery__item-thumbnail img[alt=""],
+.video-player video:not([title]),
+.video-player video[title=""] {
+    border-bottom: 4px ridge red;
+    box-sizing: border-box;
+    border-radius: inherit;
+}
+    `)
+
+    const onLoadHandler = () => {
+        let composePanel = document.querySelector(".columns-area__panels__pane--compositional")
+        let composeForm = document.querySelector(".compose-form")
+        let backDrop = document.querySelector(".compose-form")
+
+        if (!composePanel || !composeForm || !backDrop) {
+            console.warn("an element is missing, the popout compose box can't be initialized.")
+            console.log(composePanel)
+            console.log(composeForm)
+            console.log(backDrop)
+            return
+        }
+
+        backDrop.classList.add("ignore-clicks")
+
+
+        const handlerIn = (evt) => {
+            /* Ignore clicks on the buttons below the compose area */
+            if (event.target.nodeName === "BUTTON" || event.target.classList.contains("emoji-button")) return
+
+            /* Ignore FocusEvents where the focus was moved automatically, e.g. when restoring focus to the page.
+             * This also keeps the input small when the user's first interaction is via the emote picker, but any
+             * input afterwards will extend it, so that it's not too bad a compromise.
+             */
+            if (event instanceof FocusEvent && event.target.classList.contains("autosuggest-textarea__textarea") && !evt.sourceCapabilities) return
+
+            composePanel = document.querySelector(".columns-area__panels__pane--compositional")
+            composePanel.classList.add("user-focus-within")
+            setTimeout(() => {
+                backDrop = document.querySelector(".compose-form")
+                backDrop.classList.remove("ignore-clicks")
+            }, 100)
+        }
+        const handlerOut = (evt) => {
+            if (event.relatedTarget.classList.contains("emoji-button")) return
+            /* Ignore FocusEvents that take the focus out of the tab */
+            if (evt.relatedTarget == null) return
+            /* Ignore clicks that move focus to the buttons below the compose area */
+            if (composeForm.contains(event.relatedTarget)) return
+            /* ignore focus-out events from anything that's not the toot- or CW-input */
+            if (!(event.target.classList.contains("autosuggest-textarea__textarea") || event.target.classList.contains("spoiler-input__input") )) return
+
+
+            composePanel.classList.add("user-focus-within")
+            backDrop = document.querySelector(".compose-form")
+
+            composePanel.classList.remove("user-focus-within")
+            backDrop.classList.add("ignore-clicks")
+        }
+        const handlerBackdropClick = (evt) => {
+            if (composeForm.contains(document.activeElement)) return
+
+            console.log("bg", document.activeElement, evt)
+            // This should only be handled if the user clicked on the backdrop, ie. the compose-form's :before element.
+            // Since pseudoelements can't be targeted directly, this handler has to be registered on the parent, and
+            // the class "ignore-clicks" is used to mimic the :before's pointer-events: none;
+            if (evt.target !== backDrop) return
+            if (evt.target.classList.contains("ignore-clicks")) return
+
+            // composePanel.classList.add("user-focus-within")
+            backDrop = document.querySelector(".compose-form")
+
+            composePanel.classList.remove("user-focus-within")
+            backDrop.classList.add("ignore-clicks")
+        }
+
+        composeForm.addEventListener("focusin", handlerIn)
+        composeForm.addEventListener("focusout", handlerOut)
+        composeForm.addEventListener("input", handlerIn)
+        backDrop.addEventListener("click", handlerBackdropClick)
+    }
+
+    // register initial event hander
+    popoutComposeBox && addEventListener("load", onLoadHandler, {once: true} )
+
+    let currentInnerWidth = innerWidth
+    const desktopMinWidth = 1175
+
+    const resizeHandler = (evt) => {
+        /* As soon the screen is resized from from a size lower than the mobile breakpoint to one larger... */
+        if (currentInnerWidth < desktopMinWidth && innerWidth >= desktopMinWidth) {
+            /* ...wait for DOM to update, then re-register the event handlers from onLoadHandler */
+            setTimeout(() => onLoadHandler(), 0)
+        }
+        currentInnerWidth = innerWidth
+    }
+
+    popoutComposeBox && addEventListener("resize", resizeHandler)
+
+    // load relevant styles
+    popoutComposeBox && GM_addStyle(`
+@media screen and (min-width: 1175px) {
+
+    .navigation-bar {
+        z-index: 3;
+    }
+
+    .columns-area__panels__pane--compositional {
+        z-index: 3;
+    }
+
+    .compose-form {
+        position: relative;
+        width: 100%;
+        transition: width 200ms, margin-left 200ms;
+    }
+
+    .user-focus-within .compose-form {
+        --width: clamp(100%, calc( ( 100vw - clamp(0px, calc(4vw - 48px), 50px) - 600px ) / 2 - 20px), 450px);
+        width: var(--width);
+        margin-left: calc( 285px - var(--width));
+        z-index: 2;
+    }
+
+    .compose-form:before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0 0 0 / 0);
+        z-index: -1;
+        pointer-events: none;
+        transition: background-color 200ms;
+    }
+
+    .user-focus-within .compose-form:before {
+        background-color: rgba(0 0 0 / 0.25);
+        pointer-events: all;
+    }
+
+    .autosuggest-textarea__textarea {
+        transition: min-height 200ms;
+    }
+    .user-focus-within .autosuggest-textarea__textarea {
+        min-height: 200px !important;
+    }
+
+    .link-footer {
+        margin-top: auto
+    }
+}
     `)
 
     // alpha mask of the people and the logo from the header image
@@ -268,17 +456,69 @@ a.button {
     z-index: 1;
     position: relative;
 }
+.status__info__icons {
+    height: 100%
+}
 
 #mastodon[data-props='{"locale":"de"}'] .compose-form__publish-button-wrapper > .button.primary::after {
     content: "Cybertrööt!"
 }
+
+/* center the "USERNAME boosted" text at the top of a toot */
+.status__prepend {
+    flex-grow: 0;
+    align-self: center;
+    margin-left: 26px;
+    z-index: 1;
+}
+
+aside .status__display-name:hover {
+    text-decoration: underline;
+}
+
+@keyframes statusPrependIcon {
+    0%   { background-position: 0   0%; }
+    20%  { background-position: 0 100%; }
+    100% { background-position: 0 100%; }
+}
+
+.status__prepend .status__prepend-icon {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='209'><path d='M4.97 3.16c-.1.03-.17.1-.22.18L.8 8.24c-.2.3.03.78.4.8H3.6v2.68c0 4.26-.55 3.62 3.66 3.62h7.66l-2.3-2.84c-.03-.02-.03-.04-.05-.06H7.27c-.44 0-.72-.3-.72-.72v-2.7h2.5c.37.03.63-.48.4-.77L5.5 3.35c-.12-.17-.34-.25-.53-.2zm12.16.43c-.55-.02-1.32.02-2.4.02H7.1l2.32 2.85.03.06h5.25c.42 0 .72.28.72.72v2.7h-2.5c-.36.02-.56.54-.3.8l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.26-.28 0-.83-.37-.8H18.4v-2.7c0-3.15.4-3.62-1.25-3.66z' fill='%23606984' stroke-width='0'/><path d='M7.78 19.66c-.24.02-.44.25-.44.5v2.46h-.06c-1.08 0-1.86-.03-2.4-.03-1.64 0-1.25.43-1.25 3.65v4.47c0 4.26-.56 3.62 3.65 3.62H8.5l-1.3-1.06c-.1-.08-.18-.2-.2-.3-.02-.17.06-.35.2-.45l1.33-1.1H7.28c-.44 0-.72-.3-.72-.7v-4.48c0-.44.28-.72.72-.72h.06v2.5c0 .38.54.63.82.38l4.9-3.93c.25-.18.25-.6 0-.78l-4.9-3.92c-.1-.1-.24-.14-.38-.12zm9.34 2.93c-.54-.02-1.3.02-2.4.02h-1.25l1.3 1.07c.1.07.18.2.2.33.02.16-.06.3-.2.4l-1.33 1.1h1.28c.42 0 .72.28.72.72v4.47c0 .42-.3.72-.72.72h-.1v-2.47c0-.3-.3-.53-.6-.47-.07 0-.14.05-.2.1l-4.9 3.93c-.26.18-.26.6 0 .78l4.9 3.92c.27.25.82 0 .8-.38v-2.5h.1c4.27 0 3.65.67 3.65-3.62v-4.47c0-3.15.4-3.62-1.25-3.66zM10.34 38.66c-.24.02-.44.25-.43.5v2.47H7.3c-1.08 0-1.86-.04-2.4-.04-1.64 0-1.25.43-1.25 3.65v4.47c0 3.66-.23 3.7 2.34 3.66l-1.34-1.1c-.1-.08-.18-.2-.2-.3 0-.17.07-.35.2-.45l1.96-1.6c-.03-.06-.04-.13-.04-.2v-4.48c0-.44.28-.72.72-.72H9.9v2.5c0 .36.5.6.8.38l4.93-3.93c.24-.18.24-.6 0-.78l-4.94-3.92c-.1-.08-.23-.13-.36-.12zm5.63 2.93l1.34 1.1c.1.07.18.2.2.33.02.16-.03.3-.16.4l-1.96 1.6c.02.07.06.13.06.22v4.47c0 .42-.3.72-.72.72h-2.66v-2.47c0-.3-.3-.53-.6-.47-.06.02-.12.05-.18.1l-4.94 3.93c-.24.18-.24.6 0 .78l4.94 3.92c.28.22.78-.02.78-.38v-2.5h2.66c4.27 0 3.65.67 3.65-3.62v-4.47c0-3.66.34-3.7-2.4-3.66zM13.06 57.66c-.23.03-.4.26-.4.5v2.47H7.28c-1.08 0-1.86-.04-2.4-.04-1.64 0-1.25.43-1.25 3.65v4.87l2.93-2.37v-2.5c0-.44.28-.72.72-.72h5.38v2.5c0 .36.5.6.78.38l4.94-3.93c.24-.18.24-.6 0-.78l-4.94-3.92c-.1-.1-.24-.14-.38-.12zm5.3 6.15l-2.92 2.4v2.52c0 .42-.3.72-.72.72h-5.4v-2.47c0-.3-.32-.53-.6-.47-.07.02-.13.05-.2.1L3.6 70.52c-.25.18-.25.6 0 .78l4.93 3.92c.28.22.78-.02.78-.38v-2.5h5.42c4.27 0 3.65.67 3.65-3.62v-4.47-.44zM19.25 78.8c-.1.03-.2.1-.28.17l-.9.9c-.44-.3-1.36-.25-3.35-.25H7.28c-1.08 0-1.86-.03-2.4-.03-1.64 0-1.25.43-1.25 3.65v.7l2.93.3v-1c0-.44.28-.72.72-.72h7.44c.2 0 .37.08.5.2l-1.8 1.8c-.25.26-.08.76.27.8l6.27.7c.28.03.56-.25.53-.53l-.7-6.25c0-.27-.3-.48-.55-.44zm-17.2 6.1c-.2.07-.36.3-.33.54l.7 6.25c.02.36.58.55.83.27l.8-.8c.02 0 .04-.02.04 0 .46.24 1.37.17 3.18.17h7.44c4.27 0 3.65.67 3.65-3.62v-.75l-2.93-.3v1.05c0 .42-.3.72-.72.72H7.28c-.15 0-.3-.03-.4-.1L8.8 86.4c.3-.24.1-.8-.27-.84l-6.28-.65h-.2zM4.88 98.6c-1.33 0-1.34.48-1.3 2.3l1.14-1.37c.08-.1.22-.17.34-.2.16 0 .34.08.44.2l1.66 2.03c.04 0 .07-.03.12-.03h7.44c.34 0 .57.2.65.5h-2.43c-.34.05-.53.52-.3.78l3.92 4.95c.18.24.6.24.78 0l3.94-4.94c.22-.27-.02-.76-.37-.77H18.4c.02-3.9.6-3.4-3.66-3.4H7.28c-1.08 0-1.86-.04-2.4-.04zm.15 2.46c-.1.03-.2.1-.28.2l-3.94 4.9c-.2.28.03.77.4.78H3.6c-.02 3.94-.45 3.4 3.66 3.4h7.44c3.65 0 3.74.3 3.7-2.25l-1.1 1.34c-.1.1-.2.17-.32.2-.16 0-.34-.08-.44-.2l-1.65-2.03c-.06.02-.1.04-.18.04H7.28c-.35 0-.57-.2-.66-.5h2.44c.37 0 .63-.5.4-.78l-3.96-4.9c-.1-.15-.3-.23-.47-.2zM4.88 117.6c-1.16 0-1.3.3-1.3 1.56l1.14-1.38c.08-.1.22-.14.34-.16.16 0 .34.04.44.16l2.22 2.75h7c.42 0 .72.28.72.72v.53h-2.6c-.3.1-.43.54-.2.78l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-.53c0-4.2.72-3.63-3.66-3.63H7.28c-1.08 0-1.86-.03-2.4-.03zm.1 1.74c-.1.03-.17.1-.23.16L.8 124.44c-.2.28.03.77.4.78H3.6v.5c0 4.26-.55 3.62 3.66 3.62h7.44c1.03 0 1.74.02 2.28 0-.16.02-.34-.03-.44-.15l-2.22-2.76H7.28c-.44 0-.72-.3-.72-.72v-.5h2.5c.37.02.63-.5.4-.78L5.5 119.5c-.12-.15-.34-.22-.53-.16zm12.02 10c1.2-.02 1.4-.25 1.4-1.53l-1.1 1.36c-.07.1-.17.17-.3.18zM5.94 136.6l2.37 2.93h6.42c.42 0 .72.28.72.72v1.25h-2.6c-.3.1-.43.54-.2.78l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-1.25c0-4.2.72-3.63-3.66-3.63H7.28c-.6 0-.92-.02-1.34-.03zm-1.72.06c-.4.08-.54.3-.6.75l.6-.74zm.84.93c-.12 0-.24.08-.3.18l-3.95 4.9c-.24.3 0 .83.4.82H3.6v1.22c0 4.26-.55 3.62 3.66 3.62h7.44c.63 0 .97.02 1.4.03l-2.37-2.93H7.28c-.44 0-.72-.3-.72-.72v-1.22h2.5c.4.04.67-.53.4-.8l-3.96-4.92c-.1-.13-.27-.2-.44-.2zm13.28 10.03l-.56.7c.36-.07.5-.3.56-.7zM17.13 155.6c-.55-.02-1.32.03-2.4.03h-8.2l2.38 2.9h5.82c.42 0 .72.28.72.72v1.97H12.9c-.32.06-.48.52-.28.78l3.94 4.94c.2.23.6.22.78-.03l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-1.97c0-3.15.4-3.62-1.25-3.66zm-12.1.28c-.1.02-.2.1-.28.18l-3.94 4.9c-.2.3.03.78.4.8H3.6v1.96c0 4.26-.55 3.62 3.66 3.62h8.24l-2.36-2.9H7.28c-.44 0-.72-.3-.72-.72v-1.97h2.5c.37.02.63-.5.4-.78l-3.96-4.9c-.1-.15-.3-.22-.47-.2zM5.13 174.5c-.15 0-.3.07-.38.2L.8 179.6c-.24.27 0 .82.4.8H3.6v2.32c0 4.26-.55 3.62 3.66 3.62h7.94l-2.35-2.9h-5.6c-.43 0-.7-.3-.7-.72v-2.3h2.5c.38.03.66-.54.4-.83l-3.97-4.9c-.1-.13-.23-.2-.38-.2zm12 .1c-.55-.02-1.32.03-2.4.03H6.83l2.35 2.9h5.52c.42 0 .72.28.72.72v2.34h-2.6c-.3.1-.43.53-.2.78l3.92 4.9c.18.24.6.24.78 0l3.94-4.9c.22-.3-.02-.78-.37-.8H18.4v-2.33c0-3.15.4-3.62-1.25-3.66zM4.97 193.16c-.1.03-.17.1-.22.18l-3.94 4.9c-.2.3.03.78.4.8H3.6v2.68c0 4.26-.55 3.62 3.66 3.62h7.66l-2.3-2.84c-.03-.02-.03-.04-.05-.06H7.27c-.44 0-.72-.3-.72-.72v-2.7h2.5c.37.03.63-.48.4-.77l-3.96-4.9c-.12-.17-.34-.25-.53-.2zm12.16.43c-.55-.02-1.32.03-2.4.03H7.1l2.32 2.84.03.06h5.25c.42 0 .72.28.72.72v2.7h-2.5c-.36.02-.56.54-.3.8l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.26-.28 0-.83-.37-.8H18.4v-2.7c0-3.15.4-3.62-1.25-3.66z' fill='%23606984' stroke-width='0'/></svg>");
+    background-position: 0 0;
+    width: 22px;
+    /* scale to 17px via transform to keep the multi-sürite layout intact */
+    transform: scale(calc(17 / 22)) translateY(-1px);
+    aspect-ratio: 22 / 19;
+    background-size: cover;
+    animation: 4.5s infinite normal statusPrependIcon steps(10);
+}
+.status__prepend .status__prepend-icon:before {
+    display: none;
+}
+
+/* Better gradient on collapsed toots */
+.status.collapsed .status__content {
+    height: 45px;
+    margin-bottom: -15px;
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 60% );
+    mask-image: linear-gradient(to bottom, black, transparent 60% );
+}
+:is(#fake, .status.collapsed .status__content):after {
+    display: none;
+}
+
+/* Make sure the search suggestions are always ontop, the otherwise highest z-index I use is 100 */
+body>div[data-popper-escaped]:last-child {
+    z-index: 1000 !important;
+}
+
 `)
 
     GM_addStyle(`
 
 /* Add our logo */
 @media screen and (min-width: 1175px) {
-    .columns-area__panels__pane--navigational .columns-area__panels__pane__inner:before {
+    body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner:before {
         content: "";
         object-fit: contain;
         background: url(${logoSvg});
@@ -292,14 +532,14 @@ a.button {
         filter: drop-shadow(0px 0px 3px rgba(255 255 255 / .3));
     }
 
-    .navigation-panel {
+    body.flavour-glitch .navigation-panel {
         margin-top: 0;
         height: calc(100% - 68px);
     }
-    .navigation-panel:before {
+    body.flavour-glitch .navigation-panel:before {
         content: "";
         width: 100%;
-        margin: 10px 0;
+        margin: 20px 0;
     }
 }
 `)
@@ -371,7 +611,7 @@ header:hover border
     .button {
         outline: 1px solid transparent;
         outline-offset: -1px;
-        transition: box-shadow 200ms, outline-color 200ms;
+        transition: box-shadow 200ms, outline-color 200ms, background-color 200ms;
     }
     .button:hover {
         outline-color: hsl(240deg 100% 83%);
@@ -451,6 +691,11 @@ header:hover border
     .compose-form .emoji-picker-dropdown {
         top: 6px;
         right: 2px;
+        bottom: 0;
+    }
+    .compose-form .emoji-picker-dropdown .emoji-button {
+        position: sticky;
+        top: 5px;
     }
     /* make sure this isn't covered by the compose area in advanced mode*/
     .emoji-picker-dropdown__menu {
@@ -515,6 +760,26 @@ header:hover border
 
     /* ===== right side menu ===== */
 
+    .column-link--logo {
+        padding: 0;
+    }
+
+    .column-link--logo svg {
+        display: none;
+    }
+
+    .column-link--logo:before {
+        content: "";
+        object-fit: contain;
+        background: url(${logoSvg});
+        display: block;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        height: 48px;
+        max-width: 100%;
+    }
+
     /* Adjust Horizontal align of the first <hr> with the first post in a feed */
     .navigation-panel__logo hr {
         margin-top: 14px;
@@ -570,11 +835,7 @@ header:hover border
         background: hsl(224deg 16% 19%);
     }
 
-    #tabs-bar__portal>button,
-    .column-header__wrapper {
-        border-radius: 8px
-    }
-
+    .column-back-button--slim [role="button"]:after,
     #tabs-bar__portal>button:after,
     .column-header__wrapper:after {
         content: "";
@@ -586,16 +847,20 @@ header:hover border
         pointer-events: none;
     }
 
+    .column-back-button--slim [role="button"],
     #tabs-bar__portal>button,
     .column-header__wrapper {
+        border-radius: 8px;
         backdrop-filter: blur(3px);
         background: hsla(227deg 16% 23% / 0.8);
         transition: box-shadow 200ms;
     }
+    .column-back-button--slim [role="button"]:hover,
     #tabs-bar__portal>button:hover,
     .column-header__wrapper:hover {
         box-shadow: var(--neon-box-shadow-small);
     }
+    .column-back-button--slim [role="button"]:hover:after,
     #tabs-bar__portal>button:hover:after,
     .column-header__wrapper:hover:after {
         border-color: hsl(227deg 16% 51%);
@@ -704,7 +969,20 @@ header:hover border
         min-height: 40px;
     }
 
-    /* ===== Posts styling ===== /*
+    /* ===== Posts styling ===== */
+
+    .status-unlisted {
+        box-shadow: 0px 4px 10px -8px #388e3c;
+    }
+    .status-public {
+        box-shadow: 0px 4px 10px -8px #1976d2;
+    }
+    .status-direct {
+        box-shadow: 0px 4px 10px -8px #d32f2f;
+    }
+    .status-private {
+        box-shadow: 0px 4px 10px -8px #ffa000;
+    }
 
     /* All these refer to posts, in feeds... */
     .columns-area--mobile article,
@@ -895,36 +1173,32 @@ header:hover border
         z-index: -1;
     }
 
-    .notification-favourite,
-    .status[data-favourited-by] {
-        background: rgba(202 143 4 / 0.05);
+    /* Coloring */
+
+    [data-column="notifications"] .status[data-favourited-by] {
+        background: hsla(240deg 4% 20% / 1);
+        --border-hsl: 42.12deg 96.12% 40.39%;
     }
+
+    .notification-follow,
+    [data-column="notifications"] .status[data-boosted-by] {
+        background: hsla(231deg 18% 22% / 1);
+        --border-hsl: 239.48deg 100% 77.45%
+    }
+
     :is(
         #fake,
-        .notification-favourite,
-        .status[data-favourited-by]
+        .status.unread,
+        .notification.unread,
     ):before {
-        border-color: rgba(202 143 4 / 1);
+        border-color: hsl(var(--border-hsl, 227deg 16% 71%));
+        border-radius: inherit;
     }
 
     .notification-follow, .notification-follow-request {
         border-bottom: none;
     }
-    .notification-follow,
-    .notification-reblog {
-        background: rgba(140 141 255 / 0.05);
-    }
-    :is(#fake, .notification-follow, .notification-reblog):before {
-        border-color: rgba(140 141 255 / 1);
-    }
 
-    .status.unread:before {
-        border-color: hsl(239deg 100% 90%);
-    }
-
-    .notification.unread:before, .status.unread:before {
-        border-radius: inherit;
-    }
 
     /* ===== Profile ===== */
 
@@ -1027,6 +1301,15 @@ header:hover border
     }
 
     /* Lists */
+    h1#Lists {
+        visibility: hidden;
+    }
+    .column-back-button--slim [role="button"] {
+        margin-left: -10px;
+        margin-right: -10px;
+        width: calc(100% + 20px);
+    }
+
     .column-inline-form {
         margin-top: 20px;
         outline: 1px solid hsl(224deg 16% 27%);
@@ -1352,6 +1635,18 @@ header:hover border
     height: 30px !important;
 }
 
+/* make sure the grey hover outline is *behind* the emoji */
+.emoji-mart-category .emoji-mart-emoji:hover:before {
+    z-index: -1;
+}
+
+button.emoji-mart-emoji span, button.emoji-mart-emoji img {
+    transition: transform 200ms;
+}
+button.emoji-mart-emoji:hover span, button.emoji-mart-emoji:hover img {
+    transform: scale(1.4);
+}
+
 /* more comfy emoji picker icon */
 
 .emoji-button>img {
@@ -1419,6 +1714,21 @@ span.relationship-tag {
     color: hsla(0 0% 100% / .7);
     padding: 0 5px;
     pointer-events: none;
+}
+.media-gallery__gifv__label {
+    padding: 0 5px;
+    line-height: 27.1429px;
+    font-size: 1em;
+    background: rgba(0 0 0 / 0.6);
+    color: hsla(0 0% 100% / .7);
+    font-weight: normal;
+    border-radius: 8px;
+}
+.sensitive-marker {
+    background: rgba(0 0 0 / 0.6);
+    color: hsla(0 0% 100% / .7);
+    line-height: 23.141px;
+    border-radius: 8px;
 }
 `)
 
