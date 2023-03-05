@@ -305,7 +305,6 @@ markiere medien ohne alt-text*/
         const handlerBackdropClick = (evt) => {
             if (composeForm.contains(document.activeElement)) return
 
-            console.log("bg", document.activeElement, evt)
             // This should only be handled if the user clicked on the backdrop, ie. the compose-form's :before element.
             // Since pseudoelements can't be targeted directly, this handler has to be registered on the parent, and
             // the class "ignore-clicks" is used to mimic the :before's pointer-events: none;
