@@ -81,7 +81,7 @@ body {
     border-radius: 0.2rem;
     border-width: 1px;
 
-    background-color: inherit;
+    background-color: #161616;
     background-image: linear-gradient(45deg, rgb(var(--rgb-red) / 0.1), rgb(var(--rgb-red) / 0.1));
 
     margin-right: -15px;
