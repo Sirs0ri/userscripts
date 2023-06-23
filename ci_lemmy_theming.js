@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dataterm CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  try to take over the world!
 // @author       Sirs0ri
 // @match        https://dataterm.digital/*
@@ -70,23 +70,45 @@ body {
 
 /* === filter bar above posts === */
 
+.container-lg > .row > .col-12.col-md-8 > div.mb-3,
 .main-content-wrapper > div > div.mb-3 {
+    position: sticky;
+    top: 1rem;
+    z-index: 1;
+
     border-style: solid;
     border-color: #ff375c;
     border-radius: 0.2rem;
     border-width: 1px;
 
-    background-color: rgb(var(--rgb-red) / 0.1);
+    background-color: inherit;
+    background-image: linear-gradient(45deg, rgb(var(--rgb-red) / 0.1), rgb(var(--rgb-red) / 0.1));
 
     margin-right: -15px;
+    margin-bottom: 2rem !important;
 
     padding: 15px;
     padding-bottom: calc(15px - 0.5rem);
 }
 
-.main-content-wrapper > div > div.mb-3 label.false {
+:where(
+  .main-content-wrapper > div > div.mb-3,
+  .container-lg > .row > .col-12.col-md-8 > div.mb-3
+) label.false {
     background-color: #161616;
 }
+
+/* spacing between / around posts */
+.post-listing + hr {
+    display: none;
+}
+hr + .post-listing {
+    margin-top: 1rem;
+}
+.post-listing {
+    margin-left: 1rem;
+}
+
 
 /* === community === */
 
