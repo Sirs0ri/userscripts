@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dataterm CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  try to take over the world!
 // @author       Sirs0ri
 // @match        https://dataterm.digital/*
@@ -19,6 +19,11 @@
     donateLink.href = "https://ko-fi.com/revengeday"
     donateLink.target = "_blank"
 
+    /* TODO:
+       - [ ] Mobile Layout
+
+    */
+
     // Main Page
     GM_addStyle(`
 
@@ -30,11 +35,18 @@ body {
     --rgb-red: 235 75 96;
     --color-red: rgb(var(--rgb-red));
 
+    --rgb-green: 109 235 168;
+    --color-green: rgb(var(--rgb-green));
+
+    --rgb-background: 22 22 22;
+    --color-background: rgb(var(--rgb-background));
+
     font-size: 1.25rem;
 }
 
 
-/* adjust colors for better readability */
+/* === adjust colors for better readability === */
+
 .card,
 .post-listing{
     background-color: rgb(var(--rgb-red) / 0.1);
@@ -47,9 +59,25 @@ body {
 .text-muted {
     color: rgb(255 255 255 / 0.7);
 }
+.text-success {
+    color: var(--color-green) !important;
+}
+
+a {
+    color: var(--color-green);
+}
 
 
-/* increase size for up/downvote buttons */
+/* === some other color changes === */
+
+blockquote {
+    --secondary: var(--color-green);
+}
+
+
+/* === up/downvote buttons === */
+
+/* increase size */
 .icon.upvote, .icon.downvote {
     width: 1.5em;
     height: 2.5em;
@@ -58,47 +86,82 @@ body {
     margin-top: -5px;
 }
 
-/* prevent icon + text links in the account nav from twxt-wrapping */
+/* make active upvoted arrow green not blue/"info" */
+.text-info > .icon.upvote {
+    color: var(--color-green)
+}
+
+
+/* === prevent icon + text links in the account nav from twxt-wrapping === */
+
 .nav-link {
     text-wrap: nowrap;
 }
+
 
 
 /* ====================
  * style/layout changes
  * ==================== */
 
-/* === filter bar above posts === */
+/* === filter bar above posts / comments === */
 
-.container-lg > .row > .col-12.col-md-8 > div.mb-3,
-.main-content-wrapper > div > div.mb-3 {
+/* comments */
+.container-lg .col-12.col-md-8.mb-3 > :not(.btn-group) + .btn-group,
+.container-lg .col-12.col-md-8.mb-3 > .btn-group + .btn-group,
+/* posts */
+.container-lg > .row > .col-12.col-md-8 > div.mb-3:not(.post-listing ~ div),
+.main-content-wrapper > div > div.mb-3,
+:where(
+  .container-lg > .row > .col-12.col-md-8 > div.mb-3:not(.post-listing ~ div),
+  .main-content-wrapper > div > div.mb-3
+) ~ .my-2
+{
     position: sticky;
     top: 1rem;
     z-index: 1;
 
     border-style: solid;
-    border-color: #ff375c;
-    border-radius: 0.2rem;
+    border-color: var(--color-red);
     border-width: 1px;
+    grid-column-end: span 1;
 
-    background-color: #161616;
+    background-color: var(--color-background);
     background-image: linear-gradient(45deg, rgb(var(--rgb-red) / 0.1), rgb(var(--rgb-red) / 0.1));
 
+    padding: 1em;
+}
+
+.container-lg > .row > .col-12.col-md-8 > div.mb-3:not(.post-listing ~ div),
+.main-content-wrapper > div > div.mb-3,
+:where(
+  .container-lg > .row > .col-12.col-md-8 > div.mb-3:not(.post-listing ~ div),
+  .main-content-wrapper > div > div.mb-3
+) ~ .my-2 {
     margin-right: -15px;
     margin-bottom: 2rem !important;
 
+    padding-bottom: calc(1em - 0.5rem);
+}
+:where(
+  .container-lg > .row > .col-12.col-md-8 > div.mb-3:not(.post-listing ~ div),
+  .main-content-wrapper > div > div.mb-3
+) ~ .my-2 {
+    margin-top: 2rem !important;
     padding: 15px;
-    padding-bottom: calc(15px - 0.5rem);
 }
 
 :where(
   .main-content-wrapper > div > div.mb-3,
-  .container-lg > .row > .col-12.col-md-8 > div.mb-3
+  .container-lg > .row > .col-12.col-md-8 > div.mb-3,
+  .btn-group
 ) label.false {
-    background-color: #161616;
+    background-color: var(--color-background);
 }
 
-/* spacing between / around posts */
+
+/* === spacing between / around posts === */
+
 .post-listing + hr {
     display: none;
 }
@@ -107,6 +170,23 @@ hr + .post-listing {
 }
 .post-listing {
     margin-left: 1rem;
+}
+.col-12.col-md-8 > .post-listing {
+    margin-left: 0;
+}
+
+
+/* === comment area beneath posts === */
+
+.post-listing ~ div > form {
+    margin: 1rem;
+}
+.post-listing ~ div > form textarea {
+    min-height: 5em;
+    font-size: 1.25rem;
+}
+.post-listing ~ div > form .form-control:focus {
+    background-color: rgb(var(--rgb-green) / 0.3);
 }
 
 
@@ -140,12 +220,57 @@ at the start of the 2nd line, which looks bad */
 }
 
 
+/* === post view === */
+
+.container-lg .col-12.col-md-8.mb-3 {
+    display: grid;
+    grid-auto-rows: min-content;
+    grid-template-columns: 1fr 1fr;
+}
+
+.container-lg .col-12.col-md-8.mb-3 > * {
+    grid-column-end: span 2;
+}
+
+.container-lg .col-12.col-md-8.mb-3 > :not(.btn-group) + .btn-group,
+.container-lg .col-12.col-md-8.mb-3 > .btn-group + .btn-group {
+    padding: 1em;
+    border-style: solid;
+    border-color: var(--color-red);
+    border-width: 1px;
+    grid-column-end: span 1;
+
+    background-color: var(--color-background);
+    background-image: linear-gradient(45deg, rgb(var(--rgb-red) / 0.1), rgb(var(--rgb-red) / 0.1));
+
+    position: sticky;
+    top: 1rem;
+    z-index: 1;
+}
+
+.container-lg .col-12.col-md-8.mb-3 > :not(.btn-group) + .btn-group {
+    border-radius: 0.2rem 0 0 0.2rem;
+    border-right: none;
+    margin-right: 0 !important;
+    justify-content: flex-start;
+}
+.container-lg .col-12.col-md-8.mb-3 > .btn-group + .btn-group {
+    border-radius: 0 0.2rem 0.2rem 0;
+    border-left: none;
+    justify-content: flex-end;
+}
+.container-lg .col-12.col-md-8.mb-3 > .btn-group label {
+    flex-grow: 0;
+}
+
+
 /* === comments === */
 
 /* top level comments */
 :not(.details + .comments) > .comment {
     margin-top: 1em;
-    border: 1px solid rgba(255 255 255 / 0.5)
+    margin-inline: 1em;
+    border: 1px solid rgba(255 255 255 / 0.5);
 }
 :not(.details + .comments) > .comment > .details.border-top {
     border-top: none !important;
@@ -155,7 +280,8 @@ at the start of the 2nd line, which looks bad */
     margin-top: 1em;
 }
 
-/* === threaded comments === */
+/* threaded comments */
+
 .details + .comments > .comment {
     --border-indicator-width: 6px;
 }
@@ -178,7 +304,19 @@ at the start of the 2nd line, which looks bad */
     border: none;
     margin-left: 0 !important;
     padding: 0;
-    margin-left: var(--border-indicator-width, 0) !important;
+    margin-left: var(--border-indicator-width, 1em) !important;
+}
+
+/* other comments related changes */
+
+/* margin around comment body*/
+.comment > .details .md-div {
+    margin-block: 0.5rem;
+}
+
+/* move votes / "sent at" to the end */
+.comment > .details .mr-lg-5.flex-lg-grow-0 {
+    flex-grow: 1 !important;
 }
 
 
@@ -196,6 +334,7 @@ at the start of the 2nd line, which looks bad */
 .list-unstyled li.list-inline-item + li.list-inline-item {
     margin-top: 0.5em;
 }
+
 
 /* === sidebars === */
 
@@ -234,6 +373,8 @@ at the start of the 2nd line, which looks bad */
 :where(h1, h2, h3, h4, h5, h6) > * a.text-body {
     color: inherit !important;
 }
+
+
 
 /* ====================
  *        Misc
