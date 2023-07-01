@@ -26,7 +26,7 @@
  *      Alternatively, you can turn off the glow effect entirely via the CONFIGURABLE OPTIONS section below.
  */
 
-(function() {
+(function () {
     'use strict';
 
     // ====================
@@ -58,7 +58,7 @@
 
     /** Register a handler to the "load" event, and when the vew switches from mibile to desktop */
     function registerLoadHandlerDesktop(handler) {
-        addEventListener("load", handler, {once: true})
+        addEventListener("load", handler, { once: true })
         addEventListener("desktopViewVisible", evt => {
             // Run the handler on the next frame, to give the DOM a chance to update
             setTimeout(() => handler(evt), 0)
@@ -87,7 +87,7 @@
     // These preferences will be persisted in localStorage. When upgrading from a version that
     // still has preferences defined as booleans make sure to note them down before upgrading!
 
-    function loadSettings () {
+    function loadSettings() {
         const loaded = localStorage.getItem(`userscript-sirs0ri-settings-${user}`)
 
         const settings = {
@@ -116,7 +116,7 @@
         return settings
     }
 
-    function storeSettings (vals) {
+    function storeSettings(vals) {
         const str = JSON.stringify(vals)
 
         localStorage.setItem(`userscript-sirs0ri-settings-${user}`, str)
@@ -124,13 +124,13 @@
 
     let settingsWhenPopupOpened
 
-    function openSettings (evt) {
+    function openSettings(evt) {
         if (evt) evt.preventDefault()
-        settingsWhenPopupOpened = {...settings}
+        settingsWhenPopupOpened = { ...settings }
         document.body.classList.add("userscript-modal--active")
     }
 
-    function closeSettings (evt) {
+    function closeSettings(evt) {
         evt.preventDefault()
         document.body.classList.remove("userscript-modal--active")
     }
@@ -194,7 +194,7 @@
             return
         }
 
-        const insert = createElem("p", {innerHTML: "<strong>Sirs0ri's userscript</strong>: "})
+        const insert = createElem("p", { innerHTML: "<strong>Sirs0ri's userscript</strong>: " })
         const separator = createElem("span", {
             innerHTML: " · ",
             ariaHidden: true
@@ -490,151 +490,150 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
     GM_addStyle(`
 
 p {
-  line-height: 1.5;
+    line-height: 1.5;
 }
 
 body {
-  /* border radii */
-  --border-radius-button: 10px;
-  --border-radius-button-between: 3px;
+    /* border radii */
+    --border-radius-button: 10px;
+    --border-radius-button-between: 3px;
 
-  /* COLORS */
-  --hsl-white: 0deg 0% 100%;
-  --color-white: hsl(var(--hsl-white));
+    /* COLORS */
+    --hsl-white: 0deg 0% 100%;
+    --color-white: hsl(var(--hsl-white));
 
-  --neon-glow-hsl: 219deg 100% 50%;
+    --neon-glow-hsl: 219deg 100% 50%;
 
-  /* hl is a color to be used as highlight ontop of another color */
-  --color-primary: hsl(239.65deg 100% 66.47%);
-  --color-hl-primary: hsl(240deg 100% 83%);
+    /* hl is a color to be used as highlight ontop of another color */
+    --color-primary: hsl(239.65deg 100% 66.47%);
+    --color-hl-primary: hsl(240deg 100% 83%);
 
-  /* used in the neon bars in the menu */
-  --hsl-offwhite-blue: 224deg 60% 81%;
-  --color-offwhite-primary: hsl(224deg 60% 81%);
+    /* used in the neon bars in the menu */
+    --hsl-offwhite-blue: 224deg 60% 81%;
+    --color-offwhite-primary: hsl(224deg 60% 81%);
 
-  --color-green: #388e3c; /* Unlisted posts */
-  --color-blue: #1976d2; /* formerly public posts */
-  --color-red: #d32f2f; /* Direct posts */
-  --color-yellow: hsl(48 71% 54%); /* Private posts - original: ffa000*/
+    --color-green: #388e3c; /* Unlisted posts */
+    --color-blue: #1976d2; /* formerly public posts */
+    --color-red: #d32f2f; /* Direct posts */
+    --color-yellow: hsl(48 71% 54%); /* Private posts - original: ffa000*/
 
-  --color-gold: hsl(41 100% 45% / 1); /* favs */
-  --color-purple: hsl(240deg 100% 77%); /* boosts */
-  --color-orange: hsl(22 100% 45%); /* reports */
+    --color-gold: hsl(41 100% 45% / 1); /* favs */
+    --color-purple: hsl(240deg 100% 77%); /* boosts */
+    --color-orange: hsl(22 100% 45%); /* reports */
 
-  /* page background
-   */
-  --color-grey-0: hsl(224deg 17% 9%);
+    /* page background  */
+    --color-grey-0: hsl(224deg 17% 9%);
 
-  /* .account-timeline__header                        -> background
-   * explore -> subheader                             -> background
-   */
-  --color-grey-1: hsl(223deg 17% 14%);
+    /* .account-timeline__header                        -> background
+     * explore -> subheader                             -> background
+     */
+    --color-grey-1: hsl(223deg 17% 14%);
 
-  /* .search__input                                   -> background
-   * .column-back-button--slim [role="button"]:after  -> border
-   * #tabs-bar__portal>button:after                   -> border
-   * .column-header__wrapper:after                    -> border
-   * posts                                            -> background
-   * search results                                   -> background
-   * explore links                                    -> background
-   * ::-webkit-scrollbar-thumb                        -> background
-   * ::-webkit-scrollbar-track:active                 -> background
-   * ::-webkit-scrollbar-track:hover                  -> background
-   */
-  --color-grey-2: hsl(224deg 17% 19%);
+    /* .search__input                                   -> background
+     * .column-back-button--slim [role="button"]:after  -> border
+     * #tabs-bar__portal>button:after                   -> border
+     * .column-header__wrapper:after                    -> border
+     * posts                                            -> background
+     * search results                                   -> background
+     * explore links                                    -> background
+     * ::-webkit-scrollbar-thumb                        -> background
+     * ::-webkit-scrollbar-track:active                 -> background
+     * ::-webkit-scrollbar-track:hover                  -> background
+     */
+    --color-grey-2: hsl(224deg 17% 19%);
 
-  /* .column-back-button--slim [role="button"]        -> background 0.8
-   * #tabs-bar__portal>button                         -> background 0.8
-   * .column-header__wrapper                          -> background 0.8
-   * selected post                                    -> background
-   * .about:before                                    -> background
-   * scrollbars                                       -> ???
-   * body.layout-multiple-columns .column-header      -> background
-   */
-  --hsl-grey-3: 227deg 17% 23%;
-  --color-grey-3: hsl(var(--hsl-grey-3));
+    /* .column-back-button--slim [role="button"]        -> background 0.8
+     * #tabs-bar__portal>button                         -> background 0.8
+     * .column-header__wrapper                          -> background 0.8
+     * selected post                                    -> background
+     * .about:before                                    -> background
+     * scrollbars                                       -> ???
+     * body.layout-multiple-columns .column-header      -> background
+     */
+    --hsl-grey-3: 227deg 17% 23%;
+    --color-grey-3: hsl(var(--hsl-grey-3));
 
-  /* .dismissable-banner                              -> border
-   * posts                                            -> border
-   * search results                                   -> border
-   * explore links                                    -> border
-   * .explore__search-results>button                  -> border
-   * .account__section-headline                       -> border
-   * .notification__filter-bar                        -> border
-   * .account-timeline__header                        -> outline
-   * lists .column-inline-form                        -> outline
-   * ::-webkit-scrollbar-thumb                        -> border
-   * ::-webkit-scrollbar-thumb:hover                  -> background
-   */
-  --color-grey-4: hsl(227deg 17% 27%);
+    /* .dismissable-banner                              -> border
+     * posts                                            -> border
+     * search results                                   -> border
+     * explore links                                    -> border
+     * .explore__search-results>button                  -> border
+     * .account__section-headline                       -> border
+     * .notification__filter-bar                        -> border
+     * .account-timeline__header                        -> outline
+     * lists .column-inline-form                        -> outline
+     * ::-webkit-scrollbar-thumb                        -> border
+     * ::-webkit-scrollbar-thumb:hover                  -> background
+     */
+    --color-grey-4: hsl(227deg 17% 27%);
 
-  /* .search__input                                   -> background
-   * .column-header__collapsible                      -> background
-   * .account__action-bar__tab.active                 -> border
-   * .account__header__bio .account__header__fields   -> border
-   * body.layout-multiple-columns .drawer__inner      -> background
-   * body.layout-multiple-columns .drawer__inner .navigation-bar  -> background
-   */
-  --color-grey-5: hsl(227deg 17% 31%);
+    /* .search__input                                   -> background
+     * .column-header__collapsible                      -> background
+     * .account__action-bar__tab.active                 -> border
+     * .account__header__bio .account__header__fields   -> border
+     * body.layout-multiple-columns .drawer__inner      -> background
+     * body.layout-multiple-columns .drawer__inner .navigation-bar  -> background
+     */
+    --color-grey-5: hsl(227deg 17% 31%);
 
-  /* .column-header__button:hover:before              -> background
-   * .column-header__back-button:hover:before         -> background
-   * .account__section-headline :is(button, a):hover span:before  -> background
-   * .notification__filter-bar button:hover span:before  -> background
-   * .notification__filter-bar button:hover i:after   -> background
-   * .account-card                                    -> border
-   * ::-webkit-scrollbar-thumb:hover                  -> border
-   * ::-webkit-scrollbar-thumb:active                 -> background
-   * body.layout-multiple-columns .drawer--header     -> border
-   * .search__input                                   -> border
-   */
-  --color-grey-6: hsl(227deg 17% 41%);
+    /* .column-header__button:hover:before              -> background
+     * .column-header__back-button:hover:before         -> background
+     * .account__section-headline :is(button, a):hover span:before  -> background
+     * .notification__filter-bar button:hover span:before  -> background
+     * .notification__filter-bar button:hover i:after   -> background
+     * .account-card                                    -> border
+     * ::-webkit-scrollbar-thumb:hover                  -> border
+     * ::-webkit-scrollbar-thumb:active                 -> background
+     * body.layout-multiple-columns .drawer--header     -> border
+     * .search__input                                   -> border
+     */
+    --color-grey-6: hsl(227deg 17% 41%);
 
-  /* .compose-form__autosuggest-wrapper               -> border
-   * .compose-form__buttons-wrapper                   -> border
-   * .compose-form .spoiler-input                     -> border
-   * .column-back-button--slim [role="button"]:hover:after -> border
-   * #tabs-bar__portal>button:hover:after             -> border
-   * .column-header__wrapper:hover:after              -> border
-   * selected post                                    -> border
-   * .about:before                                    -> border
-   * ::-webkit-scrollbar-thumb:active                 -> border
-   */
-  --color-grey-7: hsl(227deg 17% 51%);
+    /* .compose-form__autosuggest-wrapper               -> border
+     * .compose-form__buttons-wrapper                   -> border
+     * .compose-form .spoiler-input                     -> border
+     * .column-back-button--slim [role="button"]:hover:after -> border
+     * #tabs-bar__portal>button:hover:after             -> border
+     * .column-header__wrapper:hover:after              -> border
+     * selected post                                    -> border
+     * .about:before                                    -> border
+     * ::-webkit-scrollbar-thumb:active                 -> border
+     */
+    --color-grey-7: hsl(227deg 17% 51%);
 
-  /* Notifications                                    -> border
-   */
-  --hsl-grey-8: 227deg 17% 71%;
-  --color-grey-8: hsl(var(--hsl-grey-8));
+    /* Notifications                                    -> border
+     */
+    --hsl-grey-8: 227deg 17% 71%;
+    --color-grey-8: hsl(var(--hsl-grey-8));
 
-  /* .compose-form__buttons-wrapper                   -> background
-   */
-  --color-grey-9: hsl(227deg 17% 81%);
+    /* .compose-form__buttons-wrapper                   -> background
+     */
+    --color-grey-9: hsl(227deg 17% 81%);
 
-  --anim-dur: 200ms;
+    --anim-dur: 200ms;
 
-  --neon-box-shadow:
-    /* White glow */
-    0 0 7px hsla(var(--hsl-white) / 1),
-    0 0 10px hsla(var(--hsl-white) / 1),
-    0 0 21px hsla(var(--hsl-white) / 1),
-    /* Colored glow */
-    0 0 42px hsla(var(--neon-glow-hsl) / 1),
-    0 0 82px hsla(var(--neon-glow-hsl) / 1),
-    0 0 92px hsla(var(--neon-glow-hsl) / 1),
-    0 0 102px hsla(var(--neon-glow-hsl) / 1),
-    0 0 151px hsla(var(--neon-glow-hsl) / 1);
-  --neon-box-shadow-small:
-    /* White glow */
-    0 0 6px -2px hsla(var(--hsl-white) / 0.4),
-    0 0 10px hsla(var(--hsl-white) / 0.2),
-    0 0 15px hsla(var(--hsl-white) / 0.1),
-    /* Colored glow */
-    0 0 10px hsla(var(--neon-glow-hsl) / 0.07),
-    0 0 25px hsla(var(--neon-glow-hsl) / 0.05),
-    0 0 47px hsla(var(--neon-glow-hsl) / 0.12),
-    /* White inside glow */
-    inset 0 0 5px hsla(var(--hsl-white) / 0.3);
+    --neon-box-shadow:
+      /* White glow */
+      0 0 7px hsla(var(--hsl-white) / 1),
+      0 0 10px hsla(var(--hsl-white) / 1),
+      0 0 21px hsla(var(--hsl-white) / 1),
+      /* Colored glow */
+      0 0 42px hsla(var(--neon-glow-hsl) / 1),
+      0 0 82px hsla(var(--neon-glow-hsl) / 1),
+      0 0 92px hsla(var(--neon-glow-hsl) / 1),
+      0 0 102px hsla(var(--neon-glow-hsl) / 1),
+      0 0 151px hsla(var(--neon-glow-hsl) / 1);
+    --neon-box-shadow-small:
+      /* White glow */
+      0 0 6px -2px hsla(var(--hsl-white) / 0.4),
+      0 0 10px hsla(var(--hsl-white) / 0.2),
+      0 0 15px hsla(var(--hsl-white) / 0.1),
+      /* Colored glow */
+      0 0 10px hsla(var(--neon-glow-hsl) / 0.07),
+      0 0 25px hsla(var(--neon-glow-hsl) / 0.05),
+      0 0 47px hsla(var(--neon-glow-hsl) / 0.12),
+      /* White inside glow */
+      inset 0 0 5px hsla(var(--hsl-white) / 0.3);
 }
 
 @keyframes flicker-in {
@@ -699,12 +698,12 @@ a.mention {
  *    Glow on Media
  * ==================== */
 
- /* Important note for glitch-fork users:
+/* Important note for glitch-fork users:
 
- it's HIGHLY recommended to disable the following
- options in the "app settings" (left sidebar):
-   - full-width media previews
- */
+it's HIGHLY recommended to disable the following
+options in the "app settings" (left sidebar):
+    - full-width media previews
+*/
 
 @keyframes fadeIn {
     0%   { opacity: 0; }
@@ -1314,7 +1313,7 @@ a.button {
 }
 
 button[disabled] {
-  cursor: not-allowed !important;
+    cursor: not-allowed !important;
 }
 
 .account__header__tabs__buttons {
@@ -1363,11 +1362,11 @@ button[disabled] {
 /* hide some UI that looks broken from the latest 4.1.2+glitch update */
 
 .status__avatar {
-  box-shadow: none;
+    box-shadow: none;
 }
 
 .notification__line, .status__line {
-  display: none;
+    display: none;
 }
 
 /* Make clickable area of posts larger */
@@ -2453,14 +2452,14 @@ body {
     }
 
     .account__action-bar__tab:hover {
-      background-color: var(--color-grey-4);
+        background-color: var(--color-grey-4);
     }
 
     :is(.account__action-bar__tab, #fake):hover {
         border-color: var(--color-grey-6);
     }
     .account__action-bar__tab>* {
-      position: relative;
+        position: relative;
     }
 
     .account__action-bar__tab.active:before {
@@ -2663,24 +2662,24 @@ body {
 
 
     /* ===== Profile directory ===== */
-     .account-card {
-         margin: 20px 0 !important;
-         border-radius: 8px;
-         border: 1px solid var(--color-grey-6);
-     }
-     .account-card__permalink,
-     .account-card__header,
-     .account-card__header img{
-         border-radius: inherit;
-     }
+    .account-card {
+        margin: 20px 0 !important;
+        border-radius: 8px;
+        border: 1px solid var(--color-grey-6);
+    }
+    .account-card__permalink,
+    .account-card__header,
+    .account-card__header img{
+        border-radius: inherit;
+    }
 
-     .account-card__header {
-         padding: 0;
-     }
+    .account-card__header {
+        padding: 0;
+    }
 
-     .account-card__title {
-         position: relative;
-     }
+    .account-card__title {
+        position: relative;
+    }
 
 
     /* ====================
@@ -3124,386 +3123,392 @@ span.relationship-tag {
 /* Glitch Effect on notifications */
 
 .column-link--transparent:has(i+i) {
-  position: relative;
-  z-index: 2;
-  --padding: 15px;
-  --start: 25px;
-  padding: var(--padding);
+    position: relative;
+    z-index: 2;
+    --padding: 15px;
+    --start: 25px;
+    padding: var(--padding);
 
-  text-decoration: none;
+    text-decoration: none;
 }
 
 .column-link--transparent:has(i+i)::before,
 .column-link--transparent:has(i+i)::after {
-  content: attr(title);
-  position: absolute;
-  width: 110%;
-  z-index: -1;
+    content: attr(title);
+    position: absolute;
+    width: 110%;
+    z-index: -1;
 }
 
 .column-link--transparent:has(i+i)::before {
-  top: calc((10em / 60) + var(--padding));
-  left: calc((15em / 60) + var(--padding) + var(--start));
-  color: #6364ff;
-  animation: paths 10s step-end infinite, opacity 10s step-end infinite,
-    font 16s step-end infinite, movement 20s step-end infinite;
+    top: calc((10em / 60) + var(--padding));
+    left: calc((15em / 60) + var(--padding) + var(--start));
+    color: #6364ff;
+    animation: 
+        paths 10s step-end infinite,
+        opacity 10s step-end infinite,
+        font 16s step-end infinite, 
+        movement 20s step-end infinite;
 }
 
 .column-link--transparent:has(i+i)::after {
-  top: calc((5em / 60) + var(--padding));
-  left: calc((-10em / 60) + var(--padding) + var(--start));
-  color: #1bc7fb;
-  animation: paths 10s step-end infinite, opacity 10s step-end infinite,
-    font 14s step-end infinite, movement 16s step-end infinite;
+    top: calc((5em / 60) + var(--padding));
+    left: calc((-10em / 60) + var(--padding) + var(--start));
+    color: #1bc7fb;
+    animation:
+        paths 10s step-end infinite,
+        opacity 10s step-end infinite,
+        font 14s step-end infinite,
+        movement 16s step-end infinite;
 }
 .column-link--transparent:has(i+i) span {
-  animation: paths 10s step-end infinite;
+    animation: paths 10s step-end infinite;
 }
 
 @keyframes paths {
-  0% {
-    clip-path: polygon(
-      0% 43%,
-      83% 43%,
-      83% 22%,
-      23% 22%,
-      23% 24%,
-      91% 24%,
-      91% 26%,
-      18% 26%,
-      18% 83%,
-      29% 83%,
-      29% 17%,
-      41% 17%,
-      41% 39%,
-      18% 39%,
-      18% 82%,
-      54% 82%,
-      54% 88%,
-      19% 88%,
-      19% 4%,
-      39% 4%,
-      39% 14%,
-      76% 14%,
-      76% 52%,
-      23% 52%,
-      23% 35%,
-      19% 35%,
-      19% 8%,
-      36% 8%,
-      36% 31%,
-      73% 31%,
-      73% 16%,
-      1% 16%,
-      1% 56%,
-      50% 56%,
-      50% 8%
-    );
-  }
+    0% {
+        clip-path: polygon(
+            0% 43%,
+            83% 43%,
+            83% 22%,
+            23% 22%,
+            23% 24%,
+            91% 24%,
+            91% 26%,
+            18% 26%,
+            18% 83%,
+            29% 83%,
+            29% 17%,
+            41% 17%,
+            41% 39%,
+            18% 39%,
+            18% 82%,
+            54% 82%,
+            54% 88%,
+            19% 88%,
+            19% 4%,
+            39% 4%,
+            39% 14%,
+            76% 14%,
+            76% 52%,
+            23% 52%,
+            23% 35%,
+            19% 35%,
+            19% 8%,
+            36% 8%,
+            36% 31%,
+            73% 31%,
+            73% 16%,
+            1% 16%,
+            1% 56%,
+            50% 56%,
+            50% 8%
+        );
+    }
 
-  5% {
-    clip-path: polygon(
-      0% 29%,
-      44% 29%,
-      44% 83%,
-      94% 83%,
-      94% 56%,
-      11% 56%,
-      11% 64%,
-      94% 64%,
-      94% 70%,
-      88% 70%,
-      88% 32%,
-      18% 32%,
-      18% 96%,
-      10% 96%,
-      10% 62%,
-      9% 62%,
-      9% 84%,
-      68% 84%,
-      68% 50%,
-      52% 50%,
-      52% 55%,
-      35% 55%,
-      35% 87%,
-      25% 87%,
-      25% 39%,
-      15% 39%,
-      15% 88%,
-      52% 88%
-    );
-  }
+    5% {
+        clip-path: polygon(
+            0% 29%,
+            44% 29%,
+            44% 83%,
+            94% 83%,
+            94% 56%,
+            11% 56%,
+            11% 64%,
+            94% 64%,
+            94% 70%,
+            88% 70%,
+            88% 32%,
+            18% 32%,
+            18% 96%,
+            10% 96%,
+            10% 62%,
+            9% 62%,
+            9% 84%,
+            68% 84%,
+            68% 50%,
+            52% 50%,
+            52% 55%,
+            35% 55%,
+            35% 87%,
+            25% 87%,
+            25% 39%,
+            15% 39%,
+            15% 88%,
+            52% 88%
+        );
+    }
 
-  30% {
-    clip-path: polygon(
-      0% 53%,
-      93% 53%,
-      93% 62%,
-      68% 62%,
-      68% 37%,
-      97% 37%,
-      97% 89%,
-      13% 89%,
-      13% 45%,
-      51% 45%,
-      51% 88%,
-      17% 88%,
-      17% 54%,
-      81% 54%,
-      81% 75%,
-      79% 75%,
-      79% 76%,
-      38% 76%,
-      38% 28%,
-      61% 28%,
-      61% 12%,
-      55% 12%,
-      55% 62%,
-      68% 62%,
-      68% 51%,
-      0% 51%,
-      0% 92%,
-      63% 92%,
-      63% 4%,
-      65% 4%
-    );
-  }
+    30% {
+        clip-path: polygon(
+            0% 53%,
+            93% 53%,
+            93% 62%,
+            68% 62%,
+            68% 37%,
+            97% 37%,
+            97% 89%,
+            13% 89%,
+            13% 45%,
+            51% 45%,
+            51% 88%,
+            17% 88%,
+            17% 54%,
+            81% 54%,
+            81% 75%,
+            79% 75%,
+            79% 76%,
+            38% 76%,
+            38% 28%,
+            61% 28%,
+            61% 12%,
+            55% 12%,
+            55% 62%,
+            68% 62%,
+            68% 51%,
+            0% 51%,
+            0% 92%,
+            63% 92%,
+            63% 4%,
+            65% 4%
+        );
+    }
 
-  45% {
-    clip-path: polygon(
-      0% 33%,
-      2% 33%,
-      2% 69%,
-      58% 69%,
-      58% 94%,
-      55% 94%,
-      55% 25%,
-      33% 25%,
-      33% 85%,
-      16% 85%,
-      16% 19%,
-      5% 19%,
-      5% 20%,
-      79% 20%,
-      79% 96%,
-      93% 96%,
-      93% 50%,
-      5% 50%,
-      5% 74%,
-      55% 74%,
-      55% 57%,
-      96% 57%,
-      96% 59%,
-      87% 59%,
-      87% 65%,
-      82% 65%,
-      82% 39%,
-      63% 39%,
-      63% 92%,
-      4% 92%,
-      4% 36%,
-      24% 36%,
-      24% 70%,
-      1% 70%,
-      1% 43%,
-      15% 43%,
-      15% 28%,
-      23% 28%,
-      23% 71%,
-      90% 71%,
-      90% 86%,
-      97% 86%,
-      97% 1%,
-      60% 1%,
-      60% 67%,
-      71% 67%,
-      71% 91%,
-      17% 91%,
-      17% 14%,
-      39% 14%,
-      39% 30%,
-      58% 30%,
-      58% 11%,
-      52% 11%,
-      52% 83%,
-      68% 83%
-    );
-  }
+    45% {
+        clip-path: polygon(
+            0% 33%,
+            2% 33%,
+            2% 69%,
+            58% 69%,
+            58% 94%,
+            55% 94%,
+            55% 25%,
+            33% 25%,
+            33% 85%,
+            16% 85%,
+            16% 19%,
+            5% 19%,
+            5% 20%,
+            79% 20%,
+            79% 96%,
+            93% 96%,
+            93% 50%,
+            5% 50%,
+            5% 74%,
+            55% 74%,
+            55% 57%,
+            96% 57%,
+            96% 59%,
+            87% 59%,
+            87% 65%,
+            82% 65%,
+            82% 39%,
+            63% 39%,
+            63% 92%,
+            4% 92%,
+            4% 36%,
+            24% 36%,
+            24% 70%,
+            1% 70%,
+            1% 43%,
+            15% 43%,
+            15% 28%,
+            23% 28%,
+            23% 71%,
+            90% 71%,
+            90% 86%,
+            97% 86%,
+            97% 1%,
+            60% 1%,
+            60% 67%,
+            71% 67%,
+            71% 91%,
+            17% 91%,
+            17% 14%,
+            39% 14%,
+            39% 30%,
+            58% 30%,
+            58% 11%,
+            52% 11%,
+            52% 83%,
+            68% 83%
+        );
+    }
 
-  76% {
-    clip-path: polygon(
-      0% 26%,
-      15% 26%,
-      15% 73%,
-      72% 73%,
-      72% 70%,
-      77% 70%,
-      77% 75%,
-      8% 75%,
-      8% 42%,
-      4% 42%,
-      4% 61%,
-      17% 61%,
-      17% 12%,
-      26% 12%,
-      26% 63%,
-      73% 63%,
-      73% 43%,
-      90% 43%,
-      90% 67%,
-      50% 67%,
-      50% 41%,
-      42% 41%,
-      42% 46%,
-      50% 46%,
-      50% 84%,
-      96% 84%,
-      96% 78%,
-      49% 78%,
-      49% 25%,
-      63% 25%,
-      63% 14%
-    );
-  }
+    76% {
+        clip-path: polygon(
+            0% 26%,
+            15% 26%,
+            15% 73%,
+            72% 73%,
+            72% 70%,
+            77% 70%,
+            77% 75%,
+            8% 75%,
+            8% 42%,
+            4% 42%,
+            4% 61%,
+            17% 61%,
+            17% 12%,
+            26% 12%,
+            26% 63%,
+            73% 63%,
+            73% 43%,
+            90% 43%,
+            90% 67%,
+            50% 67%,
+            50% 41%,
+            42% 41%,
+            42% 46%,
+            50% 46%,
+            50% 84%,
+            96% 84%,
+            96% 78%,
+            49% 78%,
+            49% 25%,
+            63% 25%,
+            63% 14%
+        );
+    }
 
-  90% {
-    clip-path: polygon(
-      0% 41%,
-      13% 41%,
-      13% 6%,
-      87% 6%,
-      87% 93%,
-      10% 93%,
-      10% 13%,
-      89% 13%,
-      89% 6%,
-      3% 6%,
-      3% 8%,
-      16% 8%,
-      16% 79%,
-      0% 79%,
-      0% 99%,
-      92% 99%,
-      92% 90%,
-      5% 90%,
-      5% 60%,
-      0% 60%,
-      0% 48%,
-      89% 48%,
-      89% 13%,
-      80% 13%,
-      80% 43%,
-      95% 43%,
-      95% 19%,
-      80% 19%,
-      80% 85%,
-      38% 85%,
-      38% 62%
-    );
-  }
+    90% {
+        clip-path: polygon(
+            0% 41%,
+            13% 41%,
+            13% 6%,
+            87% 6%,
+            87% 93%,
+            10% 93%,
+            10% 13%,
+            89% 13%,
+            89% 6%,
+            3% 6%,
+            3% 8%,
+            16% 8%,
+            16% 79%,
+            0% 79%,
+            0% 99%,
+            92% 99%,
+            92% 90%,
+            5% 90%,
+            5% 60%,
+            0% 60%,
+            0% 48%,
+            89% 48%,
+            89% 13%,
+            80% 13%,
+            80% 43%,
+            95% 43%,
+            95% 19%,
+            80% 19%,
+            80% 85%,
+            38% 85%,
+            38% 62%
+        );
+    }
 
-  1%,
-  7%,
-  33%,
-  47%,
-  78%,
-  93% {
-    clip-path: none;
-  }
+    1%,
+    7%,
+    33%,
+    47%,
+    78%,
+    93% {
+        clip-path: none;
+    }
 }
 
 @keyframes movement {
-  0% {
-    top: calc((0em / 60) + var(--padding));
-    left: calc((-20em / 60) + var(--padding) + var(--start));
-  }
+    0% {
+        top: calc((0em / 60) + var(--padding));
+        left: calc((-20em / 60) + var(--padding) + var(--start));
+    }
 
-  15% {
-    top: calc((10em / 60) + var(--padding));
-    left: calc((10em / 60) + var(--padding) + var(--start));
-  }
+    15% {
+        top: calc((10em / 60) + var(--padding));
+        left: calc((10em / 60) + var(--padding) + var(--start));
+    }
 
-  60% {
-    top: calc((5em / 60) + var(--padding));
-    left: calc((-10em / 60) + var(--padding) + var(--start));
-  }
+    60% {
+        top: calc((5em / 60) + var(--padding));
+        left: calc((-10em / 60) + var(--padding) + var(--start));
+    }
 
-  75% {
-    top: calc((-5em / 60) + var(--padding));
-    left: calc((20em / 60) + var(--padding) + var(--start));
-  }
+    75% {
+        top: calc((-5em / 60) + var(--padding));
+        left: calc((20em / 60) + var(--padding) + var(--start));
+    }
 
-  100% {
-    top: calc((10em / 60) + var(--padding));
-    left: calc((5em / 60) + var(--padding) + var(--start));
-  }
+    100% {
+        top: calc((10em / 60) + var(--padding));
+        left: calc((5em / 60) + var(--padding) + var(--start));
+    }
 }
 
 @keyframes opacity {
-  0% {
-    opacity: 0.1;
-  }
+    0% {
+        opacity: 0.1;
+    }
 
-  5% {
-    opacity: 0.7;
-  }
+    5% {
+        opacity: 0.7;
+    }
 
-  30% {
-    opacity: 0.4;
-  }
+    30% {
+        opacity: 0.4;
+    }
 
-  45% {
-    opacity: 0.6;
-  }
+    45% {
+        opacity: 0.6;
+    }
 
-  76% {
-    opacity: 0.4;
-  }
+    76% {
+        opacity: 0.4;
+    }
 
-  90% {
-    opacity: 0.8;
-  }
+    90% {
+        opacity: 0.8;
+    }
 
-  1%,
-  7%,
-  33%,
-  47%,
-  78%,
-  93% {
-    opacity: 0;
-  }
+    1%,
+    7%,
+    33%,
+    47%,
+    78%,
+    93% {
+        opacity: 0;
+    }
 }
 
 @keyframes font {
-  0% {
-    font-weight: 100;
-    color: #e0287d;
-    filter: blur(3px);
-  }
+    0% {
+        font-weight: 100;
+        color: #e0287d;
+        filter: blur(3px);
+    }
 
-  20% {
-    font-weight: 500;
-    color: #fff;
-    filter: blur(0);
-  }
+    20% {
+        font-weight: 500;
+        color: #fff;
+        filter: blur(0);
+    }
 
-  50% {
-    font-weight: 300;
-    color: #1bc7fb;
-    filter: blur(2px);
-  }
+    50% {
+        font-weight: 300;
+        color: #1bc7fb;
+        filter: blur(2px);
+    }
 
-  60% {
-    font-weight: 700;
-    color: #fff;
-    filter: blur(0);
-  }
+    60% {
+        font-weight: 700;
+        color: #fff;
+        filter: blur(0);
+    }
 
-  90% {
-    font-weight: 500;
-    color: #e0287d;
-    filter: blur(6px);
-  }
+    90% {
+        font-weight: 500;
+        color: #e0287d;
+        filter: blur(6px);
+    }
 }
 `)
 
@@ -3515,106 +3520,106 @@ span.relationship-tag {
     GM_addStyle(`
 /* Hover-Zoom for emotes */
 @supports selector(:has(a, b)) {
-  /* Temporarily disable overflow on elements restraining the images while hovering */
-  :where(
-    /* Toots */
-    .status__content,
-    :not(.reply-indicator__display-name)>.display-name,
-    .status__display-name,
+    /* Temporarily disable overflow on elements restraining the images while hovering */
+    :where(
+        /* Toots */
+        .status__content,
+        :not(.reply-indicator__display-name)>.display-name,
+        .status__display-name,
 
-    /* Poll Option */
-    label.poll__option,
+        /* Poll Option */
+        label.poll__option,
 
-    /* DMs */
-    .conversation__content__names,
-    .detailed-status__display-name,
-    .detailed-status__display-name strong,
-    .conversation__content__info,
-    .conversation__content,
+        /* DMs */
+        .conversation__content__names,
+        .detailed-status__display-name,
+        .detailed-status__display-name strong,
+        .conversation__content__info,
+        .conversation__content,
 
-    /* Boosts */
-    .status__prepend>span,
+        /* Boosts */
+        .status__prepend>span,
 
-    /* follow notifications */
-    .notification__message>span,
-    .account__display-name strong,
-    .account .account__display-name,
+        /* follow notifications */
+        .notification__message>span,
+        .account__display-name strong,
+        .account .account__display-name,
 
-    /* Profiles */
-    .account__header__tabs__name h1,
-    .account__header__content,
+        /* Profiles */
+        .account__header__tabs__name h1,
+        .account__header__content,
 
-    /* Profile Info Table */
-    .account__header__fields dd,
-    .account__header__fields dt,
+        /* Profile Info Table */
+        .account__header__fields dd,
+        .account__header__fields dt,
 
-    /* Replying to a toot - body only */
-    .reply-indicator,
-    .reply-indicator__content,
-    .status__content,
+        /* Replying to a toot - body only */
+        .reply-indicator,
+        .reply-indicator__content,
+        .status__content,
 
-    /* Picture in picture player */
-    .picture-in-picture__header__account,
-    .picture-in-picture__header .display-name span,
-    .picture-in-picture__header .display-name strong
-  ):has(img.emojione:hover) {
-    overflow: revert;
-  }
+        /* Picture in picture player */
+        .picture-in-picture__header__account,
+        .picture-in-picture__header .display-name span,
+        .picture-in-picture__header .display-name strong
+    ):has(img.emojione:hover) {
+        overflow: revert;
+    }
 
-  /* Add Transition to make it look nice */
-  :not(
-    .reply-indicator__header strong,
-    .emoji-button,
-    .reactions-bar__item__emoji
-  )>img.emojione {
-    position: relative;
-    /* the spoiler button has a z-index of 100, make sure this goes over the spoiler button. */
-    z-index: 101;
-    transition:
-      transform 200ms,
-      opacity 200ms;
-  }
-  /* Finally, scale emojis on hover and make sure they're fully visible */
-  :not(
-    .reply-indicator__header strong,
-    .emoji-button,
-    .reactions-bar__item__emoji
-  )>img.emojione:hover
-  {
-    transform: scale(5);
-    opacity: 1;
-    /* increase by 1, to have the hovered emoji overlap all others */
-    z-index: 102;
-  }
+    /* Add Transition to make it look nice */
+    :not(
+        .reply-indicator__header strong,
+        .emoji-button,
+        .reactions-bar__item__emoji
+    )>img.emojione {
+        position: relative;
+        /* the spoiler button has a z-index of 100, make sure this goes over the spoiler button. */
+        z-index: 101;
+        transition:
+        transform 200ms,
+        opacity 200ms;
+    }
+    /* Finally, scale emojis on hover and make sure they're fully visible */
+    :not(
+        .reply-indicator__header strong,
+        .emoji-button,
+        .reactions-bar__item__emoji
+    )>img.emojione:hover
+    {
+        transform: scale(5);
+        opacity: 1;
+        /* increase by 1, to have the hovered emoji overlap all others */
+        z-index: 102;
+    }
 
-  /* Adjust the "better gradient" on collapsed toots */
-  .status.collapsed .status__content:has(img.emojione:hover) {
-    overflow: visible;
-    margin-top: -30px;
-    padding-top: 40px;
-    z-index: 1;
+    /* Adjust the "better gradient" on collapsed toots */
+    .status.collapsed .status__content:has(img.emojione:hover) {
+        overflow: visible;
+        margin-top: -30px;
+        padding-top: 40px;
+        z-index: 1;
 
-    -webkit-mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
-    mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
-  }
+        -webkit-mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
+        mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
+    }
 
-  @keyframes heartbeat {
-    0%  { scale: 1    }
-    25% { scale: 1    }
-    30% { scale: 0.9  }
-    45% { scale: 1    }
-    50% { scale: 0.95 }
-    55% { scale: 1    }
-  }
+    @keyframes heartbeat {
+        0%  { scale: 1    }
+        25% { scale: 1    }
+        30% { scale: 0.9  }
+        45% { scale: 1    }
+        50% { scale: 0.95 }
+        55% { scale: 1    }
+    }
 
-  :not(
-    .reply-indicator__header strong,
-    .emoji-button,
-    .reactions-bar__item__emoji
-  )>img.emojione[title*="heart"]:hover
-  {
-    animation: heartbeat 1.5s infinite;
-  }
+    :not(
+        .reply-indicator__header strong,
+        .emoji-button,
+        .reactions-bar__item__emoji
+    )>img.emojione[title*="heart"]:hover
+    {
+        animation: heartbeat 1.5s infinite;
+    }
 }
 `)
 })();
