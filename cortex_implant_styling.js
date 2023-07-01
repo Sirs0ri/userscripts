@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.4.3
+// @version      1.5.0
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -30,28 +30,460 @@
     'use strict';
 
     // ====================
-    // CONFIGURABLE OPTIONS
+    //      Helpers
     // ====================
 
-    // I personally don't like the checkmarks Glitch-Fork adds to e.g. the fac- and boost-buttons.
-    // If you want them disabled, change the following boolean from `false` to `true`:
-    const hideCheckmarks = false
+    async function sleep(amount) {
+        return new Promise(resolve => {
+            setTimeout(resolve, amount)
+        })
+    }
 
-    // Glitch-Fork makes soem animations super bouncy, e.g. when expanding a post or faving it.
-    // Setting the following option to "true" will make the animations smoother, removing the "overshooting" effect
-    const disableBouncyAnimations = false
+    const desktopViewVisible = new Event("desktopViewVisible")
+    const desktopViewHiddenEvent = new Event("desktopViewHidden")
 
-    // This will turn on/off the glow on media content embedded in posts. Use this option e.g. if you're experiencing issues with glitch's layout options and my changes.
-    const enableGlowOnMedia = true
+    let _currentInnerWidth = window.innerWidth
+    const _desktopMinWidth = 1175
 
-    // This will enable full-sized images inposts / disable cropping images to 16/9
-    const showImagesUncropped = true
+    const onResize = evt => {
+        if (_currentInnerWidth < _desktopMinWidth && innerWidth >= _desktopMinWidth) {
+            dispatchEvent(desktopViewVisible)
+        } else if (innerWidth < _desktopMinWidth && _currentInnerWidth >= _desktopMinWidth) {
+            dispatchEvent(desktopViewHiddenEvent)
+        }
+        _currentInnerWidth = innerWidth
+    }
 
-    // Highlight media without an alt text by adding a visible red bar underneath
-    const highlightMediaWithoutAlt = true
+    addEventListener("resize", onResize)
 
-    // Make the compose box larger when focussed. This will have no effect in the Advanced View.
-    const popoutComposeBox = false
+    /** Register a handler to the "load" event, and when the vew switches from mibile to desktop */
+    function registerLoadHandlerDesktop(handler) {
+        addEventListener("load", handler, {once: true})
+        addEventListener("desktopViewVisible", evt => {
+            // Run the handler on the next frame, to give the DOM a chance to update
+            setTimeout(() => handler(evt), 0)
+        })
+    }
+
+    // Get own account info from embedded "initial-state" JSON
+    const elem = document.getElementById("initial-state")
+    const data = JSON.parse(elem.text)
+    const user = data.accounts[data.meta.me]?.username
+
+    // get account color
+    const avatarLink = data.accounts[data.meta.me]?.avatar_static
+
+    function createElem(tagName, options) {
+        const elem = document.createElement(tagName)
+        Object.assign(elem, options)
+        if (options.class) elem.classList.add(...options.class.split(" "))
+        return elem
+    }
+
+    // ====================
+    //     Preferences
+    // ====================
+
+    // These preferences will be persisted in localStorage. When upgrading from a version that
+    // still has preferences defined as booleans make sure to note them down before upgrading!
+
+    function loadSettings () {
+        const loaded = localStorage.getItem(`userscript-sirs0ri-settings-${user}`)
+
+        const settings = {
+            hideCheckmarks: true,
+            disableBouncyAnimations: true,
+            enableGlowOnMedia: true,
+            showImagesUncropped: true,
+            highlightMediaWithoutAlt: true,
+            popoutComposeBox: true,
+            imACat: true,
+        }
+
+        if (loaded == null) {
+            settings._firstRun = true
+        } else {
+            const parsed = JSON.parse(loaded)
+            if (parsed.hideCheckmarks != null) settings.hideCheckmarks = parsed.hideCheckmarks
+            if (parsed.disableBouncyAnimations != null) settings.disableBouncyAnimations = parsed.disableBouncyAnimations
+            if (parsed.enableGlowOnMedia != null) settings.enableGlowOnMedia = parsed.enableGlowOnMedia
+            if (parsed.showImagesUncropped != null) settings.showImagesUncropped = parsed.showImagesUncropped
+            if (parsed.highlightMediaWithoutAlt != null) settings.highlightMediaWithoutAlt = parsed.highlightMediaWithoutAlt
+            if (parsed.popoutComposeBox != null) settings.popoutComposeBox = parsed.popoutComposeBox
+            if (parsed.imACat != null) settings.imACat = parsed.imACat
+        }
+
+        return settings
+    }
+
+    function storeSettings (vals) {
+        const str = JSON.stringify(vals)
+
+        localStorage.setItem(`userscript-sirs0ri-settings-${user}`, str)
+    }
+
+    let settingsWhenPopupOpened
+
+    function openSettings (evt) {
+        if (evt) evt.preventDefault()
+        settingsWhenPopupOpened = {...settings}
+        document.body.classList.add("userscript-modal--active")
+    }
+
+    function closeSettings (evt) {
+        evt.preventDefault()
+        document.body.classList.remove("userscript-modal--active")
+    }
+
+    const settings = loadSettings()
+
+    if (settings._firstRun) {
+        document.body.classList.add("userscript-modal--firstrun")
+        delete settings._firstRun
+        storeSettings(settings)
+        openSettings()
+    }
+
+    function onSettingChange(evt) {
+        switch (evt.target.id) {
+            case "hideCheckmarks":
+                settings.hideCheckmarks = evt.target.checked
+                break
+            case "disableBouncyAnimations":
+                settings.disableBouncyAnimations = evt.target.checked
+                break
+            case "enableGlowOnMedia":
+                settings.enableGlowOnMedia = evt.target.checked
+                break
+            case "showImagesUncropped":
+                settings.showImagesUncropped = evt.target.checked
+                break
+            case "highlightMediaWithoutAlt":
+                settings.highlightMediaWithoutAlt = evt.target.checked
+                break
+            case "popoutComposeBox":
+                settings.popoutComposeBox = evt.target.checked
+                break
+            case "imACat":
+                settings.imACat = evt.target.checked
+                break
+            default:
+                return
+        }
+
+        let needsReload = false
+        if (settings.hideCheckmarks !== settingsWhenPopupOpened.hideCheckmarks) needsReload = true
+        if (settings.disableBouncyAnimations !== settingsWhenPopupOpened.disableBouncyAnimations) needsReload = true
+        if (settings.enableGlowOnMedia !== settingsWhenPopupOpened.enableGlowOnMedia) needsReload = true
+        if (settings.showImagesUncropped !== settingsWhenPopupOpened.showImagesUncropped) needsReload = true
+        if (settings.highlightMediaWithoutAlt !== settingsWhenPopupOpened.highlightMediaWithoutAlt) needsReload = true
+        if (settings.popoutComposeBox !== settingsWhenPopupOpened.popoutComposeBox) needsReload = true
+        if (settings.imACat !== settingsWhenPopupOpened.imACat) needsReload = true
+
+        storeSettings(settings)
+
+        if (needsReload) document.querySelector(".userscript-modal-root").classList.add("needs-reload")
+        else document.querySelector(".userscript-modal-root").classList.remove("needs-reload")
+    }
+
+    const _insertFooter = (evt) => {
+        const footer = document.querySelector(".link-footer")
+
+        if (!footer) {
+            console.warn("footer not found")
+            return
+        }
+
+        const insert = createElem("p", {innerHTML: "<strong>Sirs0ri's userscript</strong>: "})
+        const separator = createElem("span", {
+            innerHTML: " · ",
+            ariaHidden: true
+        })
+        const preferencesLink = createElem("a", {
+            textContent: document.querySelector(".column-link[href='/settings/preferences']").title,
+            href: "#",
+            onclick: openSettings
+        })
+        const issuesLink = createElem("a", {
+            textContent: "Issues",
+            href: "https://github.com/Sirs0ri/userscripts/issues",
+            target: "_blank",
+        })
+        const codeLink = createElem("a", {
+            textContent: document.querySelector(".link-footer [href*='github.com']").textContent,
+            href: "https://github.com/Sirs0ri/userscripts/blob/main/cortex_implant_styling.js",
+            target: "_blank",
+        })
+        const versionSpan = createElem("span", { innerHTML: "v" + GM_info.script.version })
+
+        insert.appendChild(preferencesLink)
+        insert.appendChild(separator.cloneNode(true))
+        insert.appendChild(issuesLink)
+        insert.appendChild(separator.cloneNode(true))
+        insert.appendChild(codeLink)
+        insert.appendChild(separator.cloneNode(true))
+        insert.appendChild(versionSpan)
+
+        footer.insertBefore(insert, footer.firstChild)
+    }
+
+    const _insertSettingsModal = (evt) => {
+        const modalWrapper = createElem("div", { class: "modal-root userscript-modal-root" })
+        const modalOverlay = createElem("div", { class: "modal-root__overlay", role: "presentation", onclick: closeSettings })
+        const modalContainer = createElem("div", { class: "modal-root__container", role: "dialog" })
+        const modalModal = createElem("div", { class: "userscript-settings__modal" })
+
+        modalModal.innerHTML = `
+<nav>
+    <a role="button" tabindex="0" class="glitch local-settings__navigation__item active" title="General" aria-label="General">
+        <i role="img" class="fa fa-cogs fa-fw"></i> <span>General</span>
+    </a>
+
+    <div>
+        <p class="reload-needed-hint">Some of the settings you changed need the page to be reloaded to apply.</p>
+        <button
+            id="userscript-settings__reload"
+            tabindex="0"
+            title="Reload"
+            aria-label="Reload"
+            class="button reload-needed-hint"
+        >
+            <i role="img" class="fa fa-refresh fa-fw"></i>
+            <span>reload</span>
+        </button>
+        <button
+            id="userscript-settings__close"
+            tabindex="0"
+            title="Close"
+            aria-label="Close"
+            class="button"
+        >
+            <i role="img" class="fa fa-times fa-fw"></i>
+            <span>Close</span>
+        </button>
+
+    </div>
+</nav>
+
+<div class="userscript-settings__content">
+
+    <p class="first-run-notice">
+        Hi there choom! <br>
+        This userscript has a settings UI now!  You're seeing this because you're running the new version of the script for the first time. <br>
+
+        If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to this instance's about page.
+    </p>
+
+    <h1><span>General</span></h1>
+
+    <div class="userscript-settings__item">
+        <input id="hideCheckmarks" type="checkbox">
+        <label for="hideCheckmarks">
+            hide checkmarks
+        </label>
+
+        <p>Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons</p>
+    </div>
+    <div class="userscript-settings__item">
+        <input id="disableBouncyAnimations" type="checkbox">
+        <label for="disableBouncyAnimations">
+            disable bouncy animations
+        </label>
+
+        <p>Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it</p>
+    </div>
+    <div class="userscript-settings__item">
+        <input id="enableGlowOnMedia" type="checkbox">
+        <label for="enableGlowOnMedia">
+            enable glow on media
+        </label>
+
+        <p>Enable a glow effect around media content embedded in posts</p>
+    </div>
+    <div class="userscript-settings__item">
+        <input id="showImagesUncropped" type="checkbox">
+        <label for="showImagesUncropped">
+            show images uncropped
+        </label>
+
+        <p>Enable full-sized images in posts, instead of cropping images to 16/9</p>
+    </div>
+    <div class="userscript-settings__item">
+        <input id="highlightMediaWithoutAlt" type="checkbox">
+        <label for="highlightMediaWithoutAlt">
+            highlight media without alt text
+        </label>
+
+        <p>Highlight media without an alt text by adding a visible red bar underneath</p>
+    </div>
+    <div class="userscript-settings__item">
+        <input id="popoutComposeBox" type="checkbox">
+        <label for="popoutComposeBox">
+            growing compose box
+        </label>
+
+        <p>Make the compose box larger when focussed. This will have no effect in the Advanced View.</p>
+    </div>
+    <div class="userscript-settings__item">
+        <input id="imACat" type="checkbox">
+        <label for="imACat">
+            imACat 🐈
+        </label>
+
+        <p>Meow?</p>
+    </div>
+</div>
+`
+        modalWrapper.appendChild(modalOverlay)
+        modalWrapper.appendChild(modalContainer)
+        modalContainer.appendChild(modalModal)
+
+        setTimeout(() => {
+            document.getElementById("userscript-settings__close").onclick = closeSettings
+            document.getElementById("userscript-settings__reload").onclick = () => location.reload()
+            document.getElementById("hideCheckmarks").onclick = onSettingChange
+            document.getElementById("hideCheckmarks").checked = settings.hideCheckmarks
+            document.getElementById("disableBouncyAnimations").onclick = onSettingChange
+            document.getElementById("disableBouncyAnimations").checked = settings.disableBouncyAnimations
+            document.getElementById("enableGlowOnMedia").onclick = onSettingChange
+            document.getElementById("enableGlowOnMedia").checked = settings.enableGlowOnMedia
+            document.getElementById("showImagesUncropped").onclick = onSettingChange
+            document.getElementById("showImagesUncropped").checked = settings.showImagesUncropped
+            document.getElementById("highlightMediaWithoutAlt").onclick = onSettingChange
+            document.getElementById("highlightMediaWithoutAlt").checked = settings.highlightMediaWithoutAlt
+            document.getElementById("popoutComposeBox").onclick = onSettingChange
+            document.getElementById("popoutComposeBox").checked = settings.popoutComposeBox
+            document.getElementById("imACat").onclick = onSettingChange
+            document.getElementById("imACat").checked = settings.imACat
+        }, 0)
+
+
+        GM_addStyle(`
+
+.userscript-modal-root {
+    transition: visibility 200ms;
+    pointer-events: none;
+    opacity: 0;
+
+    transition: opacity 200ms;
+}
+.userscript-modal-root > div {
+    width: 100vw;
+}
+
+body.userscript-modal--active {
+    overflow-y: hidden !important;
+    margin-right: 12px;
+}
+
+body.userscript-modal--active .userscript-modal-root {
+    pointer-events: revert;
+
+    opacity: 1;
+}
+
+body.userscript-modal--active .userscript-settings__modal {
+    pointer-events: auto;
+}
+
+.userscript-settings__modal {
+    background: #d9e1e8;
+    border-radius: 8px;
+    color: #282c37;
+    height: 80vh;
+    max-height: 450px;
+    max-width: 740px;
+    overflow: hidden;
+    position: relative;
+    width: 80vw;
+
+    display: flex;
+
+    box-sizing: border-box;
+}
+
+.userscript-settings__modal nav {
+    display: flex;
+    flex-direction: column;
+
+    background: #f2f5f7;
+    font-size: 15px;
+    line-height: 20px;
+    overflow-y: auto;
+    width: 212px;
+    flex: 1 0 auto;
+}
+
+.userscript-settings__modal nav *+* {
+    margin-top: 15px
+}
+
+.userscript-settings__modal nav > :last-child {
+    margin-top: auto;
+    padding: 15px;
+    display: grid;
+    font-size: 13px;
+}
+
+.userscript-settings__content {
+    padding: 15px;
+    overflow-y: scroll;
+}
+
+.userscript-settings__content .first-run-notice {
+    margin-bottom: 20px;
+    display: none;
+}
+
+body.userscript-modal--firstrun .userscript-settings__content .first-run-notice {
+    display: block;
+}
+
+.userscript-settings__modal h1 {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 24px;
+    margin-bottom: 20px;
+}
+
+.userscript-settings__item {
+    padding-inline-start: 4ch;
+    position: relative;
+}
+
+.userscript-settings__item + .userscript-settings__item {
+    margin-top: 15px;
+}
+
+.userscript-settings__item input[type="checkbox"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.userscript-settings__item p {
+    opacity: 0.8;
+}
+
+.reload-needed-hint {
+    visibility: hidden;
+}
+.needs-reload .reload-needed-hint {
+    visibility: visible;
+}
+        `)
+        document.body.appendChild(modalWrapper)
+    }
+
+    const insertSettings = (evt) => {
+        _insertFooter(evt)
+
+        // only insert the modal during the "load" event, not on subsequent runs of this functions when the view switches from mobile to desktop
+        if (evt.type !== "load") return
+
+        _insertSettingsModal(evt)
+    }
+
+    registerLoadHandlerDesktop(insertSettings)
 
     // Use TamperMonkey's helper to inject CSS
     // see https://codepen.io/mattgrosswork/pen/VwprebG
@@ -213,14 +645,14 @@ body {
 }
     `)
 
-    hideCheckmarks && GM_addStyle(`
+    settings.hideCheckmarks && GM_addStyle(`
 /* disable checkmark on buttons */
 .detailed-status__button .icon-button.active:after, .status__action-bar-button.active:after {
     content: ""
 }
 `)
 
-    disableBouncyAnimations && GM_addStyle(`
+    settings.disableBouncyAnimations && GM_addStyle(`
 /* ====================
  * de-springyfy anims
  * ==================== */
@@ -250,13 +682,8 @@ a.mention {
 }
 `)
 
-    showImagesUncropped && GM_addStyle(`
-/* Forge all images to be in their original aspect ratio, not 16/9 */
-
-.status {
-    display: flex;
-    flex-direction: column;
-}
+    settings.showImagesUncropped && GM_addStyle(`
+/* Force all images to be in their original aspect ratio, not 16/9 */
 
 .status .media-gallery:not(:has(.media-gallery__item + .media-gallery__item)):has(.spoiler-button--minified) {
     height: auto !important;
@@ -267,7 +694,7 @@ a.mention {
 }
 `)
 
-    enableGlowOnMedia && GM_addStyle(`
+    settings.enableGlowOnMedia && GM_addStyle(`
 /* ====================
  *    Glow on Media
  * ==================== */
@@ -454,7 +881,7 @@ canvas.status-card__image-preview--hidden {
 }
     `)
 
-    highlightMediaWithoutAlt && GM_addStyle(`
+    settings.highlightMediaWithoutAlt && GM_addStyle(`
 /* inspired von chaos.social:
 markiere medien ohne alt-text*/
 .audio-player__canvas:not([title]),
@@ -558,24 +985,10 @@ markiere medien ohne alt-text*/
     }
 
     // register initial event hander
-    popoutComposeBox && addEventListener("load", onLoadHandler, {once: true} )
-
-    let currentInnerWidth = innerWidth
-    const desktopMinWidth = 1175
-
-    const resizeHandler = (evt) => {
-        /* As soon the screen is resized from from a size lower than the mobile breakpoint to one larger... */
-        if (currentInnerWidth < desktopMinWidth && innerWidth >= desktopMinWidth) {
-            /* ...wait for DOM to update, then re-register the event handlers from onLoadHandler */
-            setTimeout(() => onLoadHandler(), 0)
-        }
-        currentInnerWidth = innerWidth
-    }
-
-    popoutComposeBox && addEventListener("resize", resizeHandler)
+    settings.popoutComposeBox && registerLoadHandlerDesktop(onLoadHandler)
 
     // load relevant styles
-    popoutComposeBox && GM_addStyle(`
+    settings.popoutComposeBox && GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
     .navigation-bar {
@@ -627,6 +1040,246 @@ markiere medien ohne alt-text*/
     }
 }
     `)
+
+    const doCatThings = avatarLink && user && settings.imACat
+
+    doCatThings && GM_addStyle(`
+
+@keyframes earwiggleleft {
+    0%  { transform: rotate(35deg) skew(28deg) }
+    25% { transform: rotate(10deg) skew(28deg) }
+    50% { transform: rotate(20deg) skew(28deg) }
+    75% { transform: rotate(0)     skew(28deg) }
+    to  { transform: rotate(35deg) skew(28deg) }
+}
+
+@keyframes earwiggleright {
+    0%  { transform: rotate(-32deg) skew(-28deg) }
+    30% { transform: rotate(-10deg) skew(-28deg) }
+    55% { transform: rotate(-20deg) skew(-28deg) }
+    75% { transform: rotate(0)      skew(-28deg) }
+    to  { transform: rotate(-32deg) skew(-28deg) }
+}
+
+.account__header__bar {
+    z-index: 1
+}
+.detailed-status__display-avatar {
+    z-index: 1;
+    position: relative;
+}
+.status__info>span,
+.detailed-status__display-name
+{
+    overflow: revert;
+}
+
+.account__avatar-overlay-overlay {
+    position: static;
+    margin-top: -25%;
+    margin-left: auto;
+}
+
+[data-avatar-of="@${user}"]:before, [data-avatar-of="@${user}"]:after {
+    background: #ebbcba;
+    border: solid 4px currentColor;
+    box-sizing: border-box;
+    content: "";
+    display: inline-block;
+    height: 50%;
+    width: 50%;
+    z-index: -1;
+    position: relative;
+    color: rgb(129, 125, 131);
+    color: var(--color-1);
+    background: var(--color-6);
+    scale: 0;
+    transition: scale 300ms;
+}
+
+body.meow [data-avatar-of="@${user}"]:before,
+body.meow [data-avatar-of="@${user}"]:after {
+    scale: 1;
+}
+
+[data-avatar-of="@${user}"]:before {
+    border-radius: 0 75% 75%;
+    transform: rotate(32deg) skew(28deg);
+}
+[data-avatar-of="@${user}"]:hover:before {
+    animation: earwiggleleft 1s;
+    animation-iteration-count: 1;
+}
+
+[data-avatar-of="@${user}"]:after {
+    border-radius: 75% 0 75% 75%;
+    transform: rotate(-32deg) skew(-28deg);
+}
+[data-avatar-of="@${user}"]:hover:after {
+    animation: earwiggleright 1s ;
+}
+    `)
+
+    if (doCatThings) {
+
+        // most of this code is from https://github.com/zygisS22/color-palette-extraction/blob/master/index.js#L17, adjusted for my needs:
+        // - lower fidelity: less quantizising for fewer colors,
+        const calculateLuminance = (p) => 0.2126 * p.r + 0.7152 * p.g + 0.0722 * p.b;
+
+
+        /**
+         * Using relative luminance we order the brightness of the colors
+         * the fixed values and further explanation about this topic
+         * can be found here -> https://en.wikipedia.org/wiki/Luma_(video)
+         */
+        const orderByLuminance = (rgbValues) => rgbValues.sort((p1, p2) => calculateLuminance(p2) - calculateLuminance(p1))
+
+
+        const buildRgb = (imageData) => {
+            const targetLength = imageData.length / 4
+            const rgbValues = Array(targetLength);
+            // note that we are loopin every 4!
+            // for every Red, Green, Blue and Alpha
+            for (let i = 0; i < targetLength; i++) {
+                const j = i * 4
+                rgbValues[i] = {
+                    r: imageData[j],
+                    g: imageData[j + 1],
+                    b: imageData[j + 2],
+                    // j+3 would hold the alpha value that we don't care about
+                }
+            }
+            return rgbValues;
+        };
+
+        // returns what color channel has the biggest difference
+        const findBiggestColorRange = (rgbValues) => {
+            /**
+             * Min is initialized to the maximum value posible
+             * from there we procced to find the minimum value for that color channel
+             *
+             * Max is initialized to the minimum value posible
+             * from there we procced to fin the maximum value for that color channel
+             */
+            const rs = rgbValues.map(p => p.r)
+            const gs = rgbValues.map(p => p.g)
+            const bs = rgbValues.map(p => p.b)
+
+            const rRange = Math.max(...rs) - Math.min(...rs);
+            const gRange = Math.max(...gs) - Math.min(...gs);
+            const bRange = Math.max(...bs) - Math.min(...bs);
+
+            // determine which color has the biggest difference
+            const biggestRange = Math.max(rRange, gRange, bRange);
+            if (biggestRange === rRange) {
+                return "r";
+            } else if (biggestRange === gRange) {
+                return "g";
+            } else {
+                return "b";
+            }
+        };
+
+        const quantizationReducer = (prev, curr) => {
+            prev.r += curr.r;
+            prev.g += curr.g;
+            prev.b += curr.b;
+
+            return prev;
+        }
+
+        /**
+         * Median cut implementation
+         * can be found here -> https://en.wikipedia.org/wiki/Median_cut
+         */
+        const quantization = (rgbValues, depth) => {
+            const MAX_DEPTH = 3;
+
+            // Base case
+            if (depth === MAX_DEPTH || rgbValues.length === 0) {
+                const color = rgbValues.reduce(
+                    quantizationReducer,
+                    { r: 0, g: 0, b: 0 }
+                );
+
+                color.r = Math.round(color.r / rgbValues.length);
+                color.g = Math.round(color.g / rgbValues.length);
+                color.b = Math.round(color.b / rgbValues.length);
+
+                return [color];
+            }
+
+            /**
+             *  Recursively do the following:
+             *  1. Find the pixel channel (red,green or blue) with biggest difference/range
+             *  2. Order by this channel
+             *  3. Divide in half the rgb colors list
+             *  4. Repeat process again, until desired depth or base case
+             */
+            const componentToSortBy = findBiggestColorRange(rgbValues);
+            rgbValues.sort((p1, p2) => {
+                return p1[componentToSortBy] - p2[componentToSortBy];
+            });
+
+            const mid = rgbValues.length / 2;
+
+            const rgbValues2 = rgbValues.splice(mid)
+
+            depth++
+
+            const firstHalf = quantization(rgbValues, depth)
+            const secndHalf = quantization(rgbValues2, depth)
+
+            return [
+                ...firstHalf,
+                ...secndHalf,
+            ];
+        };
+
+        const getColors = (link) => {
+            const image = new Image();
+
+            // Set the canvas size to be 100x100 - enough to extract some "good enough" colors.
+            const w = 100
+            const h = 100
+
+            const canvas = new OffscreenCanvas(w, w);
+            const ctx = canvas.getContext("2d");
+
+            image.onload = () => {
+                // const start = performance.now()
+                ctx.drawImage(image, 0, 0, w, h);
+
+                /**
+                 * getImageData returns an array full of RGBA values
+                 * each pixel consists of four values: the red value of the colour, the green, the blue and the alpha
+                 * (transparency). For array value consistency reasons,
+                 * the alpha is not from 0 to 1 like it is in the RGBA of CSS, but from 0 to 255.
+                 */
+                const imageData = ctx.getImageData(0, 0, w, h);
+
+                // Convert the image data to RGB values so its much simpler
+                const rgbArray = buildRgb(imageData.data);
+
+                /**
+                 * Color quantization
+                 * A process that reduces the number of colors used in an image
+                 * while trying to visually maintin the original image as much as possible
+                 */
+                const quantColors = orderByLuminance(quantization(rgbArray, 0));
+
+                document.body.classList.add("meow")
+                const style = `body {\n${quantColors.map((p, i) => `--color-${i}: rgb(${p.r}, ${p.g}, ${p.b});`).join("\n")}\n}`
+                GM_addStyle(style)
+
+            };
+            image.src = link;
+        }
+
+        // this doesn't need to run right away, it can wait a bit.
+        // As a nice sideeffect, when this runs the profile picture's probably already cached!
+        setTimeout(() => getColors(avatarLink), 750)
+    }
 
     // alpha mask of the people and the logo from the header image
     const footerImgMask = "data:image/avif;base64,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"
