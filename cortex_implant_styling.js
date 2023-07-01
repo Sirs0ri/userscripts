@@ -56,7 +56,16 @@
     // Use TamperMonkey's helper to inject CSS
     // see https://codepen.io/mattgrosswork/pen/VwprebG
     GM_addStyle(`
+
+p {
+  line-height: 1.5;
+}
+
 body {
+  /* border radii */
+  --border-radius-button: 10px;
+  --border-radius-button-between: 3px;
+
   /* COLORS */
   --hsl-white: 0deg 0% 100%;
   --color-white: hsl(var(--hsl-white));
@@ -236,7 +245,8 @@ body {
 a.mention {
     background: rgba(255 255 255 / 0.1);
     border-radius: 4px;
-    padding: 0 2px;
+    padding: 1px 5px;
+    margin-inline: -2px;
 }
 `)
 
@@ -288,14 +298,74 @@ a.mention {
     overflow: revert;
 }
 
-.media-gallery__item,
-.video-player.inline {
-    border-radius: 8px;
+.media-gallery__item{
+    border-radius: var(--border-radius-button-between);
 }
 .media-gallery__item>*,
 .video-player.inline>* {
     border-radius: inherit;
     overflow: hidden;
+}
+
+/* single item */
+.media-gallery__item[style*="inset: auto;"],
+.video-player.inline {
+    border-radius: var(--border-radius-button);
+}
+
+/* left half auto 2px auto auto */
+.media-gallery__item[style*="inset: auto 2px auto auto;"] {
+    inset: 0 !important;
+    width: calc(50% - 2px) !important;
+    height: 100% !important;
+    margin: 0 2px 0 0;
+    border-start-start-radius: var(--border-radius-button);
+    border-end-start-radius: var(--border-radius-button);
+}
+/* right half auto auto auto 2px */
+.media-gallery__item[style*="inset: auto auto auto 2px;"] {
+    inset: 0 !important;
+    width: calc(50% - 2px) !important;
+    height: 100% !important;
+    margin: 0 0 0 2px;
+    border-start-end-radius: var(--border-radius-button);
+    border-end-end-radius: var(--border-radius-button);
+}
+
+/* top left image */
+.media-gallery__item[style*="inset: auto 2px 2px auto;"] {
+    inset: 0 !important;
+    width: calc(50% - 2px) !important;
+    height: calc(50% - 2px) !important;
+    margin: 0 2px 2px 0;
+    border-start-start-radius: var(--border-radius-button);
+}
+
+/* top right image */
+.media-gallery__item[style*="inset: auto auto 2px 2px;"] {
+    inset: 0 !important;
+    width: calc(50% - 2px) !important;
+    height: calc(50% - 2px) !important;
+    margin: 0 0 2px 2px;
+    border-start-end-radius: var(--border-radius-button);
+}
+
+/* bottom left image */
+.media-gallery__item[style*="inset: 2px 2px auto auto;"] {
+    inset: 0 !important;
+    width: calc(50% - 2px) !important;
+    height: calc(50% - 2px) !important;
+    margin: 2px 2px 0 0;
+    border-end-start-radius: var(--border-radius-button);
+}
+
+/* bottom right image */
+.media-gallery__item[style*="inset: 2px auto auto 2px;"] {
+    inset: 0 !important;
+    width: calc(50% - 2px) !important;
+    height: calc(50% - 2px) !important;
+    margin: 2px 0 0 2px;
+    border-end-end-radius: var(--border-radius-button);
 }
 
 .media-gallery__item canvas {
@@ -343,14 +413,14 @@ a.mention {
 
 /* YT Video Embeds & other link image previews */
 .status-card  {
-    border-radius: 8px;
+    border-radius: var(--border-radius-button);
     overflow: revert;
 }
 .status-card__image {
     border-radius: inherit;
     position: relative;
 }
-canvas.status-card__image-preview {
+:is(#fake, canvas.status-card__image-preview) {
     border-radius: inherit;
     z-index: unset;
     filter: blur(3px);
@@ -398,6 +468,10 @@ markiere medien ohne alt-text*/
     border-bottom: 4px ridge red;
     box-sizing: border-box;
     border-radius: inherit;
+}
+
+.focal-point-modal__content video {
+    border-bottom: none;
 }
     `)
 
@@ -567,19 +641,47 @@ markiere medien ohne alt-text*/
  * Misc general changes
  * ==================== */
 
+/* ===== BUTTONS ===== */
+
 /* adjust color of fav button */
 .icon-button.star-icon.active {
     color: var(--color-gold);
+}
+
+.button, button {
+    border-radius: var(--border-radius-button);
 }
 
 /* Remove underline from button links */
 a.button {
     text-decoration: none;
 }
+.button.logo-button {
+    line-height: 1;
+}
 
 button[disabled] {
   cursor: not-allowed !important;
 }
+
+.account__header__tabs__buttons {
+    gap: var(--border-radius-button-between);
+}
+.account__header__tabs__buttons > * {
+    border-radius: var(--border-radius-button-between);
+}
+.account__header__tabs__buttons > :first-child {
+    border-top-left-radius: var(--border-radius-button);
+    border-bottom-left-radius: var(--border-radius-button);
+}
+.account__header__tabs__buttons > :last-child {
+    border-top-right-radius: var(--border-radius-button);
+    border-bottom-right-radius: var(--border-radius-button);
+}
+.account__header__tabs__buttons > span > * {
+    border-radius: inherit !important;
+}
+
 
 /* wider margin next to the main content scroller */
 @media screen and (min-width: 1175px) {
@@ -605,11 +707,22 @@ button[disabled] {
     display: none;
 }
 
+/* hide some UI that looks broken from the latest 4.1.2+glitch update */
+
+.status__avatar {
+  box-shadow: none;
+}
+
+.notification__line, .status__line {
+  display: none;
+}
+
 /* Make clickable area of posts larger */
 
 .status:not(.collapsed) .status__content--with-action {
-    margin-top: -72px;
-    padding-top: 82px;
+    padding-top: 58px;
+    margin-top: -48px;
+    margin-bottom: 0;
 }
 .status__prepend + .status .status__content--with-action {
     margin-top: -110px;
@@ -627,7 +740,20 @@ button[disabled] {
     position: relative;
 }
 .status__info__icons {
-    height: 100%
+    height: 100%;
+    display: grid;
+    grid-auto-flow: column;
+    justify-items: center;
+    align-items: center;
+    grid-auto-columns: 1fr;
+}
+.status__content__spoiler-link {
+    border-radius: 100vh;
+    padding-inline: 10px;
+    vertical-align: text-bottom;
+}
+.status__content--with-spoiler > div:not(.status__content__spoiler) {
+    line-height: 1.5em;
 }
 
 #mastodon[data-props='{"locale":"de"}'] .compose-form__publish-button-wrapper > .button.primary::after {
@@ -639,14 +765,16 @@ button[disabled] {
     flex-grow: 0;
     align-self: center;
     margin-left: 26px;
-    z-index: 1;
+}
+.status__prepend:hover {
+    z-index: 2;
 }
 
 /* make sure links to user profiles are consistently underlined on hover */
-aside .status__display-name:hover {
+aside .status__display-name:hover,
+.status.collapsed .display-name:hover .display-name__html {
     text-decoration: underline;
 }
-
 @keyframes statusPrependIcon {
     0%   { background-position: 0   0%; }
     20%  { background-position: 0 100%; }
@@ -669,11 +797,12 @@ aside .status__display-name:hover {
 
 /* Better gradient on collapsed toots */
 .status.collapsed .status__content {
-    height: 45px;
+    height: 35px;
     margin-bottom: -15px;
     -webkit-mask-image: linear-gradient(to bottom, black, transparent 60% );
     mask-image: linear-gradient(to bottom, black, transparent 60% );
 }
+
 :is(#fake, .status.collapsed .status__content):after {
     display: none;
 }
@@ -713,7 +842,6 @@ body>div[data-popper-escaped]:last-child {
         margin-inline: -10px;
         max-width: calc(100% + 20px);
         background-size: calc(100% - 20px);
-}
     }
 
     @keyframes move-background {
@@ -773,6 +901,7 @@ body {
 
 /* min-width: 1175px is Mastodon's breakpoint after which it shows the "desktop" ui */
 @media screen and (min-width: 1175px) {
+
     /* ===== Buttons get a glow-on-hover ===== */
 
     .button {
@@ -786,33 +915,54 @@ body {
         --color-primary: transparent;
     }
 
-    .button:hover {
+    .button:not([disabled]):hover {
         outline-color: var(--color-hl-primary);
         box-shadow: var(--neon-box-shadow-small);
     }
 
     /* poll options get similar treatment */
-    .poll li {
-        border-radius: 8px;
+
+    .status__content .poll li {
+        border-radius: var(--border-radius-button-between);
+        border: 1px solid var(--color-grey-4);
+        margin-bottom: var(--border-radius-button-between);
+    }
+    .status__content .poll li:first-of-type {
+        border-top-left-radius: var(--border-radius-button);
+        border-top-right-radius: var(--border-radius-button);
+        border: 1px solid var(--color-grey-4);
+    }
+    .status__content .poll li:last-of-type {
+        border-bottom-left-radius: var(--border-radius-button);
+        border-bottom-right-radius: var(--border-radius-button);
         border: 1px solid var(--color-grey-4);
     }
 
-    .poll__option {
+    .status__content .poll__option {
         padding: 12px 8px;
         border-radius: inherit
     }
 
-    .poll__option.selectable {
+    .status__content .poll__option.selectable {
         outline: 1px solid var(--color-grey-5);
         transition: background-color var(--anim-dur), outline-color var(--anim-dur);
     }
-    .poll__option.selectable:hover {
+    .status__content .poll__option.selectable:hover {
         background-color: var(--color-grey-4);
         outline-color: var(--color-grey-6);
     }
 
-    .poll__chart {
+    .status__content .poll__chart {
         margin-top: -3px;
+        background: var(--color-grey-7);
+        border-radius: unset;
+        border-bottom-left-radius: inherit;
+        border-bottom-right-radius: inherit;
+    }
+
+    .status__content .poll__chart.leading {
+        box-shadow: var(--neon-box-shadow-small);
+        background: var(--color-primary);
     }
 
     /* ====================
@@ -864,9 +1014,9 @@ body {
 
      /* I'm not *quite* happy with these colors. Waiting for more inspiration */
 
-     :is(#fake, .compose-form__warning) {
-         border-radius: 8px;
-     }
+    :is(#fake, .compose-form__warning) {
+        border-radius: 8px;
+    }
 
     :is(#fake, .compose-form__autosuggest-wrapper) {
         border-radius: 8px;
@@ -935,7 +1085,6 @@ body {
         border-radius: 8px;
         margin-bottom: 20px;
     }
-
 
     .compose-form .spoiler-input__input {
         border-radius: 8px;
@@ -1072,9 +1221,10 @@ body {
         background: var(--color-grey-5);
     }
 
-    .column-back-button--slim [role="button"]:after,
     #tabs-bar__portal>button:after,
-    .column-header__wrapper:after {
+    .column-header__wrapper:after,
+    h1:where(#Lists, #Follow-requests):after
+    {
         content: "";
         position: absolute;
         inset: 0px;
@@ -1084,7 +1234,6 @@ body {
         pointer-events: none;
     }
 
-    .column-back-button--slim [role="button"],
     #tabs-bar__portal>button,
     .column-header__wrapper {
         border-radius: 8px;
@@ -1092,14 +1241,14 @@ body {
         background: hsla(var(--hsl-grey-3) / 0.8);
         transition: box-shadow 200ms;
     }
-    .column-back-button--slim [role="button"]:hover,
     #tabs-bar__portal>button:hover,
-    .column-header__wrapper:hover {
+    .column-header__wrapper:hover,
+    h1:where(#Lists, #Follow-requests):hover {
         box-shadow: var(--neon-box-shadow-small);
     }
-    .column-back-button--slim [role="button"]:hover:after,
     #tabs-bar__portal>button:hover:after,
-    .column-header__wrapper:hover:after {
+    .column-header__wrapper:hover:after,
+    h1:where(#Lists, #Follow-requests):hover:after {
         border-color: var(--color-grey-7);
     }
 
@@ -1134,12 +1283,14 @@ body {
     }
 
     .column-header__button:hover,
-    .column-header__back-button:hover {
+    .column-header__back-button:hover,
+    .column-back-button:hover {
         color: var(--color-white);
     }
 
     .column-header__button:before,
-    .column-header__back-button:before {
+    .column-header__back-button:before,
+    .column-back-button:before {
         content: "";
         position: absolute;
         inset: 4px;
@@ -1150,7 +1301,8 @@ body {
     }
 
     .column-header__button:hover:before,
-    .column-header__back-button:hover:before {
+    .column-header__back-button:hover:before,
+    .column-back-button:hover:before {
         background: var(--color-grey-6);
     }
 
@@ -1208,16 +1360,25 @@ body {
 
     /* ===== Posts styling ===== */
 
-    .status-unlisted {
+    .status {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .status-unlisted,
+    .detailed-status-unlisted {
         --color-privacy: var(--color-green, white);
     }
-    .status-public {
+    .status-public,
+    .detailed-status-public {
         --color-privacy: var(--color-grey-8, white);
     }
-    .status-direct {
+    .status-direct,
+    .detailed-status-direct {
         --color-privacy: var(--color-red, white);
     }
-    .status-private {
+    .status-private,
+    .detailed-status-private {
         --color-privacy: var(--color-yellow, white);
     }
 
@@ -1263,7 +1424,7 @@ body {
         margin-bottom: 20px;
         border: 1px solid var(--color-grey-4);
         background: var(--color-grey-2);
-        border-radius: 8px;
+        border-radius: var(--border-radius-button);
     }
 
     .explore__search-results>button {
@@ -1287,16 +1448,24 @@ body {
 
 
     /* give the selected post in single-post-view a lighter background */
-    .columns-area--mobile .scrollable>div[tabindex="-1"] {
+    .columns-area--mobile .scrollable>div[tabindex="-1"]:has(.detailed-status) {
         box-shadow: var(--neon-box-shadow-small);
         border-color: var(--color-grey-7);
         background: var(--color-grey-3);
     }
+    .detailed-status {
+        border-top: none
+    }
+    .detailed-status .status__content {
+        font-size: 15px;
+        line-height: 20px;
+    }
 
     /* remove bottom border on all kinds of posts */
-    :where(.columns-area--mobile article,
-           .columns-area--mobile .scrollable>div[tabindex="-1"],
-           .columns-area--mobile .scrollable>div>div[tabindex="-1"]
+    :where(
+        .columns-area--mobile article,
+        .columns-area--mobile .scrollable>div[tabindex="-1"],
+        .columns-area--mobile .scrollable>div>div[tabindex="-1"]
     ) .status,
     /* follow notifications */
     .notification .account,
@@ -1307,16 +1476,18 @@ body {
     }
 
     .status__action-bar {
-        margin-top: 8px;
-        margin-bottom: -8px;
+        margin-top: 15px;
+        margin-bottom: 0;
     }
 
     .status__action-bar,
     .detailed-status__action-bar {
         height: 40px;
+        gap: var(--border-radius-button-between);
     }
 
-    :where(.status__action-bar, .detailed-status__action-bar) :is(button, .status__action-bar-dropdown, detailed-status__action-bar-dropdown) {
+    :where(.status__action-bar, .detailed-status__action-bar)
+    :is(button, .status__action-bar-dropdown, detailed-status__action-bar-dropdown) {
         height: 100% !important;
         min-width: 40px !important;
         border-radius: 8px;
@@ -1349,7 +1520,9 @@ body {
 
     /* Edge cases for single status view */
     /* group of posts before the one opened post */
-    .columns-area--mobile .scrollable>div:first-of-type:not([role=feed]):not(.account__section-headline):not([tabindex="-1"]) {
+    .columns-area--mobile .scrollable>div:first-of-type:not(:where(
+        .account__section-headline, .account-timeline__header, [role=feed], [tabindex="-1"]
+    )) {
         border: none;
         background: none;
     }
@@ -1364,6 +1537,8 @@ body {
         border-radius: 0 0 8px 8px;
         border: none;
         background: none;
+        padding: 15px;
+        padding-top: 0;
     }
 
     /* Notifications / explore */
@@ -1372,17 +1547,24 @@ body {
         border: none;
     }
 
+    .account__section-headline {
+        padding-inline: 10px;
+    }
+
     .account__section-headline,
+    .notification__filter-bar {
+        border-radius: 8px;
+        border: 1px solid var(--color-grey-4);
+    }
     .notification__filter-bar {
         margin-top: -20px;
         padding-top: 40px;
-        border-radius: 8px;
-        border: 1px solid var(--color-grey-4);
     }
 
     .account__section-headline :is(button, a),
     .notification__filter-bar button {
         border-radius: inherit;
+        flex: 1 1 0;
     }
 
     .account__section-headline :is(button, a) span,
@@ -1420,16 +1602,6 @@ body {
     .notification__filter-bar button:hover i:after {
         background-color: var(--color-grey-6);
     }
-
-
-    /*
-    @keyframes flicker-in {
-        0%   { opacity: 0   }
-        40%  { opacity: 0.7 }
-        75%  { opacity: 0.4 }
-        100% { opacity: 1   }
-    }
-    */
 
 
     /* Mentions use .status__wrapper directly, all other notifications are wrapped in a .notification div */
@@ -1474,15 +1646,6 @@ body {
         --color-notification: var(--color-orange);
     }
 
-    /*
-    @keyframes border-flicker-in {
-        0%   { opacity: 0   }
-        40%  { opacity: 0.7 }
-        75%  { opacity: 0.4 }
-        100% { opacity: 1   }
-    }
-    */
-
     :is(
         #fake,
         .status.unread,
@@ -1492,8 +1655,6 @@ body {
         border-left-width: 4px;
         border-left-color: var(--color-notification, transparent);
         border-radius: inherit;
-
-        animation: border-flicker-in 200ms ease-out 200ms both;
     }
 
     :is(#fake, .status.unread) {
@@ -1549,6 +1710,8 @@ body {
         background-color: var(--color-notification, transparent);
         opacity: 0.05;
         border-radius: inherit;
+
+        pointer-events: none;
     }
 
     .notification-follow, .notification-follow-request {
@@ -1561,43 +1724,120 @@ body {
     .account-timeline__header {
         margin-bottom: 20px;
         border-radius: 8px;
-        outline: 1px solid var(--color-grey-4);
-        outline-offset: -1px;
+        border: 1px solid var(--color-grey-4);
         background: var(--color-grey-1);
     }
-    .account__header,
-    .account__header__bar {
+    .account__header {
         border-radius: inherit;
     }
 
+    .account__header ,
+    .account__header__bar,
+    .account__header__bio {
+        overflow: visible;
+    }
+
     .account__header__bar {
-        border-bottom: none;
-    }
-    .account__action-bar {
-        border-top: none;
-    }
-
-    .account__action-bar__tab {
-        border-style: solid;
-        border-width: 0 1px 4px 1px;
-        border-color: transparent
-    }
-
-    .account__action-bar,
-    .account__action-bar__tab.active {
         border-radius: 0 0 8px 8px;
-    }
-    .account__action-bar__tab.active {
-        border-color: var(--color-grey-5);
-        border-bottom-color: var(--color-primary);
+        border-bottom: 1px solid var(--color-grey-4);
     }
 
-    .account__header__bio .account__header__fields {
+    .account__header__image {
+        border-top-left-radius: inherit;
+        border-top-right-radius: inherit;
+    }
+
+    .account__header__account-note {
+        border: 1px solid #42485a;
         border-radius: 8px;
+        margin: 0;
+    }
+
+    .account__header__tabs__buttons .icon-button {
+        font-size: 18px !important;
+        height: 36px !important;
+        width: unset !important;
+        min-width: 36px;
+        box-sizing: border-box;
+    }
+
+    .account__disclaimer {
+        margin: 10px 5px;
+    }
+
+    .account__action-bar {
+        border-radius: var(--border-radius-button);
+        border: none;
         margin: 10px;
+    }
+
+    .account__action-bar-links {
+        border-radius: inherit;
+    }
+
+    :is(.account__action-bar__tab, #fake) {
         border: 1px solid var(--color-grey-5);
     }
+    .account__action-bar__tab {
+        border: 1px solid var(--color-grey-5);
+        border-radius: var(--border-radius-button-between);
+        transition: background-color 200ms;
+        position: relative;
+    }
+    .account__action-bar__tab.active {
+        background-color: var(--color-grey-2);
+    }
+    .account__action-bar__tab + .account__action-bar__tab {
+        margin-inline-start: var(--border-radius-button-between);
+    }
+    .account__action-bar__tab:first-child {
+        border-top-left-radius: inherit;
+        border-bottom-left-radius: inherit;
+    }
+    .account__action-bar__tab:last-child {
+        border-top-right-radius: inherit;
+        border-bottom-right-radius: inherit;
+    }
 
+    .account__action-bar__tab:hover {
+      background-color: var(--color-grey-4);
+    }
+
+    :is(.account__action-bar__tab, #fake):hover {
+        border-color: var(--color-grey-6);
+    }
+    .account__action-bar__tab>* {
+      position: relative;
+    }
+
+    .account__action-bar__tab.active:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        border-bottom: 4px solid var(--color-primary);
+    }
+
+
+
+
+
+
+    /* ===== Account links ===== */
+
+    .account__header__bio .account__header__fields {
+        border-radius: var(--border-radius-button);
+        margin: 10px;
+        border: none;
+    }
+
+    .account__header__fields dl {
+        border: none;
+        border-radius: var(--border-radius-button-between);
+    }
+    .account__header__fields dl+dl {
+        margin-top: var(--border-radius-button-between);
+    }
     .account__header__fields dl:first-of-type {
         border-top-left-radius: inherit;
         border-top-right-radius: inherit;
@@ -1607,14 +1847,37 @@ body {
         border-bottom-right-radius: inherit;
     }
 
+    .account__header__fields dt,
+    .account__header__fields dd {
+        border-radius: var(--border-radius-button-between);
+    }
+
     .account__header__fields dt {
+        /* border: 1px solid var(--color-grey-6); */
+        background: var(--color-grey-1);
         border-top-left-radius: inherit;
         border-bottom-left-radius: inherit;
         width: 200px;
+        margin-right: var(--border-radius-button-between);
     }
 
-    .account__header__fields dd.verified {
-        border-radius: 2px
+    .account__header__fields dd {
+        border: 1px solid var(--color-grey-6);
+        background: hsl(var(--hsl-offwhite-blue) / 0.05);
+        position: relative;
+    }
+
+    .account__header__fields dd a:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        opacity: 0;
+        background-image: radial-gradient(currentColor, transparent);
+        transition: opacity 200ms;
+    }
+    .account__header__fields dd a:hover:before {
+        opacity: 0.1;
     }
 
     :is(#fake, .account__header__fields dd) {
@@ -1656,14 +1919,26 @@ body {
         outline-offset: 0px;
     }
 
-    /* Lists */
-    h1#Lists {
-        visibility: hidden;
-    }
-    .column-back-button--slim [role="button"] {
+    /* Lists / Follower requests */
+    h1#Lists, h1#Follow-requests {
         margin-left: -10px;
         margin-right: -10px;
-        width: calc(100% + 20px);
+        border-radius: 8px;
+        backdrop-filter: blur(3px);
+        background: hsla(var(--hsl-grey-3) / 0.8);
+        transition: box-shadow 200ms;
+        position: sticky;
+        top: 10px;
+    }
+    .column-back-button--slim {
+        position: sticky;
+        top: 58px;
+        z-index: 2;
+    }
+    .column-back-button--slim [role="button"] {
+        margin-right: -10px;
+        width: auto;
+        border-radius: 8px
     }
 
     .column-inline-form {
@@ -1748,6 +2023,10 @@ body {
 
      .account-card__header {
          padding: 0;
+     }
+
+     .account-card__title {
+         position: relative;
      }
 
 
@@ -1865,6 +2144,7 @@ body {
         -webkit-mask-position: bottom;
         -webkit-mask-repeat: no-repeat
     }
+
     body.layout-multiple-columns .drawer__inner__mastodon img {
         display: none;
     }
@@ -1941,10 +2221,26 @@ body {
         /* Start a new stacking context */
         z-index: 1;
 
-        --background-hsl: 225deg 10% 30%;
+        --bg-hsl: 225deg 10% 30%;
         --border-hsl: 227deg 16% 76%;
-        --shine-hsl: 227deg 16% 54%;
-        --antishine-hsl: 227deg 16% 10%;
+        --bg-shine-hsl: 227deg 16% 54%;
+        --border-shine-hsl: 227deg 16% 10%;
+    }
+
+    /* owner */
+    .user-role-3 {
+        --border-hsl: 330deg 100% 50%;
+        --border-shine-hsl: 254deg 100% 65%;
+    }
+    /* moderator */
+    .user-role-1 {
+        --border-hsl: 149.12deg 34% 60.78%;
+        --border-shine-hsl: 240deg 100% 69%;
+    }
+    /* supporter */
+    .user-role-34 {
+        --border-shine-hsl: 58deg 100% 47%;
+        --border-hsl: 187deg 98% 48%;
     }
 
     /* User badges */
@@ -1967,13 +2263,87 @@ body {
     .account-role::before {
         z-index: -2;
         inset: -1px;
-        background-image: linear-gradient(60deg, transparent 0%, transparent 40%, hsla(var(--antishine-hsl) / 0.4) 50%, transparent 60%, transparent 100%), linear-gradient(hsl(var(--border-hsl)), hsl(var(--border-hsl)));
+        background-image: linear-gradient(60deg, transparent 0%, transparent 40%, hsla(var(--border-shine-hsl) / 0.4) 50%, transparent 60%, transparent 100%), linear-gradient(hsl(var(--border-hsl)), hsl(var(--border-hsl)));
     }
     /* background */
     .account-role::after {
         z-index: -1;
         inset: 0px;
-        background-image: linear-gradient(60deg, transparent 0%, transparent 45%, hsla(var(--shine-hsl) / 0.2) 55%, transparent 65%, transparent 100%), linear-gradient(hsl(var(--background-hsl)), hsl(var(--background-hsl)));
+        background-image: linear-gradient(60deg, transparent 0%, transparent 45%, hsla(var(--bg-shine-hsl) / 0.2) 55%, transparent 65%, transparent 100%), linear-gradient(hsl(var(--bg-hsl)), hsl(var(--bg-hsl)));
+    }
+
+
+    /* This makes the buttons beneath toots look different */
+
+    .status__action-bar :where(button, a),
+    .detailed-status__button,
+    .detailed-status__action-bar-dropdown {
+        border: 1px solid;
+        border-radius: var(--border-radius-button-between);
+        border-color: var(--color-grey-5);
+        position: relative;
+    }
+
+    .status__action-bar a {
+        flex: 1 1 22px;
+        height: 40px;
+        box-sizing: border-box;
+        padding-inline: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    :where(.status__action-bar, .detailed-status__action-bar) :where(button, a):before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        left: unset;
+        width: 100%;
+        background-color: var(--color-grey-7);
+        opacity: 0.1;
+        border-radius: inherit;
+        pointer-events: none;
+    }
+
+    :where(.status__action-bar, .detailed-status__action-bar) button.disabled {
+        background-color: var(--color-grey-1);
+    }
+
+    :where(.status__action-bar, .detailed-status__action-bar) button.active:before {
+        opacity: 0.2;
+        background-image: radial-gradient(currentColor, transparent);
+    }
+
+    .status__action-bar > * {
+        margin-inline: 0;
+    }
+
+    :where(.status__action-bar, .detailed-status__action-bar) > :first-child {
+        border-start-start-radius: var(--border-radius-button);
+        border-end-start-radius: var(--border-radius-button);
+    }
+
+    :where(.status__action-bar, .detailed-status__action-bar) > :last-child {
+        border-start-end-radius: var(--border-radius-button);
+        border-end-end-radius: var(--border-radius-button);
+    }
+
+    :is(.status:not(.collapsed) .status__content--with-action, #fake) {
+        padding-top: 58px;
+        margin-top: -48px;
+        margin-bottom: 0;
+    }
+
+    .status__action-bar-spacer {
+        display: none;
+    }
+
+    .detailed-status__button button,
+    .detailed-status__action-bar-dropdown > span,
+    .detailed-status__action-bar-dropdown button {
+        width: 100% !important;
+        border-radius: inherit;
     }
 }
 `)
@@ -1990,6 +2360,12 @@ body {
     width: 30px !important;
     height: 30px !important;
 }
+
+/* remove empty icons */
+.emoji-mart-category-list li:empty {
+    display: none;
+}
+
 
 /* make sure the grey hover outline is *behind* the emoji */
 .emoji-mart-category .emoji-mart-emoji:hover:before {
@@ -2538,6 +2914,9 @@ span.relationship-tag {
     .emoji-button,
     .reactions-bar__item__emoji
   )>img.emojione {
+    position: relative;
+    /* the spoiler button has a z-index of 100, make sure this goes over the spoiler button. */
+    z-index: 101;
     transition:
       transform 200ms,
       opacity 200ms;
@@ -2551,8 +2930,37 @@ span.relationship-tag {
   {
     transform: scale(5);
     opacity: 1;
-    z-index: 2;
-    position: relative;
+    /* increase by 1, to have the hovered emoji overlap all others */
+    z-index: 102;
+  }
+
+  /* Adjust the "better gradient" on collapsed toots */
+  .status.collapsed .status__content:has(img.emojione:hover) {
+    overflow: visible;
+    margin-top: -30px;
+    padding-top: 40px;
+    z-index: 1;
+
+    -webkit-mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
+    mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
+  }
+
+  @keyframes heartbeat {
+    0%  { scale: 1    }
+    25% { scale: 1    }
+    30% { scale: 0.9  }
+    45% { scale: 1    }
+    50% { scale: 0.95 }
+    55% { scale: 1    }
+  }
+
+  :not(
+    .reply-indicator__header strong,
+    .emoji-button,
+    .reactions-bar__item__emoji
+  )>img.emojione[title*="heart"]:hover
+  {
+    animation: heartbeat 1.5s infinite;
   }
 }
 `)
