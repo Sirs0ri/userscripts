@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.5.1
+// @version      1.5.2
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -2771,11 +2771,30 @@ body {
         background: transparent;
     }
 
-    .columns-area:not(.columns-area--mobile) .scrollable article {
+    .columns-area:not(.columns-area--mobile) :where(
+        .scrollable article,
+        .scrollable.detailed-status__wrapper .focusable
+    ) {
         background: var(--color-grey-2);
         border-radius: 8px;
         border: 1px solid var(--color-grey-4);
         margin-bottom: 10px;
+    }
+
+    .columns-area:not(.columns-area--mobile) .scrollable.detailed-status__wrapper .focusable:not(.status__wrapper-reply) {
+        background: var(--color-grey-3);
+        border-color: var(--color-grey-7);
+    }
+
+    .columns-area:not(.columns-area--mobile) :where(
+        .notification--in-thread .status__action-bar,
+        .notification--in-thread .status__content,
+        .status--in-thread .status__action-bar,
+        .status--in-thread .status__content
+    ) {
+        -webkit-margin-start: 0;
+        margin-inline-start: 0;
+        width: 100%;
     }
 
 
