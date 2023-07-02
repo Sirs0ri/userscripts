@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.5.0
+// @version      1.5.1
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -9,6 +9,11 @@
 // @supportURL   https://github.com/Sirs0ri/userscripts/issues
 // @grant        GM_addStyle
 // ==/UserScript==
+
+/*
+ * == TODO ==
+ *    - ?
+ */
 
 /*
  * == KNOWN ISSUES ==
@@ -489,6 +494,8 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
     // see https://codepen.io/mattgrosswork/pen/VwprebG
     GM_addStyle(`
 
+/* general setup */
+
 p {
     line-height: 1.5;
 }
@@ -670,14 +677,6 @@ body {
 .no-reduce-motion .icon-button.star-icon.active>.fa-star,
 .no-reduce-motion .icon-button.star-icon.activate>.fa-star {
     transform: rotate(2.4turn);
-}
-
-/* improve visibility of mentions */
-a.mention {
-    background: rgba(255 255 255 / 0.1);
-    border-radius: 4px;
-    padding: 1px 5px;
-    margin-inline: -2px;
 }
 `)
 
@@ -1334,6 +1333,20 @@ button[disabled] {
     border-radius: inherit !important;
 }
 
+/* ===== special formatting ===== */
+
+/* improve visibility of mentions (and thereby hashtags) and code snippets */
+a.mention,
+code {
+    background: rgba(255 255 255 / 0.1);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-inline: -2px;
+}
+/* inline code uses just <code>, code blocks are additionally wrapped in a <pre> */
+pre > code {
+    display: block
+}
 
 /* wider margin next to the main content scroller */
 @media screen and (min-width: 1175px) {
@@ -2114,11 +2127,7 @@ body {
     }
 
     /* remove bottom border on all kinds of posts */
-    :where(
-        .columns-area--mobile article,
-        .columns-area--mobile .scrollable>div[tabindex="-1"],
-        .columns-area--mobile .scrollable>div>div[tabindex="-1"]
-    ) .status,
+    .status,
     /* follow notifications */
     .notification .account,
     /* and the "load more" button */
@@ -2150,12 +2159,13 @@ body {
     }
 
     /* Make sure everything inside a post follows the border radius */
+    article > div[tabindex="-1"],
     .focusable,
-    .columns-area--mobile article>div,
-    .columns-area--mobile article>div>.notification.unread,
-    .columns-area--mobile article>div>.notification.unread:before,
-    .columns-area--mobile article>div>.status__wrapper.unread,
-    .columns-area--mobile article>div>.status__wrapper.unread:before {
+    .columns-area--mobile article > div,
+    .columns-area--mobile article > div > .notification.unread,
+    .columns-area--mobile article > div > .notification.unread:before,
+    .columns-area--mobile article > div > .status__wrapper.unread,
+    .columns-area--mobile article > div > .status__wrapper.unread:before {
         border-radius: inherit;
     }
 
@@ -2755,6 +2765,19 @@ body {
         padding: 10px;
     }
 
+    /* ===== Feeds ===== */
+
+    .columns-area:not(.columns-area--mobile) .scrollable {
+        background: transparent;
+    }
+
+    .columns-area:not(.columns-area--mobile) .scrollable article {
+        background: var(--color-grey-2);
+        border-radius: 8px;
+        border: 1px solid var(--color-grey-4);
+        margin-bottom: 10px;
+    }
+
 
     /* Center the columns when space permits it, instead of having them left-aligned */
     body.layout-multiple-columns .columns-area>*:first-child {
@@ -3144,10 +3167,10 @@ span.relationship-tag {
     top: calc((10em / 60) + var(--padding));
     left: calc((15em / 60) + var(--padding) + var(--start));
     color: #6364ff;
-    animation: 
+    animation:
         paths 10s step-end infinite,
         opacity 10s step-end infinite,
-        font 16s step-end infinite, 
+        font 16s step-end infinite,
         movement 20s step-end infinite;
 }
 
