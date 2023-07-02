@@ -2781,7 +2781,7 @@ body {
         margin-bottom: 10px;
     }
 
-    .columns-area:not(.columns-area--mobile) .scrollable.detailed-status__wrapper .focusable:not(.status__wrapper-reply) {
+    .columns-area:not(.columns-area--mobile) .scrollable.detailed-status__wrapper .focusable:not(.status) {
         background: var(--color-grey-3);
         border-color: var(--color-grey-7);
     }
