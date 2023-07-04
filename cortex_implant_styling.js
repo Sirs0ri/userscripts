@@ -2141,7 +2141,7 @@ body {
         border-radius: inherit;
     }
 
-    .status__action-bar {
+    :is(#fake, .status__action-bar) {
         margin-top: 15px;
         margin-bottom: 0;
     }
