@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.5.2
+// @version      1.5.3-b0
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -32,338 +32,342 @@
  */
 
 (function () {
-    'use strict';
+  "use strict"
 
-    // ====================
-    //      Helpers
-    // ====================
+  // ====================
+  //      Helpers
+  // ====================
 
-    async function sleep(amount) {
-        return new Promise(resolve => {
-            setTimeout(resolve, amount)
-        })
+  const desktopViewVisible = new Event("desktopViewVisible")
+  const desktopViewHiddenEvent = new Event("desktopViewHidden")
+
+  let _currentInnerWidth = window.innerWidth
+  const _desktopMinWidth = 1175
+
+  const onResize = evt => {
+    if (_currentInnerWidth < _desktopMinWidth && innerWidth >= _desktopMinWidth) {
+      dispatchEvent(desktopViewVisible)
+    } else if (innerWidth < _desktopMinWidth && _currentInnerWidth >= _desktopMinWidth) {
+      dispatchEvent(desktopViewHiddenEvent)
+    }
+    _currentInnerWidth = innerWidth
+  }
+
+  addEventListener("resize", onResize)
+
+  /** Register a handler to the "load" event, and when the vew switches from mibile to desktop */
+  function registerLoadHandlerDesktop (handler) {
+    addEventListener("load", handler, { once: true })
+    addEventListener("desktopViewVisible", evt => {
+      // Run the handler on the next frame, to give the DOM a chance to update
+      setTimeout(() => handler(evt), 0)
+    })
+  }
+
+  // Get own account info from embedded "initial-state" JSON
+  const elem = document.getElementById("initial-state")
+  const data = JSON.parse(elem.text)
+  const user = data.accounts[data.meta.me]?.username
+
+  // get account color
+  const avatarLink = data.accounts[data.meta.me]?.avatar_static
+
+  function createElem (tagName, options) {
+    const elem = document.createElement(tagName)
+    Object.assign(elem, options)
+    if (options.class) elem.classList.add(...options.class.split(" "))
+    return elem
+  }
+
+  // ====================
+  //     Preferences
+  // ====================
+
+  // These preferences will be persisted in localStorage. When upgrading from a version that
+  // still has preferences defined as booleans make sure to note them down before upgrading!
+
+  function loadSettings () {
+    const loaded = localStorage.getItem(`userscript-sirs0ri-settings-${user}`)
+
+    const settings = {
+      hideCheckmarks: true,
+      disableBouncyAnimations: true,
+      enableGlowOnMedia: true,
+      showImagesUncropped: true,
+      highlightMediaWithoutAlt: true,
+      popoutComposeBox: true,
+      imACat: true,
     }
 
-    const desktopViewVisible = new Event("desktopViewVisible")
-    const desktopViewHiddenEvent = new Event("desktopViewHidden")
-
-    let _currentInnerWidth = window.innerWidth
-    const _desktopMinWidth = 1175
-
-    const onResize = evt => {
-        if (_currentInnerWidth < _desktopMinWidth && innerWidth >= _desktopMinWidth) {
-            dispatchEvent(desktopViewVisible)
-        } else if (innerWidth < _desktopMinWidth && _currentInnerWidth >= _desktopMinWidth) {
-            dispatchEvent(desktopViewHiddenEvent)
-        }
-        _currentInnerWidth = innerWidth
+    if (loaded == null) {
+      settings._firstRun = true
+    } else {
+      const parsed = JSON.parse(loaded)
+      if (parsed.hideCheckmarks != null) settings.hideCheckmarks = parsed.hideCheckmarks
+      if (parsed.disableBouncyAnimations != null) settings.disableBouncyAnimations = parsed.disableBouncyAnimations
+      if (parsed.enableGlowOnMedia != null) settings.enableGlowOnMedia = parsed.enableGlowOnMedia
+      if (parsed.showImagesUncropped != null) settings.showImagesUncropped = parsed.showImagesUncropped
+      if (parsed.highlightMediaWithoutAlt != null) settings.highlightMediaWithoutAlt = parsed.highlightMediaWithoutAlt
+      if (parsed.popoutComposeBox != null) settings.popoutComposeBox = parsed.popoutComposeBox
+      if (parsed.imACat != null) settings.imACat = parsed.imACat
     }
 
-    addEventListener("resize", onResize)
+    return settings
+  }
 
-    /** Register a handler to the "load" event, and when the vew switches from mibile to desktop */
-    function registerLoadHandlerDesktop(handler) {
-        addEventListener("load", handler, { once: true })
-        addEventListener("desktopViewVisible", evt => {
-            // Run the handler on the next frame, to give the DOM a chance to update
-            setTimeout(() => handler(evt), 0)
-        })
+  function storeSettings (vals) {
+    const str = JSON.stringify(vals)
+
+    localStorage.setItem(`userscript-sirs0ri-settings-${user}`, str)
+  }
+
+  let settingsWhenPopupOpened
+
+  function openSettings (evt) {
+    if (evt) evt.preventDefault()
+    settingsWhenPopupOpened = { ...settings }
+    document.body.classList.add("userscript-modal--active")
+  }
+
+  function closeSettings (evt) {
+    evt.preventDefault()
+    document.body.classList.remove("userscript-modal--active")
+  }
+
+  const settings = loadSettings()
+
+  if (settings._firstRun) {
+    document.body.classList.add("userscript-modal--firstrun")
+    delete settings._firstRun
+    storeSettings(settings)
+    openSettings()
+  }
+
+  function onSettingChange (evt) {
+    switch (evt.target.id) {
+      case "hideCheckmarks":
+        settings.hideCheckmarks = evt.target.checked
+        break
+      case "disableBouncyAnimations":
+        settings.disableBouncyAnimations = evt.target.checked
+        break
+      case "enableGlowOnMedia":
+        settings.enableGlowOnMedia = evt.target.checked
+        break
+      case "showImagesUncropped":
+        settings.showImagesUncropped = evt.target.checked
+        break
+      case "highlightMediaWithoutAlt":
+        settings.highlightMediaWithoutAlt = evt.target.checked
+        break
+      case "popoutComposeBox":
+        settings.popoutComposeBox = evt.target.checked
+        break
+      case "imACat":
+        settings.imACat = evt.target.checked
+        break
+      default:
+        return
     }
 
-    // Get own account info from embedded "initial-state" JSON
-    const elem = document.getElementById("initial-state")
-    const data = JSON.parse(elem.text)
-    const user = data.accounts[data.meta.me]?.username
+    let needsReload = false
+    if (settings.hideCheckmarks !== settingsWhenPopupOpened.hideCheckmarks) needsReload = true
+    if (settings.disableBouncyAnimations !== settingsWhenPopupOpened.disableBouncyAnimations) needsReload = true
+    if (settings.enableGlowOnMedia !== settingsWhenPopupOpened.enableGlowOnMedia) needsReload = true
+    if (settings.showImagesUncropped !== settingsWhenPopupOpened.showImagesUncropped) needsReload = true
+    if (settings.highlightMediaWithoutAlt !== settingsWhenPopupOpened.highlightMediaWithoutAlt) needsReload = true
+    if (settings.popoutComposeBox !== settingsWhenPopupOpened.popoutComposeBox) needsReload = true
+    if (settings.imACat !== settingsWhenPopupOpened.imACat) needsReload = true
 
-    // get account color
-    const avatarLink = data.accounts[data.meta.me]?.avatar_static
+    storeSettings(settings)
 
-    function createElem(tagName, options) {
-        const elem = document.createElement(tagName)
-        Object.assign(elem, options)
-        if (options.class) elem.classList.add(...options.class.split(" "))
-        return elem
+    if (needsReload) document.querySelector(".userscript-modal-root").classList.add("needs-reload")
+    else document.querySelector(".userscript-modal-root").classList.remove("needs-reload")
+  }
+
+  const _insertFooter = (evt) => {
+    const footer = document.querySelector(".link-footer")
+
+    if (!footer) {
+      console.warn("footer not found")
+      return
     }
 
-    // ====================
-    //     Preferences
-    // ====================
+    const insert = createElem("p", { innerHTML: "<strong>Sirs0ri's userscript</strong>: " })
+    const separator = createElem("span", {
+      innerHTML: " · ",
+      ariaHidden: true,
+    })
+    const preferencesLink = createElem("a", {
+      textContent: document.querySelector(".column-link[href='/settings/preferences']").title,
+      href: "#",
+      onclick: openSettings,
+    })
+    const issuesLink = createElem("a", {
+      textContent: "Issues",
+      href: "https://github.com/Sirs0ri/userscripts/issues",
+      target: "_blank",
+    })
+    const codeLink = createElem("a", {
+      textContent: document.querySelector(".link-footer [href*='github.com']").textContent,
+      href: "https://github.com/Sirs0ri/userscripts/blob/main/cortex_implant_styling.js",
+      target: "_blank",
+    })
+    const versionSpan = createElem("span", { innerHTML: "v" + GM_info.script.version })
 
-    // These preferences will be persisted in localStorage. When upgrading from a version that
-    // still has preferences defined as booleans make sure to note them down before upgrading!
+    insert.appendChild(preferencesLink)
+    insert.appendChild(separator.cloneNode(true))
+    insert.appendChild(issuesLink)
+    insert.appendChild(separator.cloneNode(true))
+    insert.appendChild(codeLink)
+    insert.appendChild(separator.cloneNode(true))
+    insert.appendChild(versionSpan)
 
-    function loadSettings() {
-        const loaded = localStorage.getItem(`userscript-sirs0ri-settings-${user}`)
+    footer.insertBefore(insert, footer.firstChild)
+  }
 
-        const settings = {
-            hideCheckmarks: true,
-            disableBouncyAnimations: true,
-            enableGlowOnMedia: true,
-            showImagesUncropped: true,
-            highlightMediaWithoutAlt: true,
-            popoutComposeBox: true,
-            imACat: true,
-        }
+  const _insertSettingsModal = (evt) => {
+    const modalWrapper = createElem("div", { class: "modal-root userscript-modal-root" })
+    const modalOverlay = createElem("div", { class: "modal-root__overlay", role: "presentation", onclick: closeSettings })
+    const modalContainer = createElem("div", { class: "modal-root__container", role: "dialog" })
+    const modalModal = createElem("div", { class: "userscript-settings__modal" })
 
-        if (loaded == null) {
-            settings._firstRun = true
-        } else {
-            const parsed = JSON.parse(loaded)
-            if (parsed.hideCheckmarks != null) settings.hideCheckmarks = parsed.hideCheckmarks
-            if (parsed.disableBouncyAnimations != null) settings.disableBouncyAnimations = parsed.disableBouncyAnimations
-            if (parsed.enableGlowOnMedia != null) settings.enableGlowOnMedia = parsed.enableGlowOnMedia
-            if (parsed.showImagesUncropped != null) settings.showImagesUncropped = parsed.showImagesUncropped
-            if (parsed.highlightMediaWithoutAlt != null) settings.highlightMediaWithoutAlt = parsed.highlightMediaWithoutAlt
-            if (parsed.popoutComposeBox != null) settings.popoutComposeBox = parsed.popoutComposeBox
-            if (parsed.imACat != null) settings.imACat = parsed.imACat
-        }
-
-        return settings
-    }
-
-    function storeSettings(vals) {
-        const str = JSON.stringify(vals)
-
-        localStorage.setItem(`userscript-sirs0ri-settings-${user}`, str)
-    }
-
-    let settingsWhenPopupOpened
-
-    function openSettings(evt) {
-        if (evt) evt.preventDefault()
-        settingsWhenPopupOpened = { ...settings }
-        document.body.classList.add("userscript-modal--active")
-    }
-
-    function closeSettings(evt) {
-        evt.preventDefault()
-        document.body.classList.remove("userscript-modal--active")
-    }
-
-    const settings = loadSettings()
-
-    if (settings._firstRun) {
-        document.body.classList.add("userscript-modal--firstrun")
-        delete settings._firstRun
-        storeSettings(settings)
-        openSettings()
-    }
-
-    function onSettingChange(evt) {
-        switch (evt.target.id) {
-            case "hideCheckmarks":
-                settings.hideCheckmarks = evt.target.checked
-                break
-            case "disableBouncyAnimations":
-                settings.disableBouncyAnimations = evt.target.checked
-                break
-            case "enableGlowOnMedia":
-                settings.enableGlowOnMedia = evt.target.checked
-                break
-            case "showImagesUncropped":
-                settings.showImagesUncropped = evt.target.checked
-                break
-            case "highlightMediaWithoutAlt":
-                settings.highlightMediaWithoutAlt = evt.target.checked
-                break
-            case "popoutComposeBox":
-                settings.popoutComposeBox = evt.target.checked
-                break
-            case "imACat":
-                settings.imACat = evt.target.checked
-                break
-            default:
-                return
-        }
-
-        let needsReload = false
-        if (settings.hideCheckmarks !== settingsWhenPopupOpened.hideCheckmarks) needsReload = true
-        if (settings.disableBouncyAnimations !== settingsWhenPopupOpened.disableBouncyAnimations) needsReload = true
-        if (settings.enableGlowOnMedia !== settingsWhenPopupOpened.enableGlowOnMedia) needsReload = true
-        if (settings.showImagesUncropped !== settingsWhenPopupOpened.showImagesUncropped) needsReload = true
-        if (settings.highlightMediaWithoutAlt !== settingsWhenPopupOpened.highlightMediaWithoutAlt) needsReload = true
-        if (settings.popoutComposeBox !== settingsWhenPopupOpened.popoutComposeBox) needsReload = true
-        if (settings.imACat !== settingsWhenPopupOpened.imACat) needsReload = true
-
-        storeSettings(settings)
-
-        if (needsReload) document.querySelector(".userscript-modal-root").classList.add("needs-reload")
-        else document.querySelector(".userscript-modal-root").classList.remove("needs-reload")
-    }
-
-    const _insertFooter = (evt) => {
-        const footer = document.querySelector(".link-footer")
-
-        if (!footer) {
-            console.warn("footer not found")
-            return
-        }
-
-        const insert = createElem("p", { innerHTML: "<strong>Sirs0ri's userscript</strong>: " })
-        const separator = createElem("span", {
-            innerHTML: " · ",
-            ariaHidden: true
-        })
-        const preferencesLink = createElem("a", {
-            textContent: document.querySelector(".column-link[href='/settings/preferences']").title,
-            href: "#",
-            onclick: openSettings
-        })
-        const issuesLink = createElem("a", {
-            textContent: "Issues",
-            href: "https://github.com/Sirs0ri/userscripts/issues",
-            target: "_blank",
-        })
-        const codeLink = createElem("a", {
-            textContent: document.querySelector(".link-footer [href*='github.com']").textContent,
-            href: "https://github.com/Sirs0ri/userscripts/blob/main/cortex_implant_styling.js",
-            target: "_blank",
-        })
-        const versionSpan = createElem("span", { innerHTML: "v" + GM_info.script.version })
-
-        insert.appendChild(preferencesLink)
-        insert.appendChild(separator.cloneNode(true))
-        insert.appendChild(issuesLink)
-        insert.appendChild(separator.cloneNode(true))
-        insert.appendChild(codeLink)
-        insert.appendChild(separator.cloneNode(true))
-        insert.appendChild(versionSpan)
-
-        footer.insertBefore(insert, footer.firstChild)
-    }
-
-    const _insertSettingsModal = (evt) => {
-        const modalWrapper = createElem("div", { class: "modal-root userscript-modal-root" })
-        const modalOverlay = createElem("div", { class: "modal-root__overlay", role: "presentation", onclick: closeSettings })
-        const modalContainer = createElem("div", { class: "modal-root__container", role: "dialog" })
-        const modalModal = createElem("div", { class: "userscript-settings__modal" })
-
-        modalModal.innerHTML = `
+    modalModal.innerHTML = `
 <nav>
-    <a role="button" tabindex="0" class="glitch local-settings__navigation__item active" title="General" aria-label="General">
-        <i role="img" class="fa fa-cogs fa-fw"></i> <span>General</span>
-    </a>
+  <a 
+    role="button"
+    tabindex="0"
+    class="glitch local-settings__navigation__item active"
+    title="General"
+    aria-label="General"
+  >
+    <i role="img" class="fa fa-cogs fa-fw"></i>
+    <span>General</span>
+  </a>
 
-    <div>
-        <p class="reload-needed-hint">Some of the settings you changed need the page to be reloaded to apply.</p>
-        <button
-            id="userscript-settings__reload"
-            tabindex="0"
-            title="Reload"
-            aria-label="Reload"
-            class="button reload-needed-hint"
-        >
-            <i role="img" class="fa fa-refresh fa-fw"></i>
-            <span>reload</span>
-        </button>
-        <button
-            id="userscript-settings__close"
-            tabindex="0"
-            title="Close"
-            aria-label="Close"
-            class="button"
-        >
-            <i role="img" class="fa fa-times fa-fw"></i>
-            <span>Close</span>
-        </button>
+  <div>
+    <p class="reload-needed-hint" class="test">
+      Some of the settings you changed need the page to be reloaded to apply.
+    </p>
+    <button
+      id="userscript-settings__reload"
+      tabindex="0"
+      title="Reload"
+      aria-label="Reload"
+      class="button reload-needed-hint"
+    >
+      <i role="img" class="fa fa-refresh fa-fw"></i>
+      <span>reload</span>
+    </button>
+    <button
+      id="userscript-settings__close"
+      tabindex="0"
+      title="Close"
+      aria-label="Close"
+      class="button"
+    >
+      <i role="img" class="fa fa-times fa-fw"></i>
+      <span>Close</span>
+    </button>
 
-    </div>
+  </div>
 </nav>
 
 <div class="userscript-settings__content">
 
-    <p class="first-run-notice">
-        Hi there choom! <br>
-        This userscript has a settings UI now!  You're seeing this because you're running the new version of the script for the first time. <br>
+  <p class="first-run-notice">
+    Hi there choom! <br>
+    This userscript has a settings UI now! You're seeing this because you're running the new version of the script for
+    the first time. <br>
 
-        If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to this instance's about page.
-    </p>
+    If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to
+    this instance's about page.
+  </p>
 
-    <h1><span>General</span></h1>
+  <h1><span>General</span></h1>
 
-    <div class="userscript-settings__item">
-        <input id="hideCheckmarks" type="checkbox">
-        <label for="hideCheckmarks">
-            hide checkmarks
-        </label>
+  <div class="userscript-settings__item">
+    <input id="hideCheckmarks" type="checkbox">
+    <label for="hideCheckmarks">
+      hide checkmarks
+    </label>
 
-        <p>Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons</p>
-    </div>
-    <div class="userscript-settings__item">
-        <input id="disableBouncyAnimations" type="checkbox">
-        <label for="disableBouncyAnimations">
-            disable bouncy animations
-        </label>
+    <p>Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons</p>
+  </div>
+  <div class="userscript-settings__item">
+    <input id="disableBouncyAnimations" type="checkbox">
+    <label for="disableBouncyAnimations">
+      disable bouncy animations
+    </label>
 
-        <p>Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it</p>
-    </div>
-    <div class="userscript-settings__item">
-        <input id="enableGlowOnMedia" type="checkbox">
-        <label for="enableGlowOnMedia">
-            enable glow on media
-        </label>
+    <p>Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or
+      faving it</p>
+  </div>
+  <div class="userscript-settings__item">
+    <input id="enableGlowOnMedia" type="checkbox">
+    <label for="enableGlowOnMedia">
+      enable glow on media
+    </label>
 
-        <p>Enable a glow effect around media content embedded in posts</p>
-    </div>
-    <div class="userscript-settings__item">
-        <input id="showImagesUncropped" type="checkbox">
-        <label for="showImagesUncropped">
-            show images uncropped
-        </label>
+    <p>Enable a glow effect around media content embedded in posts</p>
+  </div>
+  <div class="userscript-settings__item">
+    <input id="showImagesUncropped" type="checkbox">
+    <label for="showImagesUncropped">
+      show images uncropped
+    </label>
 
-        <p>Enable full-sized images in posts, instead of cropping images to 16/9</p>
-    </div>
-    <div class="userscript-settings__item">
-        <input id="highlightMediaWithoutAlt" type="checkbox">
-        <label for="highlightMediaWithoutAlt">
-            highlight media without alt text
-        </label>
+    <p>Enable full-sized images in posts, instead of cropping images to 16/9</p>
+  </div>
+  <div class="userscript-settings__item">
+    <input id="highlightMediaWithoutAlt" type="checkbox">
+    <label for="highlightMediaWithoutAlt">
+      highlight media without alt text
+    </label>
 
-        <p>Highlight media without an alt text by adding a visible red bar underneath</p>
-    </div>
-    <div class="userscript-settings__item">
-        <input id="popoutComposeBox" type="checkbox">
-        <label for="popoutComposeBox">
-            growing compose box
-        </label>
+    <p>Highlight media without an alt text by adding a visible red bar underneath</p>
+  </div>
+  <div class="userscript-settings__item">
+    <input id="popoutComposeBox" type="checkbox">
+    <label for="popoutComposeBox">
+      growing compose box
+    </label>
 
-        <p>Make the compose box larger when focussed. This will have no effect in the Advanced View.</p>
-    </div>
-    <div class="userscript-settings__item">
-        <input id="imACat" type="checkbox">
-        <label for="imACat">
-            imACat 🐈
-        </label>
+    <p>Make the compose box larger when focussed. This will have no effect in the Advanced View.</p>
+  </div>
+  <div class="userscript-settings__item">
+    <input id="imACat" type="checkbox">
+    <label for="imACat">
+      imACat 🐈
+    </label>
 
-        <p>Meow?</p>
-    </div>
-</div>
-`
-        modalWrapper.appendChild(modalOverlay)
-        modalWrapper.appendChild(modalContainer)
-        modalContainer.appendChild(modalModal)
+    <p>Meow?</p>
+  </div>
+</div>`
+    modalWrapper.appendChild(modalOverlay)
+    modalWrapper.appendChild(modalContainer)
+    modalContainer.appendChild(modalModal)
 
-        setTimeout(() => {
-            document.getElementById("userscript-settings__close").onclick = closeSettings
-            document.getElementById("userscript-settings__reload").onclick = () => location.reload()
-            document.getElementById("hideCheckmarks").onclick = onSettingChange
-            document.getElementById("hideCheckmarks").checked = settings.hideCheckmarks
-            document.getElementById("disableBouncyAnimations").onclick = onSettingChange
-            document.getElementById("disableBouncyAnimations").checked = settings.disableBouncyAnimations
-            document.getElementById("enableGlowOnMedia").onclick = onSettingChange
-            document.getElementById("enableGlowOnMedia").checked = settings.enableGlowOnMedia
-            document.getElementById("showImagesUncropped").onclick = onSettingChange
-            document.getElementById("showImagesUncropped").checked = settings.showImagesUncropped
-            document.getElementById("highlightMediaWithoutAlt").onclick = onSettingChange
-            document.getElementById("highlightMediaWithoutAlt").checked = settings.highlightMediaWithoutAlt
-            document.getElementById("popoutComposeBox").onclick = onSettingChange
-            document.getElementById("popoutComposeBox").checked = settings.popoutComposeBox
-            document.getElementById("imACat").onclick = onSettingChange
-            document.getElementById("imACat").checked = settings.imACat
-        }, 0)
+    setTimeout(() => {
+      document.getElementById("userscript-settings__close").onclick = closeSettings
+      document.getElementById("userscript-settings__reload").onclick = () => location.reload()
+      document.getElementById("hideCheckmarks").onclick = onSettingChange
+      document.getElementById("hideCheckmarks").checked = settings.hideCheckmarks
+      document.getElementById("disableBouncyAnimations").onclick = onSettingChange
+      document.getElementById("disableBouncyAnimations").checked = settings.disableBouncyAnimations
+      document.getElementById("enableGlowOnMedia").onclick = onSettingChange
+      document.getElementById("enableGlowOnMedia").checked = settings.enableGlowOnMedia
+      document.getElementById("showImagesUncropped").onclick = onSettingChange
+      document.getElementById("showImagesUncropped").checked = settings.showImagesUncropped
+      document.getElementById("highlightMediaWithoutAlt").onclick = onSettingChange
+      document.getElementById("highlightMediaWithoutAlt").checked = settings.highlightMediaWithoutAlt
+      document.getElementById("popoutComposeBox").onclick = onSettingChange
+      document.getElementById("popoutComposeBox").checked = settings.popoutComposeBox
+      document.getElementById("imACat").onclick = onSettingChange
+      document.getElementById("imACat").checked = settings.imACat
+    }, 0)
 
-
-        GM_addStyle(`
+    GM_addStyle(`
 
 .userscript-modal-root {
     transition: visibility 200ms;
@@ -475,24 +479,24 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
 .needs-reload .reload-needed-hint {
     visibility: visible;
 }
-        `)
-        document.body.appendChild(modalWrapper)
-    }
+`)
+    document.body.appendChild(modalWrapper)
+  }
 
-    const insertSettings = (evt) => {
-        _insertFooter(evt)
+  const insertSettings = (evt) => {
+    _insertFooter(evt)
 
-        // only insert the modal during the "load" event, not on subsequent runs of this functions when the view switches from mobile to desktop
-        if (evt.type !== "load") return
+    // only insert the modal during the "load" event, not on subsequent runs of this functions when the view switches from mobile to desktop
+    if (evt.type !== "load") return
 
-        _insertSettingsModal(evt)
-    }
+    _insertSettingsModal(evt)
+  }
 
-    registerLoadHandlerDesktop(insertSettings)
+  registerLoadHandlerDesktop(insertSettings)
 
-    // Use TamperMonkey's helper to inject CSS
-    // see https://codepen.io/mattgrosswork/pen/VwprebG
-    GM_addStyle(`
+  // Use TamperMonkey's helper to inject CSS
+  // see https://codepen.io/mattgrosswork/pen/VwprebG
+  GM_addStyle(`
 
 /* general setup */
 
@@ -651,14 +655,14 @@ body {
 }
     `)
 
-    settings.hideCheckmarks && GM_addStyle(`
+  settings.hideCheckmarks && GM_addStyle(`
 /* disable checkmark on buttons */
 .detailed-status__button .icon-button.active:after, .status__action-bar-button.active:after {
     content: ""
 }
 `)
 
-    settings.disableBouncyAnimations && GM_addStyle(`
+  settings.disableBouncyAnimations && GM_addStyle(`
 /* ====================
  * de-springyfy anims
  * ==================== */
@@ -680,7 +684,7 @@ body {
 }
 `)
 
-    settings.showImagesUncropped && GM_addStyle(`
+  settings.showImagesUncropped && GM_addStyle(`
 /* Force all images to be in their original aspect ratio, not 16/9 */
 
 .status .media-gallery:not(:has(.media-gallery__item + .media-gallery__item)):has(.spoiler-button--minified) {
@@ -692,7 +696,7 @@ body {
 }
 `)
 
-    settings.enableGlowOnMedia && GM_addStyle(`
+  settings.enableGlowOnMedia && GM_addStyle(`
 /* ====================
  *    Glow on Media
  * ==================== */
@@ -879,7 +883,7 @@ canvas.status-card__image-preview--hidden {
 }
     `)
 
-    settings.highlightMediaWithoutAlt && GM_addStyle(`
+  settings.highlightMediaWithoutAlt && GM_addStyle(`
 /* inspired von chaos.social:
 markiere medien ohne alt-text*/
 .audio-player__canvas:not([title]),
@@ -900,93 +904,93 @@ markiere medien ohne alt-text*/
 }
     `)
 
-    const debugFocus = false;
+  const debugFocus = false
 
-    const onLoadHandler = () => {
-        let composePanel = document.querySelector(".columns-area__panels__pane--compositional")
-        let composeForm = document.querySelector(".compose-form")
-        let backDrop = document.querySelector(".compose-form")
+  const onLoadHandler = () => {
+    let composePanel = document.querySelector(".columns-area__panels__pane--compositional")
+    const composeForm = document.querySelector(".compose-form")
+    let backDrop = document.querySelector(".compose-form")
 
-        if (!composePanel || !composeForm || !backDrop) {
-            console.warn("an element is missing, the popout compose box can't be initialized.")
-            console.log(composePanel)
-            console.log(composeForm)
-            console.log(backDrop)
-            return
-        }
+    if (!composePanel || !composeForm || !backDrop) {
+      console.warn("an element is missing, the popout compose box can't be initialized.")
+      console.log(composePanel)
+      console.log(composeForm)
+      console.log(backDrop)
+      return
+    }
 
-        backDrop.classList.add("ignore-clicks")
+    backDrop.classList.add("ignore-clicks")
 
-        const handlerIn = (evt) => {
-            debugFocus && console.log("in", evt)
-            /* Ignore clicks on the buttons below the compose area */
-            if (evt.target.nodeName === "BUTTON" || evt.target.classList.contains("emoji-button")) return
+    const handlerIn = (evt) => {
+      debugFocus && console.log("in", evt)
+      /* Ignore clicks on the buttons below the compose area */
+      if (evt.target.nodeName === "BUTTON" || evt.target.classList.contains("emoji-button")) return
 
-            /* Ignore FocusEvents where the focus was moved automatically, e.g. when restoring focus to the page.
+      /* Ignore FocusEvents where the focus was moved automatically, e.g. when restoring focus to the page.
              * This also keeps the input small when the user's first interaction is via the emote picker, but any
              * input afterwards will extend it, so that it's not too bad a compromise.
              */
-            if (evt instanceof FocusEvent && evt.target.classList.contains("autosuggest-textarea__textarea") && !evt.sourceCapabilities) return
+      if (evt instanceof FocusEvent && evt.target.classList.contains("autosuggest-textarea__textarea") && !evt.sourceCapabilities) return
 
-            debugFocus && console.log("in handled", evt)
+      debugFocus && console.log("in handled", evt)
 
-            composePanel = document.querySelector(".columns-area__panels__pane--compositional")
-            composePanel.classList.add("user-focus-within")
-            setTimeout(() => {
-                backDrop = document.querySelector(".compose-form")
-                backDrop.classList.remove("ignore-clicks")
-            }, 100)
-        }
-        const handlerOut = (evt) => {
-            debugFocus && console.log("out", evt)
+      composePanel = document.querySelector(".columns-area__panels__pane--compositional")
+      composePanel.classList.add("user-focus-within")
+      setTimeout(() => {
+        backDrop = document.querySelector(".compose-form")
+        backDrop.classList.remove("ignore-clicks")
+      }, 100)
+    }
+    const handlerOut = (evt) => {
+      debugFocus && console.log("out", evt)
 
-            /* Ignore FocusEvents that take the focus out of the tab */
-            if (evt.relatedTarget == null) return
-            /* Ignore clicks that move focus within the compose area, e.g. to the buttons below */
-            if (composeForm.contains(evt.relatedTarget)) return
-            /* ignore events that remove focus from buttons that now have the .active class, i.e. after opening one of the menus */
-            if (evt.target.nodeName === "BUTTON" && evt.target.classList.contains("active")) return
-            /* ignore events that remove focus from the emoji-button, e.g. when opening the emoji picker */
-            if (evt.target.classList.contains("emoji-button")) return
+      /* Ignore FocusEvents that take the focus out of the tab */
+      if (evt.relatedTarget == null) return
+      /* Ignore clicks that move focus within the compose area, e.g. to the buttons below */
+      if (composeForm.contains(evt.relatedTarget)) return
+      /* ignore events that remove focus from buttons that now have the .active class, i.e. after opening one of the menus */
+      if (evt.target.nodeName === "BUTTON" && evt.target.classList.contains("active")) return
+      /* ignore events that remove focus from the emoji-button, e.g. when opening the emoji picker */
+      if (evt.target.classList.contains("emoji-button")) return
 
-            debugFocus && console.log("out handled", evt)
+      debugFocus && console.log("out handled", evt)
 
-            composePanel.classList.add("user-focus-within")
-            backDrop = document.querySelector(".compose-form")
+      composePanel.classList.add("user-focus-within")
+      backDrop = document.querySelector(".compose-form")
 
-            composePanel.classList.remove("user-focus-within")
-            backDrop.classList.add("ignore-clicks")
-        }
-        const handlerBackdropClick = (evt) => {
-            debugFocus && console.log("bg-click", evt)
-            if (composeForm.contains(document.activeElement)) return
+      composePanel.classList.remove("user-focus-within")
+      backDrop.classList.add("ignore-clicks")
+    }
+    const handlerBackdropClick = (evt) => {
+      debugFocus && console.log("bg-click", evt)
+      if (composeForm.contains(document.activeElement)) return
 
-            // This should only be handled if the user clicked on the backdrop, ie. the compose-form's :before element.
-            // Since pseudoelements can't be targeted directly, this handler has to be registered on the parent, and
-            // the class "ignore-clicks" is used to mimic the :before's pointer-events: none;
-            if (evt.target !== backDrop) return
-            if (evt.target.classList.contains("ignore-clicks")) return
+      // This should only be handled if the user clicked on the backdrop, ie. the compose-form's :before element.
+      // Since pseudoelements can't be targeted directly, this handler has to be registered on the parent, and
+      // the class "ignore-clicks" is used to mimic the :before's pointer-events: none;
+      if (evt.target !== backDrop) return
+      if (evt.target.classList.contains("ignore-clicks")) return
 
-            debugFocus && console.log("bg-click handled", evt)
+      debugFocus && console.log("bg-click handled", evt)
 
-            // composePanel.classList.add("user-focus-within")
-            backDrop = document.querySelector(".compose-form")
+      // composePanel.classList.add("user-focus-within")
+      backDrop = document.querySelector(".compose-form")
 
-            composePanel.classList.remove("user-focus-within")
-            backDrop.classList.add("ignore-clicks")
-        }
-
-        composeForm.addEventListener("focusin", handlerIn)
-        composeForm.addEventListener("focusout", handlerOut)
-        composeForm.addEventListener("input", handlerIn)
-        backDrop.addEventListener("click", handlerBackdropClick)
+      composePanel.classList.remove("user-focus-within")
+      backDrop.classList.add("ignore-clicks")
     }
 
-    // register initial event hander
-    settings.popoutComposeBox && registerLoadHandlerDesktop(onLoadHandler)
+    composeForm.addEventListener("focusin", handlerIn)
+    composeForm.addEventListener("focusout", handlerOut)
+    composeForm.addEventListener("input", handlerIn)
+    backDrop.addEventListener("click", handlerBackdropClick)
+  }
 
-    // load relevant styles
-    settings.popoutComposeBox && GM_addStyle(`
+  // register initial event hander
+  settings.popoutComposeBox && registerLoadHandlerDesktop(onLoadHandler)
+
+  // load relevant styles
+  settings.popoutComposeBox && GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
     .navigation-bar {
@@ -1039,9 +1043,9 @@ markiere medien ohne alt-text*/
 }
     `)
 
-    const doCatThings = avatarLink && user && settings.imACat
+  const doCatThings = avatarLink && user && settings.imACat
 
-    doCatThings && GM_addStyle(`
+  doCatThings && GM_addStyle(`
 
 @keyframes earwiggleleft {
     0%  { transform: rotate(35deg) skew(28deg) }
@@ -1118,175 +1122,175 @@ body.meow [data-avatar-of="@${user}"]:after {
 }
     `)
 
-    if (doCatThings) {
+  if (doCatThings) {
+    // most of this code is from https://github.com/zygisS22/color-palette-extraction/blob/master/index.js#L17, adjusted for my needs:
+    // - lower fidelity: less quantizising for fewer colors,
+    const calculateLuminance = (p) => 0.2126 * p.r + 0.7152 * p.g + 0.0722 * p.b
 
-        // most of this code is from https://github.com/zygisS22/color-palette-extraction/blob/master/index.js#L17, adjusted for my needs:
-        // - lower fidelity: less quantizising for fewer colors,
-        const calculateLuminance = (p) => 0.2126 * p.r + 0.7152 * p.g + 0.0722 * p.b;
-
-
-        /**
+    /**
          * Using relative luminance we order the brightness of the colors
          * the fixed values and further explanation about this topic
          * can be found here -> https://en.wikipedia.org/wiki/Luma_(video)
          */
-        const orderByLuminance = (rgbValues) => rgbValues.sort((p1, p2) => calculateLuminance(p2) - calculateLuminance(p1))
+    const orderByLuminance = (rgbValues) => rgbValues.sort((p1, p2) => calculateLuminance(p2) - calculateLuminance(p1))
 
+    const buildRgb = (imageData) => {
+      const targetLength = imageData.length / 4
+      const rgbValues = Array(targetLength)
+      // note that we are loopin every 4!
+      // for every Red, Green, Blue and Alpha
+      for (let i = 0; i < targetLength; i++) {
+        const j = i * 4
+        rgbValues[i] = {
+          r: imageData[j],
+          g: imageData[j + 1],
+          b: imageData[j + 2],
+          // j+3 would hold the alpha value that we don't care about
+        }
+      }
+      return rgbValues
+    }
 
-        const buildRgb = (imageData) => {
-            const targetLength = imageData.length / 4
-            const rgbValues = Array(targetLength);
-            // note that we are loopin every 4!
-            // for every Red, Green, Blue and Alpha
-            for (let i = 0; i < targetLength; i++) {
-                const j = i * 4
-                rgbValues[i] = {
-                    r: imageData[j],
-                    g: imageData[j + 1],
-                    b: imageData[j + 2],
-                    // j+3 would hold the alpha value that we don't care about
-                }
-            }
-            return rgbValues;
-        };
-
-        // returns what color channel has the biggest difference
-        const findBiggestColorRange = (rgbValues) => {
-            /**
+    // returns what color channel has the biggest difference
+    const findBiggestColorRange = (rgbValues) => {
+      /**
              * Min is initialized to the maximum value posible
              * from there we procced to find the minimum value for that color channel
              *
              * Max is initialized to the minimum value posible
              * from there we procced to fin the maximum value for that color channel
              */
-            const rs = rgbValues.map(p => p.r)
-            const gs = rgbValues.map(p => p.g)
-            const bs = rgbValues.map(p => p.b)
+      const rs = rgbValues.map(p => p.r)
+      const gs = rgbValues.map(p => p.g)
+      const bs = rgbValues.map(p => p.b)
 
-            const rRange = Math.max(...rs) - Math.min(...rs);
-            const gRange = Math.max(...gs) - Math.min(...gs);
-            const bRange = Math.max(...bs) - Math.min(...bs);
+      const rRange = Math.max(...rs) - Math.min(...rs)
+      const gRange = Math.max(...gs) - Math.min(...gs)
+      const bRange = Math.max(...bs) - Math.min(...bs)
 
-            // determine which color has the biggest difference
-            const biggestRange = Math.max(rRange, gRange, bRange);
-            if (biggestRange === rRange) {
-                return "r";
-            } else if (biggestRange === gRange) {
-                return "g";
-            } else {
-                return "b";
-            }
-        };
+      // determine which color has the biggest difference
+      const biggestRange = Math.max(rRange, gRange, bRange)
+      if (biggestRange === rRange) {
+        return "r"
+      } else if (biggestRange === gRange) {
+        return "g"
+      } else {
+        return "b"
+      }
+    }
 
-        const quantizationReducer = (prev, curr) => {
-            prev.r += curr.r;
-            prev.g += curr.g;
-            prev.b += curr.b;
+    const quantizationReducer = (prev, curr) => {
+      prev.r += curr.r
+      prev.g += curr.g
+      prev.b += curr.b
 
-            return prev;
-        }
+      return prev
+    }
 
-        /**
+    /**
          * Median cut implementation
          * can be found here -> https://en.wikipedia.org/wiki/Median_cut
          */
-        const quantization = (rgbValues, depth) => {
-            const MAX_DEPTH = 3;
+    const quantization = (rgbValues, depth) => {
+      const MAX_DEPTH = 3
 
-            // Base case
-            if (depth === MAX_DEPTH || rgbValues.length === 0) {
-                const color = rgbValues.reduce(
-                    quantizationReducer,
-                    { r: 0, g: 0, b: 0 }
-                );
+      // Base case
+      if (depth === MAX_DEPTH || rgbValues.length === 0) {
+        const color = rgbValues.reduce(
+          quantizationReducer,
+          { r: 0, g: 0, b: 0 },
+        )
 
-                color.r = Math.round(color.r / rgbValues.length);
-                color.g = Math.round(color.g / rgbValues.length);
-                color.b = Math.round(color.b / rgbValues.length);
+        color.r = Math.round(color.r / rgbValues.length)
+        color.g = Math.round(color.g / rgbValues.length)
+        color.b = Math.round(color.b / rgbValues.length)
 
-                return [color];
-            }
+        return [color]
+      }
 
-            /**
+      /**
              *  Recursively do the following:
              *  1. Find the pixel channel (red,green or blue) with biggest difference/range
              *  2. Order by this channel
              *  3. Divide in half the rgb colors list
              *  4. Repeat process again, until desired depth or base case
              */
-            const componentToSortBy = findBiggestColorRange(rgbValues);
-            rgbValues.sort((p1, p2) => {
-                return p1[componentToSortBy] - p2[componentToSortBy];
-            });
+      const componentToSortBy = findBiggestColorRange(rgbValues)
+      rgbValues.sort((p1, p2) => {
+        return p1[componentToSortBy] - p2[componentToSortBy]
+      })
 
-            const mid = rgbValues.length / 2;
+      const mid = rgbValues.length / 2
 
-            const rgbValues2 = rgbValues.splice(mid)
+      const rgbValues2 = rgbValues.splice(mid)
 
-            depth++
+      depth++
 
-            const firstHalf = quantization(rgbValues, depth)
-            const secndHalf = quantization(rgbValues2, depth)
+      const firstHalf = quantization(rgbValues, depth)
+      const secndHalf = quantization(rgbValues2, depth)
 
-            return [
-                ...firstHalf,
-                ...secndHalf,
-            ];
-        };
+      return [
+        ...firstHalf,
+        ...secndHalf,
+      ]
+    }
 
-        const getColors = (link) => {
-            const image = new Image();
+    const getColors = (link) => {
+      const image = new Image()
 
-            // Set the canvas size to be 100x100 - enough to extract some "good enough" colors.
-            const w = 100
-            const h = 100
+      // Set the canvas size to be 100x100 - enough to extract some "good enough" colors.
+      const w = 100
+      const h = 100
 
-            const canvas = new OffscreenCanvas(w, w);
-            const ctx = canvas.getContext("2d");
+      const canvas = new OffscreenCanvas(w, w)
+      const ctx = canvas.getContext("2d")
 
-            image.onload = () => {
-                // const start = performance.now()
-                ctx.drawImage(image, 0, 0, w, h);
+      image.onload = () => {
+        // const start = performance.now()
+        ctx.drawImage(image, 0, 0, w, h)
 
-                /**
+        /**
                  * getImageData returns an array full of RGBA values
                  * each pixel consists of four values: the red value of the colour, the green, the blue and the alpha
                  * (transparency). For array value consistency reasons,
                  * the alpha is not from 0 to 1 like it is in the RGBA of CSS, but from 0 to 255.
                  */
-                const imageData = ctx.getImageData(0, 0, w, h);
+        const imageData = ctx.getImageData(0, 0, w, h)
 
-                // Convert the image data to RGB values so its much simpler
-                const rgbArray = buildRgb(imageData.data);
+        // Convert the image data to RGB values so its much simpler
+        const rgbArray = buildRgb(imageData.data)
 
-                /**
+        /**
                  * Color quantization
                  * A process that reduces the number of colors used in an image
                  * while trying to visually maintin the original image as much as possible
                  */
-                const quantColors = orderByLuminance(quantization(rgbArray, 0));
+        const quantColors = orderByLuminance(quantization(rgbArray, 0))
 
-                document.body.classList.add("meow")
-                const style = `body {\n${quantColors.map((p, i) => `--color-${i}: rgb(${p.r}, ${p.g}, ${p.b});`).join("\n")}\n}`
-                GM_addStyle(style)
-
-            };
-            image.src = link;
-        }
-
-        // this doesn't need to run right away, it can wait a bit.
-        // As a nice sideeffect, when this runs the profile picture's probably already cached!
-        setTimeout(() => getColors(avatarLink), 750)
+        document.body.classList.add("meow")
+        const style = `body {\n${quantColors.map((p, i) => `--color-${i}: rgb(${p.r}, ${p.g}, ${p.b});`).join("\n")}\n}`
+        GM_addStyle(style)
+      }
+      image.src = link
     }
 
-    // alpha mask of the people and the logo from the header image
-    const footerImgMask = "data:image/avif;base64,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"
-    // The CORTEX IMPLANT Logo
-    const logoSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIzIiBoZWlnaHQ9IjI0MiI+PGRlZnM+PHBhdGggaWQ9InByZWZpeF9fYSIgZD0iTTAgMGg2djgwSDB6Ii8+PHBhdGggaWQ9InByZWZpeF9fYyIgZD0iTTAgMGgxMXY4MEgweiIvPjxwYXRoIGlkPSJwcmVmaXhfX2IiIGQ9Ik0wIDBoMTZ2ODBIMHoiLz48L2RlZnM+PGcgZmlsbD0iI2ZmZiI+PGcgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMjcgMTdoMTU1bC0xMyAzNUg2NmwzMiA0N2g1M2wtMTMgMzVIODBMMTcgNDN6bTE2NSAwaDEzM2wtNDYgMTE3SDE0NnptMjQgMzVoNThsLTE4IDQ3aC01OHptMTE5LTM1aDExOWwtMjggNzRoLTE2bC0xNC0xOSA3LTIwaC0zMWwzMyA0N2g3MWwtMTQgMzZoLTc1bC0zOS01NS0yMSA1NGgtMzd6bTEyOSAwaDE0MWwtMTMgMzVoLTUwbC0zMSA4MmgtMzdsMzEtODJoLTU0em0xNTAgMGgxNDRsLTEzIDM1aC05NGw0IDZoODhsLTEzIDM1aC05M2wtMzQtNDh6bS0yMCA0N2gxNWwyNCAzNWg5NGwtMTQgMzZoLTk3bC0zMS00NXptMTc1LTQ3aDM4bC05IDI0IDEyIDE3aDM5bDE1LTEyIDEyLTI5aDM3bC0xOSA1MS0yMSAxNiAxNSAyMS0xMiAzMWgtMzdsMTAtMjYtMTItMTdoLTQ2bC0xOCAxNC0xMSAyOWgtMzhsMTktNTAgMjgtMjItMTMtMTh6TTk5MSAxN2gzN2wtNDUgMTE5aC0zNnptNDcgMGgxNDZsLTQ1IDExN2gtMzdsMzEtODJoLTE2bC0xNyA0NWgtMzhsMTgtNDVoLTE5bC0zMSA4MmgtMzd6bTE1NiAwaDExOWwtMzAgNzgtMjggMTloLTYybC04IDIwaC0zN3ptMjMgMzVoNDVsLTggMjAgNSA2aC01MnptMTA0LTM1aDM4bC0zMiA4MmgxMDNsLTEzIDM1aC0xNDF6bTE1MCAwaDE0MmwtNDUgMTE4aC0zN2wzMS04M2gtNjdsLTE1IDQxIDM5LTI4IDI1IDI1LTU4IDQ0aC02MHptMTUxIDBoMTMzbC00NSAxMTdoLTM3bDMxLTgyaC01OGwtMzEgODJoLTM4em0xNDMgMGgxNDFsLTEzIDM1aC01MGwtMzEgODJoLTM3bDMxLTgyaC01NHoiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAxNDUpIj48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9Ijc5Ii8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSIxMDIiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2MiIHg9IjEyNCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iMTQxIi8+PHVzZSBocmVmPSIjcHJlZml4X19hIiB4PSIxNjQiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2MiIHg9IjE3NiIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iMjA0Ii8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSIyMjciLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjI0NCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYiIgeD0iMjY3Ii8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSIyODkiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjMwNiIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iMzI5Ii8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSIzNDciLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjM4MSIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iMzkyIi8+PHVzZSBocmVmPSIjcHJlZml4X19hIiB4PSI0MjEiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjQzMiIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iNDU1Ii8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSI0NzgiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjQ5NCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iNTE4Ii8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSI1MzUiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjU1NyIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYiIgeD0iNTgxIi8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSI2MDMiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjYyMCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iNjQzIi8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSI2NjAiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjY4MyIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iNzA1Ii8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSI3MjMiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9Ijc1NyIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iNzY4Ii8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSI3OTEiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjgwOCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iODMxIi8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSI4NDMiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2MiIHg9Ijg2NSIvPjwvZz48cGF0aCBkPSJNOTQ0IDE0OGgxMXY0MWgtMTF6bTUwIDBoMTJjMSA0NiAyIDY3LTQzIDc3bC04LTEwYzI0LTQgMzktMTIgMzktMzh6bTYzLTRsMTMgOCAxMSAxMC0xMCA4LTIxLTE4em02MCAxMmw3IDhjLTE0IDM3LTU3IDUzLTcwIDU2bC03LTEwYzMyLTExIDU3LTIzIDcwLTU0em01OC03aDU1Yy0zIDQ2LTI4IDYyLTU1IDc2bC05LThjMTktOSA0Ny0yNCA1Mi01OWgtMzRjLTYgOC0xMSAxNC0yMSAyMWwtOC02YzktNiAxNy0xNiAyMC0yNG0xMDctNWgxMXYyOWw2LTVjMTQgMyAyNiA4IDM5IDE1bC05IDhjLTExLTctMjMtMTItMzYtMTZ2NDloLTExem00MyAybDMtMSA0IDExLTMgMnptOC0xbDMtMSA1IDEwLTMgMnptNDQgMzJoOHY5aC04em00NS0yNmg3NmMtMyAzMi0zMSA0NS0zOSA1MmwtOC04YzE2LTggMzUtMjcgMzEtMzRoLTYwem0xOSAzM2MxOSAxNCAyNSAyMSAzNCAzNmwtOSA0Yy0xMC0xNS0xOC0yNS0zMi0zNHptMTU5LTM5bDEwIDdjLTIzIDIyLTQzIDM0LTc0IDQ3bC04LTljMjMtOSA1Ni0yNyA3Mi00NXptLTIyIDI3djUyaC0xMXYtNDV6bTcxLTI4YzExIDYgMTQgOSAyNCAxOGwtOSA5Yy03LTctMTMtMTMtMjEtMTh6bTYxIDEybDYgOGMtMTAgMzMtNDggNDktNjkgNTdsLTctMTFjMzEtMTAgNTctMjQgNzAtNTR6bTQzLTloNTljMSAzNi0yOCA2MC01NCA3N2wtMTAtOGMyOC0xMyA1My00NSA1MC01OWgtNDV6bTM4IDQyYzE2IDkgMjYgMTkgMzUgMzFsLTE0IDRjLTgtMTMtMjItMjQtMjctMjd6bTIzLTQ0bDQtMSA0IDEzLTQgMXptNi0ybDQtMiA1IDEyLTQgMnoiLz48L2c+PC9zdmc+"
-    // The animateable "boost" svg
-    const boostSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='209'><path d='M4.97 3.16c-.1.03-.17.1-.22.18L.8 8.24c-.2.3.03.78.4.8H3.6v2.68c0 4.26-.55 3.62 3.66 3.62h7.66l-2.3-2.84c-.03-.02-.03-.04-.05-.06H7.27c-.44 0-.72-.3-.72-.72v-2.7h2.5c.37.03.63-.48.4-.77L5.5 3.35c-.12-.17-.34-.25-.53-.2zm12.16.43c-.55-.02-1.32.02-2.4.02H7.1l2.32 2.85.03.06h5.25c.42 0 .72.28.72.72v2.7h-2.5c-.36.02-.56.54-.3.8l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.26-.28 0-.83-.37-.8H18.4v-2.7c0-3.15.4-3.62-1.25-3.66z' fill='%23606984' stroke-width='0'/><path d='M7.78 19.66c-.24.02-.44.25-.44.5v2.46h-.06c-1.08 0-1.86-.03-2.4-.03-1.64 0-1.25.43-1.25 3.65v4.47c0 4.26-.56 3.62 3.65 3.62H8.5l-1.3-1.06c-.1-.08-.18-.2-.2-.3-.02-.17.06-.35.2-.45l1.33-1.1H7.28c-.44 0-.72-.3-.72-.7v-4.48c0-.44.28-.72.72-.72h.06v2.5c0 .38.54.63.82.38l4.9-3.93c.25-.18.25-.6 0-.78l-4.9-3.92c-.1-.1-.24-.14-.38-.12zm9.34 2.93c-.54-.02-1.3.02-2.4.02h-1.25l1.3 1.07c.1.07.18.2.2.33.02.16-.06.3-.2.4l-1.33 1.1h1.28c.42 0 .72.28.72.72v4.47c0 .42-.3.72-.72.72h-.1v-2.47c0-.3-.3-.53-.6-.47-.07 0-.14.05-.2.1l-4.9 3.93c-.26.18-.26.6 0 .78l4.9 3.92c.27.25.82 0 .8-.38v-2.5h.1c4.27 0 3.65.67 3.65-3.62v-4.47c0-3.15.4-3.62-1.25-3.66zM10.34 38.66c-.24.02-.44.25-.43.5v2.47H7.3c-1.08 0-1.86-.04-2.4-.04-1.64 0-1.25.43-1.25 3.65v4.47c0 3.66-.23 3.7 2.34 3.66l-1.34-1.1c-.1-.08-.18-.2-.2-.3 0-.17.07-.35.2-.45l1.96-1.6c-.03-.06-.04-.13-.04-.2v-4.48c0-.44.28-.72.72-.72H9.9v2.5c0 .36.5.6.8.38l4.93-3.93c.24-.18.24-.6 0-.78l-4.94-3.92c-.1-.08-.23-.13-.36-.12zm5.63 2.93l1.34 1.1c.1.07.18.2.2.33.02.16-.03.3-.16.4l-1.96 1.6c.02.07.06.13.06.22v4.47c0 .42-.3.72-.72.72h-2.66v-2.47c0-.3-.3-.53-.6-.47-.06.02-.12.05-.18.1l-4.94 3.93c-.24.18-.24.6 0 .78l4.94 3.92c.28.22.78-.02.78-.38v-2.5h2.66c4.27 0 3.65.67 3.65-3.62v-4.47c0-3.66.34-3.7-2.4-3.66zM13.06 57.66c-.23.03-.4.26-.4.5v2.47H7.28c-1.08 0-1.86-.04-2.4-.04-1.64 0-1.25.43-1.25 3.65v4.87l2.93-2.37v-2.5c0-.44.28-.72.72-.72h5.38v2.5c0 .36.5.6.78.38l4.94-3.93c.24-.18.24-.6 0-.78l-4.94-3.92c-.1-.1-.24-.14-.38-.12zm5.3 6.15l-2.92 2.4v2.52c0 .42-.3.72-.72.72h-5.4v-2.47c0-.3-.32-.53-.6-.47-.07.02-.13.05-.2.1L3.6 70.52c-.25.18-.25.6 0 .78l4.93 3.92c.28.22.78-.02.78-.38v-2.5h5.42c4.27 0 3.65.67 3.65-3.62v-4.47-.44zM19.25 78.8c-.1.03-.2.1-.28.17l-.9.9c-.44-.3-1.36-.25-3.35-.25H7.28c-1.08 0-1.86-.03-2.4-.03-1.64 0-1.25.43-1.25 3.65v.7l2.93.3v-1c0-.44.28-.72.72-.72h7.44c.2 0 .37.08.5.2l-1.8 1.8c-.25.26-.08.76.27.8l6.27.7c.28.03.56-.25.53-.53l-.7-6.25c0-.27-.3-.48-.55-.44zm-17.2 6.1c-.2.07-.36.3-.33.54l.7 6.25c.02.36.58.55.83.27l.8-.8c.02 0 .04-.02.04 0 .46.24 1.37.17 3.18.17h7.44c4.27 0 3.65.67 3.65-3.62v-.75l-2.93-.3v1.05c0 .42-.3.72-.72.72H7.28c-.15 0-.3-.03-.4-.1L8.8 86.4c.3-.24.1-.8-.27-.84l-6.28-.65h-.2zM4.88 98.6c-1.33 0-1.34.48-1.3 2.3l1.14-1.37c.08-.1.22-.17.34-.2.16 0 .34.08.44.2l1.66 2.03c.04 0 .07-.03.12-.03h7.44c.34 0 .57.2.65.5h-2.43c-.34.05-.53.52-.3.78l3.92 4.95c.18.24.6.24.78 0l3.94-4.94c.22-.27-.02-.76-.37-.77H18.4c.02-3.9.6-3.4-3.66-3.4H7.28c-1.08 0-1.86-.04-2.4-.04zm.15 2.46c-.1.03-.2.1-.28.2l-3.94 4.9c-.2.28.03.77.4.78H3.6c-.02 3.94-.45 3.4 3.66 3.4h7.44c3.65 0 3.74.3 3.7-2.25l-1.1 1.34c-.1.1-.2.17-.32.2-.16 0-.34-.08-.44-.2l-1.65-2.03c-.06.02-.1.04-.18.04H7.28c-.35 0-.57-.2-.66-.5h2.44c.37 0 .63-.5.4-.78l-3.96-4.9c-.1-.15-.3-.23-.47-.2zM4.88 117.6c-1.16 0-1.3.3-1.3 1.56l1.14-1.38c.08-.1.22-.14.34-.16.16 0 .34.04.44.16l2.22 2.75h7c.42 0 .72.28.72.72v.53h-2.6c-.3.1-.43.54-.2.78l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-.53c0-4.2.72-3.63-3.66-3.63H7.28c-1.08 0-1.86-.03-2.4-.03zm.1 1.74c-.1.03-.17.1-.23.16L.8 124.44c-.2.28.03.77.4.78H3.6v.5c0 4.26-.55 3.62 3.66 3.62h7.44c1.03 0 1.74.02 2.28 0-.16.02-.34-.03-.44-.15l-2.22-2.76H7.28c-.44 0-.72-.3-.72-.72v-.5h2.5c.37.02.63-.5.4-.78L5.5 119.5c-.12-.15-.34-.22-.53-.16zm12.02 10c1.2-.02 1.4-.25 1.4-1.53l-1.1 1.36c-.07.1-.17.17-.3.18zM5.94 136.6l2.37 2.93h6.42c.42 0 .72.28.72.72v1.25h-2.6c-.3.1-.43.54-.2.78l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-1.25c0-4.2.72-3.63-3.66-3.63H7.28c-.6 0-.92-.02-1.34-.03zm-1.72.06c-.4.08-.54.3-.6.75l.6-.74zm.84.93c-.12 0-.24.08-.3.18l-3.95 4.9c-.24.3 0 .83.4.82H3.6v1.22c0 4.26-.55 3.62 3.66 3.62h7.44c.63 0 .97.02 1.4.03l-2.37-2.93H7.28c-.44 0-.72-.3-.72-.72v-1.22h2.5c.4.04.67-.53.4-.8l-3.96-4.92c-.1-.13-.27-.2-.44-.2zm13.28 10.03l-.56.7c.36-.07.5-.3.56-.7zM17.13 155.6c-.55-.02-1.32.03-2.4.03h-8.2l2.38 2.9h5.82c.42 0 .72.28.72.72v1.97H12.9c-.32.06-.48.52-.28.78l3.94 4.94c.2.23.6.22.78-.03l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-1.97c0-3.15.4-3.62-1.25-3.66zm-12.1.28c-.1.02-.2.1-.28.18l-3.94 4.9c-.2.3.03.78.4.8H3.6v1.96c0 4.26-.55 3.62 3.66 3.62h8.24l-2.36-2.9H7.28c-.44 0-.72-.3-.72-.72v-1.97h2.5c.37.02.63-.5.4-.78l-3.96-4.9c-.1-.15-.3-.22-.47-.2zM5.13 174.5c-.15 0-.3.07-.38.2L.8 179.6c-.24.27 0 .82.4.8H3.6v2.32c0 4.26-.55 3.62 3.66 3.62h7.94l-2.35-2.9h-5.6c-.43 0-.7-.3-.7-.72v-2.3h2.5c.38.03.66-.54.4-.83l-3.97-4.9c-.1-.13-.23-.2-.38-.2zm12 .1c-.55-.02-1.32.03-2.4.03H6.83l2.35 2.9h5.52c.42 0 .72.28.72.72v2.34h-2.6c-.3.1-.43.53-.2.78l3.92 4.9c.18.24.6.24.78 0l3.94-4.9c.22-.3-.02-.78-.37-.8H18.4v-2.33c0-3.15.4-3.62-1.25-3.66zM4.97 193.16c-.1.03-.17.1-.22.18l-3.94 4.9c-.2.3.03.78.4.8H3.6v2.68c0 4.26-.55 3.62 3.66 3.62h7.66l-2.3-2.84c-.03-.02-.03-.04-.05-.06H7.27c-.44 0-.72-.3-.72-.72v-2.7h2.5c.37.03.63-.48.4-.77l-3.96-4.9c-.12-.17-.34-.25-.53-.2zm12.16.43c-.55-.02-1.32.03-2.4.03H7.1l2.32 2.84.03.06h5.25c.42 0 .72.28.72.72v2.7h-2.5c-.36.02-.56.54-.3.8l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.26-.28 0-.83-.37-.8H18.4v-2.7c0-3.15.4-3.62-1.25-3.66z' fill='%23606984' stroke-width='0'/></svg>"
+    // this doesn't need to run right away, it can wait a bit.
+    // As a nice sideeffect, when this runs the profile picture's probably already cached!
+    setTimeout(() => getColors(avatarLink), 750)
+  }
 
-    GM_addStyle(`
+  // #region raw images
+
+  // alpha mask of the people and the logo from the header image
+  const footerImgMask = "data:image/avif;base64,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"
+  // The CORTEX IMPLANT Logo
+  const logoSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIzIiBoZWlnaHQ9IjI0MiI+PGRlZnM+PHBhdGggaWQ9InByZWZpeF9fYSIgZD0iTTAgMGg2djgwSDB6Ii8+PHBhdGggaWQ9InByZWZpeF9fYyIgZD0iTTAgMGgxMXY4MEgweiIvPjxwYXRoIGlkPSJwcmVmaXhfX2IiIGQ9Ik0wIDBoMTZ2ODBIMHoiLz48L2RlZnM+PGcgZmlsbD0iI2ZmZiI+PGcgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMjcgMTdoMTU1bC0xMyAzNUg2NmwzMiA0N2g1M2wtMTMgMzVIODBMMTcgNDN6bTE2NSAwaDEzM2wtNDYgMTE3SDE0NnptMjQgMzVoNThsLTE4IDQ3aC01OHptMTE5LTM1aDExOWwtMjggNzRoLTE2bC0xNC0xOSA3LTIwaC0zMWwzMyA0N2g3MWwtMTQgMzZoLTc1bC0zOS01NS0yMSA1NGgtMzd6bTEyOSAwaDE0MWwtMTMgMzVoLTUwbC0zMSA4MmgtMzdsMzEtODJoLTU0em0xNTAgMGgxNDRsLTEzIDM1aC05NGw0IDZoODhsLTEzIDM1aC05M2wtMzQtNDh6bS0yMCA0N2gxNWwyNCAzNWg5NGwtMTQgMzZoLTk3bC0zMS00NXptMTc1LTQ3aDM4bC05IDI0IDEyIDE3aDM5bDE1LTEyIDEyLTI5aDM3bC0xOSA1MS0yMSAxNiAxNSAyMS0xMiAzMWgtMzdsMTAtMjYtMTItMTdoLTQ2bC0xOCAxNC0xMSAyOWgtMzhsMTktNTAgMjgtMjItMTMtMTh6TTk5MSAxN2gzN2wtNDUgMTE5aC0zNnptNDcgMGgxNDZsLTQ1IDExN2gtMzdsMzEtODJoLTE2bC0xNyA0NWgtMzhsMTgtNDVoLTE5bC0zMSA4MmgtMzd6bTE1NiAwaDExOWwtMzAgNzgtMjggMTloLTYybC04IDIwaC0zN3ptMjMgMzVoNDVsLTggMjAgNSA2aC01MnptMTA0LTM1aDM4bC0zMiA4MmgxMDNsLTEzIDM1aC0xNDF6bTE1MCAwaDE0MmwtNDUgMTE4aC0zN2wzMS04M2gtNjdsLTE1IDQxIDM5LTI4IDI1IDI1LTU4IDQ0aC02MHptMTUxIDBoMTMzbC00NSAxMTdoLTM3bDMxLTgyaC01OGwtMzEgODJoLTM4em0xNDMgMGgxNDFsLTEzIDM1aC01MGwtMzEgODJoLTM3bDMxLTgyaC01NHoiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAxNDUpIj48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9Ijc5Ii8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSIxMDIiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2MiIHg9IjEyNCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iMTQxIi8+PHVzZSBocmVmPSIjcHJlZml4X19hIiB4PSIxNjQiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2MiIHg9IjE3NiIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iMjA0Ii8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSIyMjciLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjI0NCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYiIgeD0iMjY3Ii8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSIyODkiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjMwNiIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iMzI5Ii8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSIzNDciLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjM4MSIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iMzkyIi8+PHVzZSBocmVmPSIjcHJlZml4X19hIiB4PSI0MjEiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjQzMiIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iNDU1Ii8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSI0NzgiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjQ5NCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iNTE4Ii8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSI1MzUiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjU1NyIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYiIgeD0iNTgxIi8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSI2MDMiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjYyMCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iNjQzIi8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSI2NjAiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjY4MyIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYyIgeD0iNzA1Ii8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSI3MjMiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9Ijc1NyIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iNzY4Ii8+PHVzZSBocmVmPSIjcHJlZml4X19jIiB4PSI3OTEiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2EiIHg9IjgwOCIvPjx1c2UgaHJlZj0iI3ByZWZpeF9fYSIgeD0iODMxIi8+PHVzZSBocmVmPSIjcHJlZml4X19iIiB4PSI4NDMiLz48dXNlIGhyZWY9IiNwcmVmaXhfX2MiIHg9Ijg2NSIvPjwvZz48cGF0aCBkPSJNOTQ0IDE0OGgxMXY0MWgtMTF6bTUwIDBoMTJjMSA0NiAyIDY3LTQzIDc3bC04LTEwYzI0LTQgMzktMTIgMzktMzh6bTYzLTRsMTMgOCAxMSAxMC0xMCA4LTIxLTE4em02MCAxMmw3IDhjLTE0IDM3LTU3IDUzLTcwIDU2bC03LTEwYzMyLTExIDU3LTIzIDcwLTU0em01OC03aDU1Yy0zIDQ2LTI4IDYyLTU1IDc2bC05LThjMTktOSA0Ny0yNCA1Mi01OWgtMzRjLTYgOC0xMSAxNC0yMSAyMWwtOC02YzktNiAxNy0xNiAyMC0yNG0xMDctNWgxMXYyOWw2LTVjMTQgMyAyNiA4IDM5IDE1bC05IDhjLTExLTctMjMtMTItMzYtMTZ2NDloLTExem00MyAybDMtMSA0IDExLTMgMnptOC0xbDMtMSA1IDEwLTMgMnptNDQgMzJoOHY5aC04em00NS0yNmg3NmMtMyAzMi0zMSA0NS0zOSA1MmwtOC04YzE2LTggMzUtMjcgMzEtMzRoLTYwem0xOSAzM2MxOSAxNCAyNSAyMSAzNCAzNmwtOSA0Yy0xMC0xNS0xOC0yNS0zMi0zNHptMTU5LTM5bDEwIDdjLTIzIDIyLTQzIDM0LTc0IDQ3bC04LTljMjMtOSA1Ni0yNyA3Mi00NXptLTIyIDI3djUyaC0xMXYtNDV6bTcxLTI4YzExIDYgMTQgOSAyNCAxOGwtOSA5Yy03LTctMTMtMTMtMjEtMTh6bTYxIDEybDYgOGMtMTAgMzMtNDggNDktNjkgNTdsLTctMTFjMzEtMTAgNTctMjQgNzAtNTR6bTQzLTloNTljMSAzNi0yOCA2MC01NCA3N2wtMTAtOGMyOC0xMyA1My00NSA1MC01OWgtNDV6bTM4IDQyYzE2IDkgMjYgMTkgMzUgMzFsLTE0IDRjLTgtMTMtMjItMjQtMjctMjd6bTIzLTQ0bDQtMSA0IDEzLTQgMXptNi0ybDQtMiA1IDEyLTQgMnoiLz48L2c+PC9zdmc+"
+  // The animateable "boost" svg
+  const boostSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='209'><path d='M4.97 3.16c-.1.03-.17.1-.22.18L.8 8.24c-.2.3.03.78.4.8H3.6v2.68c0 4.26-.55 3.62 3.66 3.62h7.66l-2.3-2.84c-.03-.02-.03-.04-.05-.06H7.27c-.44 0-.72-.3-.72-.72v-2.7h2.5c.37.03.63-.48.4-.77L5.5 3.35c-.12-.17-.34-.25-.53-.2zm12.16.43c-.55-.02-1.32.02-2.4.02H7.1l2.32 2.85.03.06h5.25c.42 0 .72.28.72.72v2.7h-2.5c-.36.02-.56.54-.3.8l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.26-.28 0-.83-.37-.8H18.4v-2.7c0-3.15.4-3.62-1.25-3.66z' fill='%23606984' stroke-width='0'/><path d='M7.78 19.66c-.24.02-.44.25-.44.5v2.46h-.06c-1.08 0-1.86-.03-2.4-.03-1.64 0-1.25.43-1.25 3.65v4.47c0 4.26-.56 3.62 3.65 3.62H8.5l-1.3-1.06c-.1-.08-.18-.2-.2-.3-.02-.17.06-.35.2-.45l1.33-1.1H7.28c-.44 0-.72-.3-.72-.7v-4.48c0-.44.28-.72.72-.72h.06v2.5c0 .38.54.63.82.38l4.9-3.93c.25-.18.25-.6 0-.78l-4.9-3.92c-.1-.1-.24-.14-.38-.12zm9.34 2.93c-.54-.02-1.3.02-2.4.02h-1.25l1.3 1.07c.1.07.18.2.2.33.02.16-.06.3-.2.4l-1.33 1.1h1.28c.42 0 .72.28.72.72v4.47c0 .42-.3.72-.72.72h-.1v-2.47c0-.3-.3-.53-.6-.47-.07 0-.14.05-.2.1l-4.9 3.93c-.26.18-.26.6 0 .78l4.9 3.92c.27.25.82 0 .8-.38v-2.5h.1c4.27 0 3.65.67 3.65-3.62v-4.47c0-3.15.4-3.62-1.25-3.66zM10.34 38.66c-.24.02-.44.25-.43.5v2.47H7.3c-1.08 0-1.86-.04-2.4-.04-1.64 0-1.25.43-1.25 3.65v4.47c0 3.66-.23 3.7 2.34 3.66l-1.34-1.1c-.1-.08-.18-.2-.2-.3 0-.17.07-.35.2-.45l1.96-1.6c-.03-.06-.04-.13-.04-.2v-4.48c0-.44.28-.72.72-.72H9.9v2.5c0 .36.5.6.8.38l4.93-3.93c.24-.18.24-.6 0-.78l-4.94-3.92c-.1-.08-.23-.13-.36-.12zm5.63 2.93l1.34 1.1c.1.07.18.2.2.33.02.16-.03.3-.16.4l-1.96 1.6c.02.07.06.13.06.22v4.47c0 .42-.3.72-.72.72h-2.66v-2.47c0-.3-.3-.53-.6-.47-.06.02-.12.05-.18.1l-4.94 3.93c-.24.18-.24.6 0 .78l4.94 3.92c.28.22.78-.02.78-.38v-2.5h2.66c4.27 0 3.65.67 3.65-3.62v-4.47c0-3.66.34-3.7-2.4-3.66zM13.06 57.66c-.23.03-.4.26-.4.5v2.47H7.28c-1.08 0-1.86-.04-2.4-.04-1.64 0-1.25.43-1.25 3.65v4.87l2.93-2.37v-2.5c0-.44.28-.72.72-.72h5.38v2.5c0 .36.5.6.78.38l4.94-3.93c.24-.18.24-.6 0-.78l-4.94-3.92c-.1-.1-.24-.14-.38-.12zm5.3 6.15l-2.92 2.4v2.52c0 .42-.3.72-.72.72h-5.4v-2.47c0-.3-.32-.53-.6-.47-.07.02-.13.05-.2.1L3.6 70.52c-.25.18-.25.6 0 .78l4.93 3.92c.28.22.78-.02.78-.38v-2.5h5.42c4.27 0 3.65.67 3.65-3.62v-4.47-.44zM19.25 78.8c-.1.03-.2.1-.28.17l-.9.9c-.44-.3-1.36-.25-3.35-.25H7.28c-1.08 0-1.86-.03-2.4-.03-1.64 0-1.25.43-1.25 3.65v.7l2.93.3v-1c0-.44.28-.72.72-.72h7.44c.2 0 .37.08.5.2l-1.8 1.8c-.25.26-.08.76.27.8l6.27.7c.28.03.56-.25.53-.53l-.7-6.25c0-.27-.3-.48-.55-.44zm-17.2 6.1c-.2.07-.36.3-.33.54l.7 6.25c.02.36.58.55.83.27l.8-.8c.02 0 .04-.02.04 0 .46.24 1.37.17 3.18.17h7.44c4.27 0 3.65.67 3.65-3.62v-.75l-2.93-.3v1.05c0 .42-.3.72-.72.72H7.28c-.15 0-.3-.03-.4-.1L8.8 86.4c.3-.24.1-.8-.27-.84l-6.28-.65h-.2zM4.88 98.6c-1.33 0-1.34.48-1.3 2.3l1.14-1.37c.08-.1.22-.17.34-.2.16 0 .34.08.44.2l1.66 2.03c.04 0 .07-.03.12-.03h7.44c.34 0 .57.2.65.5h-2.43c-.34.05-.53.52-.3.78l3.92 4.95c.18.24.6.24.78 0l3.94-4.94c.22-.27-.02-.76-.37-.77H18.4c.02-3.9.6-3.4-3.66-3.4H7.28c-1.08 0-1.86-.04-2.4-.04zm.15 2.46c-.1.03-.2.1-.28.2l-3.94 4.9c-.2.28.03.77.4.78H3.6c-.02 3.94-.45 3.4 3.66 3.4h7.44c3.65 0 3.74.3 3.7-2.25l-1.1 1.34c-.1.1-.2.17-.32.2-.16 0-.34-.08-.44-.2l-1.65-2.03c-.06.02-.1.04-.18.04H7.28c-.35 0-.57-.2-.66-.5h2.44c.37 0 .63-.5.4-.78l-3.96-4.9c-.1-.15-.3-.23-.47-.2zM4.88 117.6c-1.16 0-1.3.3-1.3 1.56l1.14-1.38c.08-.1.22-.14.34-.16.16 0 .34.04.44.16l2.22 2.75h7c.42 0 .72.28.72.72v.53h-2.6c-.3.1-.43.54-.2.78l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-.53c0-4.2.72-3.63-3.66-3.63H7.28c-1.08 0-1.86-.03-2.4-.03zm.1 1.74c-.1.03-.17.1-.23.16L.8 124.44c-.2.28.03.77.4.78H3.6v.5c0 4.26-.55 3.62 3.66 3.62h7.44c1.03 0 1.74.02 2.28 0-.16.02-.34-.03-.44-.15l-2.22-2.76H7.28c-.44 0-.72-.3-.72-.72v-.5h2.5c.37.02.63-.5.4-.78L5.5 119.5c-.12-.15-.34-.22-.53-.16zm12.02 10c1.2-.02 1.4-.25 1.4-1.53l-1.1 1.36c-.07.1-.17.17-.3.18zM5.94 136.6l2.37 2.93h6.42c.42 0 .72.28.72.72v1.25h-2.6c-.3.1-.43.54-.2.78l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-1.25c0-4.2.72-3.63-3.66-3.63H7.28c-.6 0-.92-.02-1.34-.03zm-1.72.06c-.4.08-.54.3-.6.75l.6-.74zm.84.93c-.12 0-.24.08-.3.18l-3.95 4.9c-.24.3 0 .83.4.82H3.6v1.22c0 4.26-.55 3.62 3.66 3.62h7.44c.63 0 .97.02 1.4.03l-2.37-2.93H7.28c-.44 0-.72-.3-.72-.72v-1.22h2.5c.4.04.67-.53.4-.8l-3.96-4.92c-.1-.13-.27-.2-.44-.2zm13.28 10.03l-.56.7c.36-.07.5-.3.56-.7zM17.13 155.6c-.55-.02-1.32.03-2.4.03h-8.2l2.38 2.9h5.82c.42 0 .72.28.72.72v1.97H12.9c-.32.06-.48.52-.28.78l3.94 4.94c.2.23.6.22.78-.03l3.94-4.9c.22-.28-.02-.77-.37-.78H18.4v-1.97c0-3.15.4-3.62-1.25-3.66zm-12.1.28c-.1.02-.2.1-.28.18l-3.94 4.9c-.2.3.03.78.4.8H3.6v1.96c0 4.26-.55 3.62 3.66 3.62h8.24l-2.36-2.9H7.28c-.44 0-.72-.3-.72-.72v-1.97h2.5c.37.02.63-.5.4-.78l-3.96-4.9c-.1-.15-.3-.22-.47-.2zM5.13 174.5c-.15 0-.3.07-.38.2L.8 179.6c-.24.27 0 .82.4.8H3.6v2.32c0 4.26-.55 3.62 3.66 3.62h7.94l-2.35-2.9h-5.6c-.43 0-.7-.3-.7-.72v-2.3h2.5c.38.03.66-.54.4-.83l-3.97-4.9c-.1-.13-.23-.2-.38-.2zm12 .1c-.55-.02-1.32.03-2.4.03H6.83l2.35 2.9h5.52c.42 0 .72.28.72.72v2.34h-2.6c-.3.1-.43.53-.2.78l3.92 4.9c.18.24.6.24.78 0l3.94-4.9c.22-.3-.02-.78-.37-.8H18.4v-2.33c0-3.15.4-3.62-1.25-3.66zM4.97 193.16c-.1.03-.17.1-.22.18l-3.94 4.9c-.2.3.03.78.4.8H3.6v2.68c0 4.26-.55 3.62 3.66 3.62h7.66l-2.3-2.84c-.03-.02-.03-.04-.05-.06H7.27c-.44 0-.72-.3-.72-.72v-2.7h2.5c.37.03.63-.48.4-.77l-3.96-4.9c-.12-.17-.34-.25-.53-.2zm12.16.43c-.55-.02-1.32.03-2.4.03H7.1l2.32 2.84.03.06h5.25c.42 0 .72.28.72.72v2.7h-2.5c-.36.02-.56.54-.3.8l3.92 4.9c.18.25.6.25.78 0l3.94-4.9c.26-.28 0-.83-.37-.8H18.4v-2.7c0-3.15.4-3.62-1.25-3.66z' fill='%23606984' stroke-width='0'/></svg>"
+
+  // #endregion
+
+  GM_addStyle(`
 
 /* ====================
  * Misc general changes
@@ -1488,9 +1492,9 @@ body>div[data-popper-escaped]:last-child {
 
 `)
 
-    GM_addStyle(`
+  /* Add our logo */
+  GM_addStyle(`
 
-/* Add our logo */
 @media screen and (min-width: 1175px) {
 
     body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner:before {
@@ -1555,7 +1559,8 @@ body>div[data-popper-escaped]:last-child {
 }
 `)
 
-    GM_addStyle(`
+  /* neon-ify the page */
+  GM_addStyle(`
 body {
     background: var(--color-grey-0)
 }
@@ -3042,7 +3047,8 @@ body {
 }
 `)
 
-    GM_addStyle(`
+  /* emoji picker improvements */
+  GM_addStyle(`
 /* Emoji picker bigger images */
 
 .emoji-mart-category-list {
@@ -3097,7 +3103,8 @@ button.emoji-mart-emoji:hover span, button.emoji-mart-emoji:hover img {
 }
 `)
 
-    GM_addStyle(`
+  /* image alt label changes */
+  GM_addStyle(`
 /* WARNING: This relies on :has and thus won't work well in FF (as of Jan 2023) */
 
 /* reposition spoiler button to have the same position as the alt tag */
@@ -3158,8 +3165,7 @@ span.relationship-tag {
 }
 `)
 
-
-    GM_addStyle(`
+  GM_addStyle(`
 /* WARNING: This relies on :has and thus won't work well in FF (as of Jan 2023) */
 
 /* Glitch Effect on notifications */
@@ -3554,12 +3560,12 @@ span.relationship-tag {
 }
 `)
 
-    // This heavily relies on :has(), without it the styling has no effect due to the @supports query.
-    // The :where(...):has(...) statement is used to select a bunch of wrappers that
-    // would otherwise have overflow: hidden, and remove that while an image is hovered.
-    //
-    // This is mostly part of the Cortex-Implant Custom CSS by now, you shouldn't need this.
-    GM_addStyle(`
+  // This heavily relies on :has(), without it the styling has no effect due to the @supports query.
+  // The :where(...):has(...) statement is used to select a bunch of wrappers that
+  // would otherwise have overflow: hidden, and remove that while an image is hovered.
+  //
+  // This is mostly part of the Cortex-Implant Custom CSS by now, you shouldn't need this.
+  GM_addStyle(`
 /* Hover-Zoom for emotes */
 @supports selector(:has(a, b)) {
     /* Temporarily disable overflow on elements restraining the images while hovering */
