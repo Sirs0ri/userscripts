@@ -3067,6 +3067,14 @@ body {
     display: none;
 }
 
+.emoji-mart-category-label {
+  top: -1px;
+}
+
+.emoji-mart-category-label span {
+  background: linear-gradient(to bottom, white 20%, rgba(255 255 255 / 0.9) 80%, transparent);
+}
+
 
 /* make sure the grey hover outline is *behind* the emoji */
 .emoji-mart-category .emoji-mart-emoji:hover:before {
