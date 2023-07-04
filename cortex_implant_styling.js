@@ -3053,7 +3053,8 @@ body {
 
 .emoji-mart-category-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+    grid-template-columns: repeat(6, minmax(42px, 1fr));
+    /* todo: is there a better way for this, considering out cells are supposed to be the same size anyways? */
 }
 .emoji-mart-category button img,
 .emoji-mart-category button span {
