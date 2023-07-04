@@ -1358,9 +1358,10 @@ pre > code {
         margin: 0 clamp(0px, calc(4vw - 48px), 50px);
     }
 
-    .compose-form {
+    :is(.compose-form, #fake) {
         padding: 10px 0;
-        overflow-y: revert !important;
+        overflow-y: revert;
+        min-height: 340px;
     }
 
     .compose-panel,
@@ -1488,6 +1489,82 @@ body>div[data-popper-escaped]:last-child {
     background: var(--color-grey-0);
     outline: 3px solid var(--color-grey-0);
     outline-offset: -1px;
+}
+
+/* ===== make footer smaller on screens with low height ===== */
+
+.link-footer {
+  position: absolute;
+  bottom: 10px;
+  background-color: var(--color-grey-0);
+  border-radius: 8px;
+  left: 0;
+  right: 0px;
+  border: 1px solid transparent;
+  padding:  10px;
+  transition: background-color 200ms, border-color 200ms;
+  z-index: 0;
+}
+
+@media (max-height: 860px) {
+
+  .compose-panel {
+    display: block;
+  }
+
+  :is(.compose-form, #fake) {
+    min-height: auto;
+}
+
+
+  .link-footer:hover,
+  .link-footer:focus-within {
+    background-color: var(--color-grey-1);
+    border-color: var(--color-grey-6);
+    z-index: 100;
+  }
+
+  .link-footer p {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 100%;
+    margin-bottom: 10px
+  }
+
+  .link-footer:hover p,
+  .link-footer:focus-within p {
+    white-space: normal;
+    margin-bottom: 20px
+  }
+
+  .link-footer > p:last-child {
+    margin-bottom: 0;
+  }
+
+  .compose-form__publish:before {
+    content: "";
+    height: calc(100% + 20px);
+    background: linear-gradient(to bottom, var(--color-grey-0), transparent);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .compose-form__publish {
+    align-items: flex-start;
+    position: relative;
+    pointer-events: none;
+  }
+
+  .compose-form__publish-button-wrapper {
+    pointer-events: all;
+  }
+
+  .compose-form {
+    z-index: 1;
+    position: relative;
+  }
 }
 
 `)
@@ -1686,6 +1763,7 @@ body {
 
     :is(#fake, .compose-form__warning) {
         border-radius: 8px;
+        margin-bottom: 10px;
     }
 
     :is(#fake, .compose-form__autosuggest-wrapper) {
@@ -1696,6 +1774,7 @@ body {
         transition: box-shadow 200ms;
         background: white;
         padding: 10px 0;
+        min-height: calc(1lh + 20px);
     }
     :is(#fakeId, .compose-form__autosuggest-wrapper):focus-within {
         box-shadow: var(--neon-box-shadow-small);
@@ -1709,6 +1788,7 @@ body {
         top: 6px;
         right: 2px;
         bottom: 0;
+        min-height: 100px; /* same as the .autosuggest-textarea__textarea */
     }
     .compose-form .emoji-picker-dropdown .emoji-button {
         position: sticky;
@@ -1771,6 +1851,7 @@ body {
     .compose-form .spoiler-input.spoiler-input--visible {
         margin-bottom: -13px;
         height: 69px; /* nice */
+        flex-shrink: 0;
     }
 
     .spoiler-input + .compose-form__autosuggest-wrapper {
