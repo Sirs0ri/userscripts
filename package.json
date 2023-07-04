@@ -1,0 +1,12 @@
+{
+  "name": "userscripts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Sirs0ri/userscripts.git",
+  "author": "Maximilian Ertl <ertl.maxi@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {},
+  "scripts": {},
+  "devDependencies": {}
+}
