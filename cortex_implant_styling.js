@@ -866,11 +866,11 @@ options in the "app settings" (left sidebar):
     filter: blur(3px);
 }
 
-.media-gallery__item>*:not(canvas) {
+.media-gallery__item>*:not(canvas, media-gallery__item__badges) {
     animation: 200ms ease-out 0s 1 fadeIn;
 }
 
-.media-gallery__item>*:not(canvas):after {
+.media-gallery__item>*:not(canvas, .media-gallery__item__badges):after {
     content: "";
     outline: 3px solid rgba(128 128 128 / 0.1);
     outline-offset: -2px;
@@ -3174,7 +3174,13 @@ span.relationship-tag {
     opacity: 1;
 }
 
+/* force alt/gif badges to lowercase since i think it looks nicer */
+.media-gallery__item__badges {
+    text-transform: lowercase;
+}
 /* Add "alt" indicator on images, gifs... */
+
+/* no longer needed on Mastodon 4.1.3
 .media-gallery__item:has(img[alt]):after,
 .media-gallery__item:has(video[aria-label]):after{
     content: "alt";
@@ -3191,9 +3197,12 @@ span.relationship-tag {
     align-items: center;
     pointer-events: none;
 }
+*/
 /* ...and audio, videos */
+
+
 .audio-player:has(canvas.audio-player__canvas[aria-label]) .video-player__buttons.right:before,
-.video-player:has(video[aria-label]) .video-player__buttons.right:before{
+.video-player video[aria-label] ~ .video-player__controls .video-player__buttons.right:before{
     content: "alt";
     color: hsla(0 0% 100% / .7);
     padding: 0 5px;
@@ -3208,6 +3217,7 @@ span.relationship-tag {
     font-weight: normal;
     border-radius: 8px;
 }
+
 .sensitive-marker {
     background: rgba(0 0 0 / 0.6);
     color: hsla(0 0% 100% / .7);
