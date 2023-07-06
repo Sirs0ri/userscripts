@@ -79,6 +79,7 @@
     return elem
   }
 
+  // #region preferences
   // ====================
   //     Preferences
   // ====================
@@ -92,6 +93,7 @@
     const settings = {
       hideCheckmarks: true,
       disableBouncyAnimations: true,
+      highlightReplies: true,
       enableGlowOnMedia: true,
       showImagesUncropped: true,
       highlightMediaWithoutAlt: true,
@@ -105,6 +107,7 @@
       const parsed = JSON.parse(loaded)
       if (parsed.hideCheckmarks != null) settings.hideCheckmarks = parsed.hideCheckmarks
       if (parsed.disableBouncyAnimations != null) settings.disableBouncyAnimations = parsed.disableBouncyAnimations
+      if (parsed.highlightReplies != null) settings.highlightReplies = parsed.highlightReplies
       if (parsed.enableGlowOnMedia != null) settings.enableGlowOnMedia = parsed.enableGlowOnMedia
       if (parsed.showImagesUncropped != null) settings.showImagesUncropped = parsed.showImagesUncropped
       if (parsed.highlightMediaWithoutAlt != null) settings.highlightMediaWithoutAlt = parsed.highlightMediaWithoutAlt
@@ -151,6 +154,9 @@
       case "disableBouncyAnimations":
         settings.disableBouncyAnimations = evt.target.checked
         break
+      case "highlightReplies":
+        settings.highlightReplies = evt.target.checked
+        break
       case "enableGlowOnMedia":
         settings.enableGlowOnMedia = evt.target.checked
         break
@@ -173,6 +179,7 @@
     let needsReload = false
     if (settings.hideCheckmarks !== settingsWhenPopupOpened.hideCheckmarks) needsReload = true
     if (settings.disableBouncyAnimations !== settingsWhenPopupOpened.disableBouncyAnimations) needsReload = true
+    if (settings.highlightReplies !== settingsWhenPopupOpened.highlightReplies) needsReload = true
     if (settings.enableGlowOnMedia !== settingsWhenPopupOpened.enableGlowOnMedia) needsReload = true
     if (settings.showImagesUncropped !== settingsWhenPopupOpened.showImagesUncropped) needsReload = true
     if (settings.highlightMediaWithoutAlt !== settingsWhenPopupOpened.highlightMediaWithoutAlt) needsReload = true
@@ -300,8 +307,15 @@
       disable bouncy animations
     </label>
 
-    <p>Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or
-      faving it</p>
+    <p>Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it</p>
+  </div>
+  <div class="userscript-settings__item">
+    <input id="highlightReplies" type="checkbox">
+    <label for="highlightReplies">
+      highlight replies
+    </label>
+
+    <p>Add an indicator to replies in the main timeline, similar to the one for boosts</p>
   </div>
   <div class="userscript-settings__item">
     <input id="enableGlowOnMedia" type="checkbox">
@@ -355,6 +369,8 @@
       document.getElementById("hideCheckmarks").checked = settings.hideCheckmarks
       document.getElementById("disableBouncyAnimations").onclick = onSettingChange
       document.getElementById("disableBouncyAnimations").checked = settings.disableBouncyAnimations
+      document.getElementById("highlightReplies").onclick = onSettingChange
+      document.getElementById("highlightReplies").checked = settings.highlightReplies
       document.getElementById("enableGlowOnMedia").onclick = onSettingChange
       document.getElementById("enableGlowOnMedia").checked = settings.enableGlowOnMedia
       document.getElementById("showImagesUncropped").onclick = onSettingChange
@@ -493,6 +509,8 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
   }
 
   registerLoadHandlerDesktop(insertSettings)
+
+  // #endregion
 
   // Use TamperMonkey's helper to inject CSS
   // see https://codepen.io/mattgrosswork/pen/VwprebG
@@ -659,6 +677,30 @@ body {
 /* disable checkmark on buttons */
 .detailed-status__button .icon-button.active:after, .status__action-bar-button.active:after {
     content: ""
+}
+`)
+
+  settings.highlightReplies && GM_addStyle(`
+@media screen and (min-width: 1175px) {
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
+    --status-extra-top-padding: calc(1lh + 6px);
+  }
+  
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info {
+    padding-top: var(--status-extra-top-padding, 0px);
+    position: relative;
+  }
+
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:before {
+    content: "\\21B6  Replying to a conversation";
+    display: block;
+    width: 100%;
+    color: #606984;
+    font-size: 14px;
+    margin-bottom: 8px;
+    position: absolute;
+    top: -2px;
+  }
 }
 `)
 
@@ -3029,8 +3071,8 @@ body {
     }
 
     :is(.status:not(.collapsed) .status__content--with-action, #fake) {
-        padding-top: 58px;
-        margin-top: -48px;
+        padding-top: calc(58px + var(--status-extra-top-padding, 0px));
+        margin-top: calc(-48px - var(--status-extra-top-padding, 0px));
         margin-bottom: 0;
     }
 
@@ -3679,4 +3721,4 @@ span.relationship-tag {
     }
 }
 `)
-})();
+})()
