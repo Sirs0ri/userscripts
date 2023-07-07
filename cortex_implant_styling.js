@@ -546,9 +546,15 @@ body {
     --color-red: #d32f2f; /* Direct posts */
     --color-yellow: hsl(48 71% 54%); /* Private posts - original: ffa000*/
 
-    --color-gold: hsl(41 100% 45% / 1); /* favs */
-    --color-purple: hsl(240deg 100% 77%); /* boosts */
-    --color-orange: hsl(22 100% 45%); /* reports */
+    /* favs */
+    --hsl-gold: 41 100% 45%;
+    --color-gold: hsl(var(--hsl-gold));
+    /* boosts */
+    --hsl-purple: 240 100% 77%;
+    --color-purple: hsl(var(--hsl-purple)); 
+    /* reports */
+    --hsl-orange: 22 100% 45%;
+    --color-orange: hsl(var(--hsl-orange)); 
 
     /* page background  */
     --color-grey-0: hsl(224deg 17% 9%);
@@ -2333,41 +2339,33 @@ body {
 
     /* Color the icon */
     .notification__message :is(#fake, .fa) {
-        color: var(--color-notification)
+        color: hsl(var(--hsl-notification))
     }
 
     [data-column="notifications"] .status {
-        --color-notification: var(--color-grey-8);
+        --hsl-notification: var(--hsl-grey-8);
     }
 
     [data-column="notifications"] .status[data-favourited-by] {
-        --color-notification: var(--color-gold);
+        --hsl-notification: var(--hsl-gold);
     }
 
     .notification-follow,
     .notification-admin-sign-up,
     [data-column="notifications"] .status[data-boosted-by] {
-        --color-notification: var(--color-purple);
+        --hsl-notification: var(--hsl-purple);
     }
 
 
     .notification-admin-report {
-        --color-notification: var(--color-orange);
+        --hsl-notification: var(--hsl-orange);
     }
-
-    :is(
-        #fake,
-        .status.unread,
-        .notification.unread,
-    ) {
-        border-left-style: solid;
-        border-left-width: 4px;
-        border-left-color: var(--color-notification, transparent);
+    
+    /* repurpose the before element adding a border */
+    .notification.unread:before, .status.unread:before {
+        border-inline-start-color: hsl(var(--hsl-notification, 0 0% 0% / 0));
         border-radius: inherit;
-    }
-
-    :is(#fake, .status.unread) {
-        padding-left: 11px;
+        left: -1px;
     }
 
     :is(.notification-admin-sign-up,
@@ -2404,23 +2402,14 @@ body {
         margin-left: 5px;
     }
 
-    :is(
-        #fake,
-        .status,
-        .notification,
-    ):before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        left: unset;
-
-        width: 100%;
-
-        background-color: var(--color-notification, transparent);
-        opacity: 0.05;
-        border-radius: inherit;
-
-        pointer-events: none;
+    /* add a transparent tint to the existing background-color. 
+     * Using a gradient between 2 identical colors because that goes through
+     * background-image which stacks ontop of the background-color! */
+    .status,
+    .notification {
+        background-image: linear-gradient(
+            hsl(var(--hsl-notification, transparent) / 0.05), 
+            hsl(var(--hsl-notification, transparent) / 0.05));
     }
 
     .notification-follow, .notification-follow-request {
