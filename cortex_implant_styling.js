@@ -1543,6 +1543,26 @@ body>div[data-popper-escaped]:last-child {
     outline-offset: -1px;
 }
 
+/* improve long usernames by adding an ellipsis (that doesn't break the zoom-on-hover!) */
+
+.status__info > span,
+.status__display-name {
+    min-width: 0;
+    flex-grow: 1;
+}
+
+:is(#fake, .display-name__html) {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    margin: -2lh;
+    padding: 2lh;
+}
+
+
+.display-name__account {
+    position: relative;
+}
+
 `)
 
   /* Add our logo */
