@@ -1131,20 +1131,18 @@ markiere medien ohne alt-text*/
 }
 
 [data-avatar-of="@${user}"]:before, [data-avatar-of="@${user}"]:after {
-    background: #ebbcba;
-    border: solid 4px currentColor;
-    box-sizing: border-box;
     content: "";
+    box-sizing: border-box;
     display: inline-block;
     height: 50%;
     width: 50%;
-    z-index: -1;
     position: relative;
-    color: rgb(129, 125, 131);
+    z-index: -1;
+    border: solid 4px currentColor;
     color: var(--color-1);
     background: var(--color-6);
-    scale: 0;
     transition: scale 300ms;
+    scale: 0;
 }
 
 body.meow [data-avatar-of="@${user}"]:before,
