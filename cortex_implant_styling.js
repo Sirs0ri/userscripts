@@ -1124,6 +1124,13 @@ markiere medien ohne alt-text*/
     overflow: revert;
 }
 
+.notification__message {
+  padding-inline-end: 10px;
+}
+.notification__message > :is(#fake, span) {
+  text-wrap: wrap;
+}
+
 .account__avatar-overlay-overlay {
     position: static;
     margin-top: -25%;
