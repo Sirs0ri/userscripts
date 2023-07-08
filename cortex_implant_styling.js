@@ -3091,7 +3091,8 @@ body {
         border-end-start-radius: var(--border-radius-button);
     }
 
-    :where(.status__action-bar, .detailed-status__action-bar) > :last-child {
+    :where(.status__action-bar, .detailed-status__action-bar) > :last-child,
+    .status__action-bar > :last-child button {
         border-start-end-radius: var(--border-radius-button);
         border-end-end-radius: var(--border-radius-button);
     }
