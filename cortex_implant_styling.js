@@ -689,7 +689,7 @@ body {
   settings.highlightReplies && GM_addStyle(`
 @media screen and (min-width: 1175px) {
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
-    --status-extra-top-padding: calc(1lh + 6px);
+    --status-extra-top-padding: calc(1.2em + 6px);
   }
   
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info {
@@ -1566,8 +1566,8 @@ body>div[data-popper-escaped]:last-child {
 :is(#fake, .display-name__html) {
     text-overflow: ellipsis;
     overflow: hidden;
-    margin: -2lh;
-    padding: 2lh;
+    margin: -2.4em;
+    padding: 2.4em;
 }
 
 
