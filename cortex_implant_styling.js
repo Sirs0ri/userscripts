@@ -735,12 +735,8 @@ body {
   settings.showImagesUncropped && GM_addStyle(`
 /* Force all images to be in their original aspect ratio, not 16/9 */
 
-.status .media-gallery:not(:has(.media-gallery__item + .media-gallery__item)):has(.spoiler-button--minified) {
-    height: auto !important;
-}
-
-.status .media-gallery:not(:has(.media-gallery__item + .media-gallery__item)) img {
-    display: block;
+.media-gallery, video {
+    aspect-ratio: unset !important;
 }
 `)
 
