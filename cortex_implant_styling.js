@@ -1545,10 +1545,21 @@ body>div[data-popper-escaped]:last-child {
 
 /* improve long usernames by adding an ellipsis (that doesn't break the zoom-on-hover!) */
 
+.detailed-status__display-name {
+    display: flex;
+}
+.detailed-status__display-name .display-name {
+    min-width: 0;
+}
+
 .status__info > span,
 .status__display-name {
     min-width: 0;
-    flex-grow: 1;
+}
+
+.status__display-name,
+.display-name {
+    overflow: visible;
 }
 
 :is(#fake, .display-name__html) {
