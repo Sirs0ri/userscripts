@@ -752,93 +752,13 @@ options in the "app settings" (left sidebar):
     - full-width media previews
 */
 
+.media-gallery {
+    --extra-gap: 2px;
+}
+
 @keyframes fadeIn {
     0%   { opacity: 0; }
     100% { opacity: 1; }
-}
-
-:is(#fake,
-    .columns-area--mobile .status .audio-player,
-    .columns-area--mobile .status .media-gallery,
-    .columns-area--mobile .status .video-player
-) {
-    margin-top: 20px;
-}
-
-.media-gallery,
-.media-gallery__item,
-.video-player.inline {
-    overflow: revert;
-}
-
-.media-gallery__item{
-    border-radius: var(--border-radius-button-between);
-}
-.media-gallery__item>*,
-.video-player.inline>* {
-    border-radius: inherit;
-    overflow: hidden;
-}
-
-/* single item */
-.media-gallery__item[style*="inset: auto;"],
-.video-player.inline {
-    border-radius: var(--border-radius-button);
-}
-
-/* left half auto 2px auto auto */
-.media-gallery__item[style*="inset: auto 2px auto auto;"] {
-    inset: 0 !important;
-    width: calc(50% - 2px) !important;
-    height: 100% !important;
-    margin: 0 2px 0 0;
-    border-start-start-radius: var(--border-radius-button);
-    border-end-start-radius: var(--border-radius-button);
-}
-/* right half auto auto auto 2px */
-.media-gallery__item[style*="inset: auto auto auto 2px;"] {
-    inset: 0 !important;
-    width: calc(50% - 2px) !important;
-    height: 100% !important;
-    margin: 0 0 0 2px;
-    border-start-end-radius: var(--border-radius-button);
-    border-end-end-radius: var(--border-radius-button);
-}
-
-/* top left image */
-.media-gallery__item[style*="inset: auto 2px 2px auto;"] {
-    inset: 0 !important;
-    width: calc(50% - 2px) !important;
-    height: calc(50% - 2px) !important;
-    margin: 0 2px 2px 0;
-    border-start-start-radius: var(--border-radius-button);
-}
-
-/* top right image */
-.media-gallery__item[style*="inset: auto auto 2px 2px;"] {
-    inset: 0 !important;
-    width: calc(50% - 2px) !important;
-    height: calc(50% - 2px) !important;
-    margin: 0 0 2px 2px;
-    border-start-end-radius: var(--border-radius-button);
-}
-
-/* bottom left image */
-.media-gallery__item[style*="inset: 2px 2px auto auto;"] {
-    inset: 0 !important;
-    width: calc(50% - 2px) !important;
-    height: calc(50% - 2px) !important;
-    margin: 2px 2px 0 0;
-    border-end-start-radius: var(--border-radius-button);
-}
-
-/* bottom right image */
-.media-gallery__item[style*="inset: 2px auto auto 2px;"] {
-    inset: 0 !important;
-    width: calc(50% - 2px) !important;
-    height: calc(50% - 2px) !important;
-    margin: 2px 0 0 2px;
-    border-end-end-radius: var(--border-radius-button);
 }
 
 .media-gallery__item canvas {
@@ -885,29 +805,14 @@ options in the "app settings" (left sidebar):
 }
 
 /* YT Video Embeds & other link image previews */
-.status-card  {
-    border-radius: var(--border-radius-button);
-    overflow: revert;
-}
-.status-card__image {
-    border-radius: inherit;
-    position: relative;
-}
+
 :is(#fake, canvas.status-card__image-preview) {
     border-radius: inherit;
     z-index: unset;
     filter: blur(3px);
 }
-.status-card__image iframe {
-    border-radius: inherit
-}
 canvas.status-card__image-preview--hidden {
     display: revert;
-}
-:is(#fake, .status-card__image-image) {
-    border-radius: inherit;
-    max-width: 100%;
-    position: relative;
 }
 .status-card__image:after {
     content: "";
@@ -919,11 +824,6 @@ canvas.status-card__image-preview--hidden {
     border-radius: inherit;
     mix-blend-mode: plus-lighter;
     pointer-events: none;
-}
-
-/* Show thumbnails in un-spoilered posts */
-.status__content__spoiler--visible + .status-card .status-card__image-image {
-    visibility: visible !important;
 }
     `)
 
@@ -1344,6 +1244,110 @@ body.meow [data-avatar-of="@${user}"]:after {
 /* ====================
  * Misc general changes
  * ==================== */
+
+
+/* ===== Gallieries, Media, YT, Links ===== */
+
+/* Galleries with 1-4 images, videos, audio */
+
+.columns-area--mobile .status :is(
+    #fake, .audio-player, .media-gallery, .video-player
+) {
+    margin-top: 20px;
+}
+
+.media-gallery,
+.media-gallery__item,
+.video-player.inline {
+    overflow: revert;
+}
+
+.media-gallery {
+    gap: calc(var(--border-radius-button-between) + var(--extra-gap, 0px));
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+.media-gallery__item {
+    border-radius: var(--border-radius-button-between);
+}
+.media-gallery__item *,
+.video-player.inline > * {
+    border-radius: inherit;
+    overflow: hidden;
+}
+
+/* single item */
+.media-gallery__item--tall.media-gallery__item--wide,
+.video-player.inline {
+    border-radius: var(--border-radius-button);
+}
+
+/* left half */
+.media-gallery__item--tall:not(.media-gallery__item ~ .media-gallery__item) {
+    border-start-start-radius: var(--border-radius-button);
+    border-end-start-radius: var(--border-radius-button);
+}
+
+/* right half */
+.media-gallery__item ~ .media-gallery__item--tall {
+    border-start-end-radius: var(--border-radius-button);
+    border-end-end-radius: var(--border-radius-button);
+}
+
+/* first item */
+:not(.media-gallery__item) + .media-gallery__item {
+    border-start-start-radius: var(--border-radius-button);
+}
+
+/* 2nd item */
+.media-gallery__item + .media-gallery__item:not(.media-gallery__item + .media-gallery__item + .media-gallery__item) {
+    border-start-end-radius: var(--border-radius-button);
+}
+
+/* 3rd item in a 3-item-grid */
+.media-gallery__item--tall + .media-gallery__item + .media-gallery__item,
+/* 4th item in a 4-item grid */
+.media-gallery__item + .media-gallery__item + .media-gallery__item + .media-gallery__item {
+    border-end-end-radius: var(--border-radius-button);
+}
+
+/* 3rd item in a 4-item grid */
+.media-gallery__item:not(.media-gallery__item--tall) + .media-gallery__item + .media-gallery__item:not(
+    .media-gallery__item + .media-gallery__item + .media-gallery__item + .media-gallery__item
+) {
+    border-end-start-radius: var(--border-radius-button);
+}
+
+/* YT Video Embeds & other link image previews */
+
+.status-card  {
+    border-radius: var(--border-radius-button);
+    overflow: revert;
+}
+.status-card__image {
+    border-radius: inherit;
+    position: relative;
+}
+.status-card__image iframe {
+    border-radius: inherit
+}
+:is(#fake, .status-card__image-image, .status-card__image-preview) {
+    border-radius: inherit;
+    max-width: 100%;
+}
+:is(#fake, .status-card__image-image) {
+    position: relative;
+}
+/* Show thumbnails in un-spoilered posts */
+.status__content__spoiler--visible + .status-card .status-card__image-image {
+    visibility: visible !important;
+}
+
+.status-card__image.status-card-video {
+    background: transparent;
+}
+
 
 /* ===== BUTTONS ===== */
 
