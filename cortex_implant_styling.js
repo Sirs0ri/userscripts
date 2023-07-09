@@ -1550,7 +1550,8 @@ body>div[data-popper-escaped]:last-child {
 
 /* improve long usernames by adding an ellipsis (that doesn't break the zoom-on-hover!) */
 
-.detailed-status__display-name {
+.detailed-status__display-name,
+.account .account__display-name {
     display: flex;
 }
 .detailed-status__display-name .display-name {
