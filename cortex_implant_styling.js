@@ -30,10 +30,10 @@
  *    - If you're on my git, this incorporates the changes found in mastodon_media_improvements.js
  *      Use one of the two userscripts. If you're not on my git, ignore this.
  *    - The glow-on-media might look off on glitch-fork with certain settings. I recommend the following options:
- *      (under App Aettings -> Media)
+ *      (under App Settings -> Media)
  *        - [off] Full-width media previews
  *        - [on ] Inline preview cards for external links
- *      Alternatively, you can turn off the glow effect entirely via the CONFIGURABLE OPTIONS section below.
+ *      Alternatively, you can turn off the glow effect entirely via toptions found in the page footer.
  */
 
 (function () {
@@ -104,35 +104,72 @@
   //     Preferences
   // ====================
 
+  const allOptions = [
+    {
+      id: "hideCheckmarks",
+      textLabel: "hide checkmarks",
+      textDescription: "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons",
+      defaultvalue: true,
+    },
+    {
+      id: "disableBouncyAnimations",
+      textLabel: "disable bouncy animations",
+      textDescription: "Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it",
+      defaultvalue: true,
+    },
+    {
+      id: "highlightReplies",
+      textLabel: "highlight replies",
+      textDescription: "Add an indicator to replies in the main timeline, similar to the one for boosts",
+      defaultvalue: true,
+    },
+    {
+      id: "enableGlowOnMedia",
+      textLabel: "enable glow on media",
+      textDescription: "Enable a glow effect around media content embedded in posts",
+      defaultvalue: true,
+    },
+    {
+      id: "showImagesUncropped",
+      textLabel: "show images uncropped",
+      textDescription: "Enable full-sized images in posts, instead of cropping images to 16/9. If you're experiencing glitches while scrolling through your feed, turn this off!",
+      defaultvalue: false,
+    },
+    {
+      id: "highlightMediaWithoutAlt",
+      textLabel: "highlight media without alt text",
+      textDescription: "Highlight media without an alt text by adding a visible red bar underneath",
+      defaultvalue: true,
+    },
+    {
+      id: "popoutComposeBox",
+      textLabel: "growing compose box",
+      textDescription: "Make the compose box larger when focussed. This will have no effect in the Advanced View.",
+      defaultvalue: false,
+    },
+    {
+      id: "imACat",
+      textLabel: "imACat 🐈",
+      textDescription: "Meow?",
+      defaultvalue: false,
+    },
+  ]
+
   // These preferences will be persisted in localStorage. When upgrading from a version that
   // still has preferences defined as booleans make sure to note them down before upgrading!
 
   function loadSettings () {
     const loaded = localStorage.getItem(`userscript-sirs0ri-settings-${user}`)
 
-    const settings = {
-      hideCheckmarks: true,
-      disableBouncyAnimations: true,
-      highlightReplies: true,
-      enableGlowOnMedia: true,
-      showImagesUncropped: true,
-      highlightMediaWithoutAlt: true,
-      popoutComposeBox: true,
-      imACat: true,
-    }
+    const settings = Object.fromEntries(allOptions.map(o => [o.id, o.defaultvalue]))
 
     if (loaded == null) {
       settings._firstRun = true
     } else {
       const parsed = JSON.parse(loaded)
-      if (parsed.hideCheckmarks != null) settings.hideCheckmarks = parsed.hideCheckmarks
-      if (parsed.disableBouncyAnimations != null) settings.disableBouncyAnimations = parsed.disableBouncyAnimations
-      if (parsed.highlightReplies != null) settings.highlightReplies = parsed.highlightReplies
-      if (parsed.enableGlowOnMedia != null) settings.enableGlowOnMedia = parsed.enableGlowOnMedia
-      if (parsed.showImagesUncropped != null) settings.showImagesUncropped = parsed.showImagesUncropped
-      if (parsed.highlightMediaWithoutAlt != null) settings.highlightMediaWithoutAlt = parsed.highlightMediaWithoutAlt
-      if (parsed.popoutComposeBox != null) settings.popoutComposeBox = parsed.popoutComposeBox
-      if (parsed.imACat != null) settings.imACat = parsed.imACat
+      for (const option of allOptions) {
+        if (parsed[option.id] != null) settings[option.id] = parsed[option.id]
+      }
     }
 
     return settings
@@ -167,30 +204,16 @@
   }
 
   function onSettingChange (evt) {
-    switch (evt.target.id) {
-      case "hideCheckmarks":
-      case "disableBouncyAnimations":
-      case "highlightReplies":
-      case "enableGlowOnMedia":
-      case "showImagesUncropped":
-      case "highlightMediaWithoutAlt":
-      case "popoutComposeBox":
-      case "imACat":
-        settings[evt.target.id] = evt.target.checked
-        break
-      default:
-        return
-    }
+    if (allOptions.map(o => o.id).includes(evt.target.id)) settings[evt.target.id] = evt.target.checked
 
     let needsReload = false
-    if (settings.hideCheckmarks !== settingsWhenPopupOpened.hideCheckmarks) needsReload = true
-    if (settings.disableBouncyAnimations !== settingsWhenPopupOpened.disableBouncyAnimations) needsReload = true
-    if (settings.highlightReplies !== settingsWhenPopupOpened.highlightReplies) needsReload = true
-    if (settings.enableGlowOnMedia !== settingsWhenPopupOpened.enableGlowOnMedia) needsReload = true
-    if (settings.showImagesUncropped !== settingsWhenPopupOpened.showImagesUncropped) needsReload = true
-    if (settings.highlightMediaWithoutAlt !== settingsWhenPopupOpened.highlightMediaWithoutAlt) needsReload = true
-    if (settings.popoutComposeBox !== settingsWhenPopupOpened.popoutComposeBox) needsReload = true
-    if (settings.imACat !== settingsWhenPopupOpened.imACat) needsReload = true
+    for (const option of allOptions) {
+      if (settings[option.id] === settingsWhenPopupOpened[option.id]) continue
+
+      // else, if the option's changed
+      needsReload = true
+      break
+    }
 
     storeSettings(settings)
 
@@ -316,22 +339,10 @@
     }))
 
     settingsWrapper.appendChild(createElem("h1", { innerText: "General" }))
-    settingsWrapper.appendChild(_makeSettingsItem("hideCheckmarks", "hide checkmarks",
-      "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons"))
-    settingsWrapper.appendChild(_makeSettingsItem("disableBouncyAnimations", "disable bouncy animations",
-      "Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it"))
-    settingsWrapper.appendChild(_makeSettingsItem("highlightReplies", "highlight replies",
-      "Add an indicator to replies in the main timeline, similar to the one for boosts"))
-    settingsWrapper.appendChild(_makeSettingsItem("enableGlowOnMedia", "enable glow on media",
-      "Enable a glow effect around media content embedded in posts"))
-    settingsWrapper.appendChild(_makeSettingsItem("showImagesUncropped", "show images uncropped",
-      "Enable full-sized images in posts, instead of cropping images to 16/9"))
-    settingsWrapper.appendChild(_makeSettingsItem("highlightMediaWithoutAlt", "highlight media without alt text",
-      "Highlight media without an alt text by adding a visible red bar underneath"))
-    settingsWrapper.appendChild(_makeSettingsItem("popoutComposeBox", "growing compose box",
-      "Make the compose box larger when focussed. This will have no effect in the Advanced View."))
-    settingsWrapper.appendChild(_makeSettingsItem("imACat", "imACat 🐈",
-      "Meow?"))
+
+    for (const option of allOptions) {
+      settingsWrapper.appendChild(_makeSettingsItem(option.id, option.textLabel, option.textDescription))
+    }
 
     modalModal.appendChild(settingsWrapper)
 
