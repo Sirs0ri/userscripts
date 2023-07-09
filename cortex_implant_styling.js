@@ -738,6 +738,10 @@ body {
 .media-gallery, video {
     aspect-ratio: unset !important;
 }
+
+.spoiler-button:not(.spoiler-button--minified) + .media-gallery__item {
+    aspect-ratio: 16 / 9;
+}
 `)
 
   settings.enableGlowOnMedia && GM_addStyle(`
