@@ -3087,7 +3087,7 @@ body {
     }
 
     .status__action-bar > * {
-        margin-inline: 0;
+        margin-inline: 0 !important;
     }
 
     :where(.status__action-bar, .detailed-status__action-bar) > :first-child {
