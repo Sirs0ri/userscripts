@@ -2553,8 +2553,15 @@ body {
         content: "";
         position: absolute;
         inset: 0;
-        border-radius: inherit;
         border-bottom: 4px solid var(--color-primary);
+    }
+
+    .account__action-bar__tab.active:first-child:before {
+        border-bottom-left-radius: inherit;
+    }
+
+    .account__action-bar__tab.active:last-child:before {
+        border-bottom-right-radius: inherit;
     }
 
 
