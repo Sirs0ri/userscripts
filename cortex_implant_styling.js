@@ -689,7 +689,7 @@ body {
   settings.highlightReplies && GM_addStyle(`
 @media screen and (min-width: 1175px) {
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
-    --status-extra-top-padding: calc(1.2em + 6px);
+    --status-extra-top-padding: calc(1.5em + 6px);
   }
   
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info {
