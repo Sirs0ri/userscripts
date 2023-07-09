@@ -1570,10 +1570,12 @@ body>div[data-popper-escaped]:last-child {
 :is(#fake, .display-name__html) {
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+:is(#fake, .display-name__html):has(img:hover) {
     margin: -2.4em;
     padding: 2.4em;
 }
-
 
 .display-name__account {
     position: relative;
