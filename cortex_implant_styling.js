@@ -77,10 +77,25 @@
   // get account color
   const avatarLink = data.accounts[data.meta.me]?.avatar_static
 
-  function createElem (tagName, options) {
+  function createElem (tagName, options = {}) {
     const elem = document.createElement(tagName)
-    Object.assign(elem, options)
-    if (options.class) elem.classList.add(...options.class.split(" "))
+
+    for (const [key, val] of Object.entries(options)) {
+      switch (key) {
+        case "class":
+          elem.classList.add(...val.trim().split(" "))
+          break
+        case "innerHTML":
+        case "innerText":
+        case "textContent":
+        case "checked":
+        case "onclick":
+          elem[key] = val
+          break
+        default:
+          elem.setAttribute(key, val)
+      }
+    }
     return elem
   }
 
@@ -154,28 +169,14 @@
   function onSettingChange (evt) {
     switch (evt.target.id) {
       case "hideCheckmarks":
-        settings.hideCheckmarks = evt.target.checked
-        break
       case "disableBouncyAnimations":
-        settings.disableBouncyAnimations = evt.target.checked
-        break
       case "highlightReplies":
-        settings.highlightReplies = evt.target.checked
-        break
       case "enableGlowOnMedia":
-        settings.enableGlowOnMedia = evt.target.checked
-        break
       case "showImagesUncropped":
-        settings.showImagesUncropped = evt.target.checked
-        break
       case "highlightMediaWithoutAlt":
-        settings.highlightMediaWithoutAlt = evt.target.checked
-        break
       case "popoutComposeBox":
-        settings.popoutComposeBox = evt.target.checked
-        break
       case "imACat":
-        settings.imACat = evt.target.checked
+        settings[evt.target.id] = evt.target.checked
         break
       default:
         return
@@ -212,7 +213,7 @@
     })
     const preferencesLink = createElem("a", {
       textContent: document.querySelector(".column-link[href='/settings/preferences']").title,
-      href: "#",
+      role: "button",
       onclick: openSettings,
     })
     const issuesLink = createElem("a", {
@@ -225,7 +226,7 @@
       href: "https://github.com/Sirs0ri/userscripts/blob/main/cortex_implant_styling.js",
       target: "_blank",
     })
-    const versionSpan = createElem("span", { innerHTML: "v" + GM_info.script.version })
+    const versionSpan = createElem("span", { innerText: "v" + GM_info.script.version })
 
     insert.appendChild(preferencesLink)
     insert.appendChild(separator.cloneNode(true))
@@ -240,155 +241,111 @@
 
   const _insertSettingsModal = (evt) => {
     const modalWrapper = createElem("div", { class: "modal-root userscript-modal-root" })
-    const modalOverlay = createElem("div", { class: "modal-root__overlay", role: "presentation", onclick: closeSettings })
-    const modalContainer = createElem("div", { class: "modal-root__container", role: "dialog" })
     const modalModal = createElem("div", { class: "userscript-settings__modal" })
 
-    modalModal.innerHTML = `
-<nav>
-  <a 
-    role="button"
-    tabindex="0"
-    class="glitch local-settings__navigation__item active"
-    title="General"
-    aria-label="General"
-  >
-    <i role="img" class="fa fa-cogs fa-fw"></i>
-    <span>General</span>
-  </a>
+    const _makeSettingsItem = (id, labelText, description) => {
+      const wrapper = createElem("div", { class: "userscript-settings__item" })
 
-  <div>
-    <p class="reload-needed-hint" class="test">
-      Some of the settings you changed need the page to be reloaded to apply.
-    </p>
-    <button
-      id="userscript-settings__reload"
-      tabindex="0"
-      title="Reload"
-      aria-label="Reload"
-      class="button reload-needed-hint"
-    >
-      <i role="img" class="fa fa-refresh fa-fw"></i>
-      <span>reload</span>
-    </button>
-    <button
-      id="userscript-settings__close"
-      tabindex="0"
-      title="Close"
-      aria-label="Close"
-      class="button"
-    >
-      <i role="img" class="fa fa-times fa-fw"></i>
-      <span>Close</span>
-    </button>
+      wrapper.appendChild(createElem("input", {
+        id,
+        type: "checkbox",
+        checked: settings[id],
+        onclick: onSettingChange,
+      }))
+      wrapper.appendChild(createElem("label", { for: id, textContent: labelText }))
+      wrapper.appendChild(createElem("p", { textContent: description }))
 
-  </div>
-</nav>
+      return wrapper
+    }
 
-<div class="userscript-settings__content">
+    const nav = createElem("nav")
 
-  <p class="first-run-notice">
-    Hi there choom! <br>
-    This userscript has a settings UI now! You're seeing this because you're running the new version of the script for
-    the first time. <br>
+    nav.appendChild(createElem("a", {
+      role: "button",
+      tabindex: "0",
+      class: "glitch local-settings__navigation__item active",
+      title: "General",
+      "aria-label": "General",
+      innerHTML: `<i role="img" class="fa fa-cogs fa-fw"></i>
+      <span>General</span>`,
+    }))
 
-    If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to
-    this instance's about page.
-  </p>
+    const buttonsWrapper = createElem("div")
 
-  <h1><span>General</span></h1>
+    buttonsWrapper.appendChild(createElem("p", {
+      class: "reload-needed-hint",
+      innerText: "Some of the settings you changed need the page to be reloaded to apply.",
+    }))
+    buttonsWrapper.appendChild(createElem("button", {
+      tabindex: "0",
+      title: "Reload",
+      "aria-label": "Reload",
+      class: "button reload-needed-hint",
+      innerHTML: `
+        <i role="img" class="fa fa-refresh fa-fw"></i>
+        <span>reload</span>`,
+      onclick: () => location.reload(),
+    }))
+    buttonsWrapper.appendChild(createElem("button", {
+      tabindex: "0",
+      title: "Close",
+      "aria-label": "Close",
+      class: "button",
+      innerHTML: `
+        <i role="img" class="fa fa-times fa-fw"></i>
+        <span>Close</span>`,
+      onclick: closeSettings,
+    }))
 
-  <div class="userscript-settings__item">
-    <input id="hideCheckmarks" type="checkbox">
-    <label for="hideCheckmarks">
-      hide checkmarks
-    </label>
+    nav.appendChild(buttonsWrapper)
 
-    <p>Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons</p>
-  </div>
-  <div class="userscript-settings__item">
-    <input id="disableBouncyAnimations" type="checkbox">
-    <label for="disableBouncyAnimations">
-      disable bouncy animations
-    </label>
+    modalModal.appendChild(nav)
 
-    <p>Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it</p>
-  </div>
-  <div class="userscript-settings__item">
-    <input id="highlightReplies" type="checkbox">
-    <label for="highlightReplies">
-      highlight replies
-    </label>
+    const settingsWrapper = createElem("div", {
+      class: "userscript-settings__content",
+    })
 
-    <p>Add an indicator to replies in the main timeline, similar to the one for boosts</p>
-  </div>
-  <div class="userscript-settings__item">
-    <input id="enableGlowOnMedia" type="checkbox">
-    <label for="enableGlowOnMedia">
-      enable glow on media
-    </label>
+    settingsWrapper.appendChild(createElem("p", {
+      class: "first-run-notice",
+      innerHTML: `Hi there choom! <br>
+        This userscript has a settings UI now! You're seeing this because you're running the new version of the script for
+        the first time. <br>
+    
+        If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to
+        this instance's about page.`,
+    }))
 
-    <p>Enable a glow effect around media content embedded in posts</p>
-  </div>
-  <div class="userscript-settings__item">
-    <input id="showImagesUncropped" type="checkbox">
-    <label for="showImagesUncropped">
-      show images uncropped
-    </label>
+    settingsWrapper.appendChild(createElem("h1", { innerText: "General" }))
+    settingsWrapper.appendChild(_makeSettingsItem("hideCheckmarks", "hide checkmarks",
+      "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons"))
+    settingsWrapper.appendChild(_makeSettingsItem("disableBouncyAnimations", "disable bouncy animations",
+      "Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it"))
+    settingsWrapper.appendChild(_makeSettingsItem("highlightReplies", "highlight replies",
+      "Add an indicator to replies in the main timeline, similar to the one for boosts"))
+    settingsWrapper.appendChild(_makeSettingsItem("enableGlowOnMedia", "enable glow on media",
+      "Enable a glow effect around media content embedded in posts"))
+    settingsWrapper.appendChild(_makeSettingsItem("showImagesUncropped", "show images uncropped",
+      "Enable full-sized images in posts, instead of cropping images to 16/9"))
+    settingsWrapper.appendChild(_makeSettingsItem("highlightMediaWithoutAlt", "highlight media without alt text",
+      "Highlight media without an alt text by adding a visible red bar underneath"))
+    settingsWrapper.appendChild(_makeSettingsItem("popoutComposeBox", "growing compose box",
+      "Make the compose box larger when focussed. This will have no effect in the Advanced View."))
+    settingsWrapper.appendChild(_makeSettingsItem("imACat", "imACat 🐈",
+      "Meow?"))
 
-    <p>Enable full-sized images in posts, instead of cropping images to 16/9</p>
-  </div>
-  <div class="userscript-settings__item">
-    <input id="highlightMediaWithoutAlt" type="checkbox">
-    <label for="highlightMediaWithoutAlt">
-      highlight media without alt text
-    </label>
+    modalModal.appendChild(settingsWrapper)
 
-    <p>Highlight media without an alt text by adding a visible red bar underneath</p>
-  </div>
-  <div class="userscript-settings__item">
-    <input id="popoutComposeBox" type="checkbox">
-    <label for="popoutComposeBox">
-      growing compose box
-    </label>
+    modalWrapper.appendChild(createElem("div", { class: "modal-root__overlay", role: "presentation", onclick: closeSettings }))
 
-    <p>Make the compose box larger when focussed. This will have no effect in the Advanced View.</p>
-  </div>
-  <div class="userscript-settings__item">
-    <input id="imACat" type="checkbox">
-    <label for="imACat">
-      imACat 🐈
-    </label>
-
-    <p>Meow?</p>
-  </div>
-</div>`
-    modalWrapper.appendChild(modalOverlay)
+    const modalContainer = createElem("div", { class: "modal-root__container", role: "dialog" })
     modalWrapper.appendChild(modalContainer)
     modalContainer.appendChild(modalModal)
 
-    setTimeout(() => {
-      document.getElementById("userscript-settings__close").onclick = closeSettings
-      document.getElementById("userscript-settings__reload").onclick = () => location.reload()
-      document.getElementById("hideCheckmarks").onclick = onSettingChange
-      document.getElementById("hideCheckmarks").checked = settings.hideCheckmarks
-      document.getElementById("disableBouncyAnimations").onclick = onSettingChange
-      document.getElementById("disableBouncyAnimations").checked = settings.disableBouncyAnimations
-      document.getElementById("highlightReplies").onclick = onSettingChange
-      document.getElementById("highlightReplies").checked = settings.highlightReplies
-      document.getElementById("enableGlowOnMedia").onclick = onSettingChange
-      document.getElementById("enableGlowOnMedia").checked = settings.enableGlowOnMedia
-      document.getElementById("showImagesUncropped").onclick = onSettingChange
-      document.getElementById("showImagesUncropped").checked = settings.showImagesUncropped
-      document.getElementById("highlightMediaWithoutAlt").onclick = onSettingChange
-      document.getElementById("highlightMediaWithoutAlt").checked = settings.highlightMediaWithoutAlt
-      document.getElementById("popoutComposeBox").onclick = onSettingChange
-      document.getElementById("popoutComposeBox").checked = settings.popoutComposeBox
-      document.getElementById("imACat").onclick = onSettingChange
-      document.getElementById("imACat").checked = settings.imACat
-    }, 0)
-
     GM_addStyle(`
+
+.link-footer a {
+  cursor: pointer;
+}
 
 .userscript-modal-root {
     transition: visibility 200ms;
