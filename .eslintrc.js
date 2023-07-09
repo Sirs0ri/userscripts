@@ -13,9 +13,11 @@ module.exports = {
     sourceType: "module",
   },
   globals: {
-    GM_info: "readonly",
     GM_addStyle: "readonly",
     GM_addElement: "readonly",
+    GM_getResourceURL: "readonly",
+    GM_getResourceText: "readonly",
+    GM_info: "readonly",
   },
   rules: {
     // Doubleqoutes erzwingen (" statt ')
