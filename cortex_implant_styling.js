@@ -662,7 +662,7 @@ body {
   settings.highlightReplies && GM_addStyle(`
 @media screen and (min-width: 1175px) {
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
-    --status-extra-top-padding: calc(1.5em + 6px);
+    --status-extra-top-padding: calc(1.5em);
   }
   
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info {
@@ -670,15 +670,23 @@ body {
     position: relative;
   }
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:before {
-    content: "\\21B6  Replying to a conversation";
-    display: block;
-    width: 100%;
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:before,
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:after {
     color: #606984;
     font-size: 14px;
     margin-bottom: 8px;
     position: absolute;
     top: -2px;
+  }
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:before {
+    content: "\\21B6  ";
+    left: 48px;
+    transform: translateX(-100%)
+  }
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:after {
+    content: "Replying to a conversation";
+    left: 63px;
+    width: calc(100% - 63px)
   }
 }
 `)
@@ -1411,6 +1419,7 @@ pre > code {
 
 .status__avatar {
     box-shadow: none;
+    margin-inline-end: 15px;
 }
 
 .notification__line, .status__line {
