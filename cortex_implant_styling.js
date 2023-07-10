@@ -1219,8 +1219,8 @@ body.meow [data-avatar-of="@${user}"]:after {
   const footerImgMask = GM_getResourceURL("ci_header_mask.avif")
   // The CORTEX IMPLANT Logo
   const logoSvg = GM_getResourceURL("ci_logo_min.svg")
-  // The animateable "boost" svg - there's somethign weird going on with chrome not parsing a) the embedded colors from the base64 version, b) newlines correctly
-  const boostSvg = "data:image/svg+xml;utf8," + GM_getResourceText("m_boost_sprites.svg").replaceAll("\n", "")
+  // The animateable "boost" svg
+  const boostSvg = GM_getResourceURL("m_boost_sprites.svg")
 
   // #endregion
 
