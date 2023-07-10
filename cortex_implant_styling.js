@@ -136,6 +136,12 @@
       defaultvalue: false,
     },
     {
+      id: "hoverImages",
+      textLabel: "enlarge images on hover",
+      textDescription: "Enlarge images in posts to full size on hover, instead of cropping images to 16/9.",
+      defaultvalue: true,
+    },
+    {
       id: "highlightMediaWithoutAlt",
       textLabel: "highlight media without alt text",
       textDescription: "Highlight media without an alt text by adding a visible red bar underneath",
@@ -722,6 +728,58 @@ body {
 
 .spoiler-button:not(.spoiler-button--minified) + .media-gallery__item {
     aspect-ratio: 16 / 9;
+}
+`)
+
+  settings.hoverImages && GM_addStyle(`
+.media-gallery {
+z-index: 2;
+z-index: 125;
+overflow: visible;
+}
+
+.media-gallery :where(.spoiler-button, .media-gallery__item__badges) {
+transition: opacity 200ms, transform 200ms;
+z-index: 2;
+}
+.media-gallery:hover .spoiler-button.spoiler-button--minified, 
+.media-gallery:hover .spoiler-button.spoiler-button--minified ~ div .media-gallery__item__badges {
+opacity: 0;
+transform: scale(0.9)
+}
+
+.media-gallery__item {
+container: parent / size;
+align-items: center;
+display: flex !important;
+
+/* this */
+overflow: visible;
+}
+.media-gallery__item:hover {
+z-index: 1;
+}
+
+:is(#fake, .media-gallery__item-thumbnail) {
+overflow: visible !important;
+position: relative;
+height: auto;
+transition: transform 200ms, border-radius 200ms;
+}
+.media-gallery__item-thumbnail:hover {
+transform: scale(1.1);
+border-radius: var(--border-radius-button);
+}
+
+.media-gallery__item-thumbnail img {
+height: auto;
+display: block;
+max-height: 100cqh;
+transition: background 200ms, max-height 200ms !important;
+}
+.media-gallery__item-thumbnail img:hover {
+max-height: 80vh;
+max-width: 80vw;
 }
 `)
 
