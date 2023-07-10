@@ -2167,6 +2167,7 @@ body {
     {
         margin-bottom: 20px;
         border: 1px solid var(--color-grey-4);
+        box-sizing: border-box;
         background: var(--color-grey-2);
         border-radius: var(--border-radius-button);
     }
