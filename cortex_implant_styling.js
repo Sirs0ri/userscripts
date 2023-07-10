@@ -1244,7 +1244,7 @@ body.meow [data-avatar-of="@${user}"]:after {
 .media-gallery,
 .media-gallery__item,
 .video-player.inline {
-    overflow: revert;
+    / *overflow: revert; */
 }
 
 .media-gallery {
