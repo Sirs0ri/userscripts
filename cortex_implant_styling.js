@@ -1488,8 +1488,8 @@ pre > code {
     }
 }
 
-/* I've seen an article without any content exactly once, now I'll bever see one again! */
-.columns-area--mobile article:empty {
+/* I've seen an article without any content exactly twice, now I'll bever see one again! */
+article:empty {
     display: none;
 }
 
