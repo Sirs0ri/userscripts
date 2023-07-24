@@ -3001,23 +3001,33 @@ body {
         margin-top: 10px;
     }
 
-    /* "getting started" page */
-    body.layout-multiple-columns .getting-started,
-    .getting-started__wrapper,
-    .getting-started .flex-spacer,
-    .getting-started .column-link {
-        background: none;
+    /* ===== "getting started" page / last column ===== */
+
+    div[data-column="getting-started"] .getting-started__wrapper {
+      background: none;
     }
 
-    .getting-started .column-link {
+    div[data-column="getting-started"] .column-subheading {
+      background: var(--color-grey-4);
+      border-radius: 8px;
+      color: var(--color-grey-8);
+      margin-bottom: 10px;
+    }
+
+    div[data-column="getting-started"] div ~ .column-subheading {
+      margin-top: 10px;
+    }
+
+    div[data-column="getting-started"] .column-link {
         color: #d9e1e8;
         position: relative;
+        background: transparent;
     }
-    .getting-started .column-link:hover {
+    div[data-column="getting-started"] .column-link:hover {
         color: white;
     }
 
-    .getting-started .column-link:hover span:before {
+    div[data-column="getting-started"] .column-link:hover span:before {
         content: "";
         position: absolute;
         inset: 0;
@@ -3026,7 +3036,7 @@ body {
 
         animation:  200ms flicker-in ease-out;
     }
-    .getting-started .column-link:hover span:after {
+    div[data-column="getting-started"] .column-link:hover span:after {
         content: "";
         position: absolute;
         top: 8px;
@@ -3039,8 +3049,7 @@ body {
         animation: 200ms flicker-in ease-out;
     }
 
-
-    .getting-started .link-footer {
+    div[data-column="getting-started"] .link-footer {
         margin-top: auto;
         border-radius: inherit;
     }
