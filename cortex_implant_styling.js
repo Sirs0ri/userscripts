@@ -784,6 +784,9 @@ body {
   transform: scale(1.15);
   border-radius: var(--border-radius-button);
 }
+.layout-multiple-columns .media-gallery__item-thumbnail:hover {
+  transform: scale(1.05)
+}
 
 .media-gallery__item-thumbnail img {
   height: auto;
