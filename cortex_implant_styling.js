@@ -738,13 +738,20 @@ body {
 }
 `)
 
+  // TODO:
+  //   - [x] Images overlap Emotes
+  //   - [ ] Make sure images are always fully visible, like a position sticky?
+
   settings.hoverImages && GM_addStyle(`
 .media-gallery {
-  z-index: 2;
-  z-index: 125;
-  overflow: visible;
-
-  container: parent / size;
+    /* overlap emotes */
+    z-index: 101;
+    overflow: visible;
+    
+    container: parent / size;
+}
+.media-gallery:hover {
+    z-index: 102;
 }
 
 .media-gallery :where(.spoiler-button, .media-gallery__item__badges) {
