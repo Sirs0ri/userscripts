@@ -755,40 +755,40 @@ body {
     opacity: 0.5;
     transform: scale(0.9)
 }
-.media-gallery__item__badges {
+.media-gallery .media-gallery__item__badges {
     z-index: 2;
 }
 
-.media-gallery__item {
+.media-gallery .media-gallery__item {
   align-items: center;
   display: flex !important;
 
   overflow: visible;
 }
-.media-gallery__item:hover {
+.media-gallery .media-gallery__item:hover {
   z-index: 3;
 }
 
-.media-gallery__item:not(.media-gallery__item--tall) {
+.media-gallery .media-gallery__item:not(.media-gallery__item--tall) {
   --height: calc(50cqh - (var(--border-radius-button-between) + var(--extra-gap, 0px)) / 2);
   height: var(--height);
 }
 
-:is(#fake, .media-gallery__item-thumbnail) {
+.media-gallery :is(#fake, .media-gallery__item-thumbnail) {
   overflow: visible !important;
   position: relative;
   height: auto;
   transition: transform 200ms ease-out, border-radius 200ms;
 }
-.media-gallery__item-thumbnail:hover {
+.media-gallery .media-gallery__item-thumbnail:hover {
   transform: scale(1.15);
   border-radius: var(--border-radius-button);
 }
-.layout-multiple-columns .media-gallery__item-thumbnail:hover {
+.layout-multiple-columns .media-gallery .media-gallery__item-thumbnail:hover {
   transform: scale(1.05)
 }
 
-.media-gallery__item-thumbnail img {
+.media-gallery .media-gallery__item-thumbnail img {
   height: auto;
   display: block;
   max-height: 100cqh;
@@ -796,11 +796,11 @@ body {
     background 200ms, 
     max-height 200ms !important;
 }
-.media-gallery__item:not(.media-gallery__item--tall) .media-gallery__item-thumbnail img {
+.media-gallery .media-gallery__item:not(.media-gallery__item--tall) .media-gallery__item-thumbnail img {
   max-height: var(--height);
 }
 
-.media-gallery__item-thumbnail:hover img {
+.media-gallery .media-gallery__item-thumbnail:hover img {
   max-height: 60vh !important;
   max-width: 80vw;
 }
