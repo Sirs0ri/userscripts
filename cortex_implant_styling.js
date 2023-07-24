@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.5.3-b4
+// @version      1.5.3-b5
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -158,6 +158,12 @@
       id: "imACat",
       textLabel: "imACat 🐈",
       textDescription: "Meow?",
+      defaultvalue: false,
+    },
+    {
+      id: "showOldPunks",
+      textLabel: "[Advanced view] Bring back the old Cyberpunks",
+      textDescription: "Show the two cyberpunks chilling at the bottom of the compose area. When disabled, John Cyberdon will watch over your toots.",
       defaultvalue: false,
     },
   ]
@@ -2967,22 +2973,13 @@ body {
     }
 
     /* The CI Theme hides the mastodon usually displayed here - let's replace it with something more thematically fitting */
+    
     body.layout-multiple-columns .drawer__inner__mastodon {
-        background: none;
-        content: url(https://corteximplant.com/system/site_uploads/files/000/000/006/@1x/68f324b193475041.png);
-        object-fit: contain;
-        min-height: auto;
-        object-position: bottom;
-        display: revert;
+        background: url(/packs/media/flavours/glitch/images/wave-drawer-glitched-f44fa25589f31f0ee52ab119cea119cb.png) no-repeat bottom/100% auto;
         border-radius: inherit;
-        -webkit-mask-image: url(${footerImgMask});
-        -webkit-mask-size: contain;
-        -webkit-mask-position: bottom;
-        -webkit-mask-repeat: no-repeat
-    }
-
-    body.layout-multiple-columns .drawer__inner__mastodon img {
-        display: none;
+        
+        display: flex;
+        align-items: flex-end;
     }
 
     /* user profile info in the 1st column */
@@ -3184,6 +3181,22 @@ body {
     }
 }
 `)
+
+  settings.showOldPunks && GM_addStyle(`
+
+body.layout-multiple-columns .drawer__inner__mastodon {
+  content: url(https://corteximplant.com/system/site_uploads/files/000/000/006/@1x/68f324b193475041.png);
+  object-fit: contain;
+  min-height: auto;
+  object-position: bottom;
+
+  -webkit-mask-image: url(${footerImgMask});
+  -webkit-mask-size: contain;
+  -webkit-mask-position: bottom;
+  -webkit-mask-repeat: no-repeat;
+}
+
+  `)
 
   /* emoji picker improvements */
   GM_addStyle(`
