@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.5.3-b.10
+// @version      1.5.3-b.11
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -61,7 +61,7 @@
 
   addEventListener("resize", onResize)
 
-  /** Register a handler to the "load" event, and when the vew switches from mibile to desktop */
+  /** Register a handler to the "load" event, and when the vew switches from mobile to desktop */
   function registerLoadHandlerDesktop (handler) {
     addEventListener("load", handler, { once: true })
     addEventListener("desktopViewVisible", evt => {
