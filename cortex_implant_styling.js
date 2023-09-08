@@ -17,7 +17,7 @@
 
 /*
  * == TODO ==
- *    - live feeds header doesn't match the others
+ *    - ?
  */
 
 /*
@@ -2409,9 +2409,15 @@ body {
         border-radius: 8px;
         border: 1px solid var(--color-grey-4);
     }
+    /* notifications header */
     .notification__filter-bar {
-        margin-top: -20px;
-        padding-top: 40px;
+      margin-top: -20px;
+      padding-top: 40px;
+    }
+    /* explore / live feeds header */
+    .account__section-headline {
+      margin-top: -41px;
+      padding-top: 40px;
     }
 
     .account__section-headline :is(button, a),
@@ -2420,12 +2426,12 @@ body {
         flex: 1 1 0;
     }
 
-    .account__section-headline :is(button, a) span,
+    .account__section-headline :is(button, a) div,
     .notification__filter-bar button span,
     .notification__filter-bar button i {
         transition: color 200ms
     }
-    .account__section-headline :is(button, a):hover span,
+    .account__section-headline :is(button, a):hover div,
     .notification__filter-bar button:hover span,
     .notification__filter-bar button:hover i {
         color: var(--color-white);
@@ -2435,11 +2441,11 @@ body {
         z-index: 1;
         position: relative;
     }
-    .account__section-headline :is(button, a) span:before,
+    .account__section-headline :is(button, a) div:before,
     .notification__filter-bar button span:before {
         mix-blend-mode: screen;
     }
-    .account__section-headline :is(button, a) span:before,
+    .account__section-headline :is(button, a) div:before,
     .notification__filter-bar button span:before,
     .notification__filter-bar button i:after {
         content: "";
@@ -2450,7 +2456,7 @@ body {
         transition: background 200ms;
         z-index: 0;
     }
-    .account__section-headline :is(button, a):hover span:before,
+    .account__section-headline :is(button, a):hover div:before,
     .notification__filter-bar button:hover span:before,
     .notification__filter-bar button:hover i:after {
         background-color: var(--color-grey-6);
@@ -3607,7 +3613,7 @@ span.relationship-tag {
     :where(
         /* Toots */
         .status__content,
-        :not(.reply-indicator__display-name)>.display-name,
+        .display-name,
         .status__display-name,
 
         /* Poll Option */
