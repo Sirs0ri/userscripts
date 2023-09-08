@@ -763,6 +763,17 @@ body {
   //   - [x] Images overlap Emotes
   //   - [ ] Make sure images are always fully visible, like a position sticky?
 
+  /* Firefox animates the max-height from the image's original height to 100cqh for some reason, every time the image is added to the DOM
+   * This worakround onyl applies the transition on hover, meaning the images won't animate on load. */
+  const mouseoverHandler = e => {
+    if (e.target.nodeName !== "IMG") return
+    if (!e.target.parentElement.classList.contains("media-gallery__item-thumbnail")) return
+    e.target.style.transition = "background 200ms, max-height 200ms"
+    console.log(e)
+  }
+
+  settings.hoverImages && document.addEventListener("mouseover", mouseoverHandler)
+
   settings.hoverImages && GM_addStyle(`
 .media-gallery {
     /* overlap emotes */
@@ -820,9 +831,9 @@ body {
   height: auto;
   display: block;
   max-height: 100cqh;
-  transition: 
+  /* transition: 
     background 200ms, 
-    max-height 200ms !important;
+    max-height 200ms !important; */
 }
 .media-gallery .media-gallery__item:not(.media-gallery__item--tall) .media-gallery__item-thumbnail img {
   max-height: var(--height);
