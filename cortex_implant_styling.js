@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.5.3-b.11
+// @version      1.5.3-b.12
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -769,7 +769,6 @@ body {
     if (e.target.nodeName !== "IMG") return
     if (!e.target.parentElement.classList.contains("media-gallery__item-thumbnail")) return
     e.target.style.transition = "background 200ms, max-height 200ms"
-    console.log(e)
   }
 
   settings.hoverImages && document.addEventListener("mouseover", mouseoverHandler)
