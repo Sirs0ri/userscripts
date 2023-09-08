@@ -2243,6 +2243,21 @@ body {
     .status-private {
         box-shadow: 0px 4px 10px -8px var(--color-privacy);
     }
+
+    .status:not(.status-public):before {
+      content: "";
+      background: var(--color-privacy);
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      -webkit-mask-image: radial-gradient(at 39px 39px, rgba(255 255 255 / 0.1), transparent 60%);
+      -webkit-mask-size: 250px 250px;
+      -webkit-mask-repeat: no-repeat;
+      mask-image: radial-gradient(at 39px 39px, rgba(255 255 255 / 0.1), transparent 60%);
+      mask-size: 250px 250px;
+      mask-repeat: no-repeat;
+    }
+
     .hicolor-privacy-icons .status__visibility-icon.fa-unlock,
     .hicolor-privacy-icons .status__visibility-icon.fa-globe,
     .hicolor-privacy-icons .status__visibility-icon.fa-envelope,
