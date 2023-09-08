@@ -674,32 +674,49 @@ body {
 
   settings.highlightReplies && GM_addStyle(`
 @media screen and (min-width: 1175px) {
+
+    
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
     --status-extra-top-padding: calc(1.5em);
   }
   
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info {
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info) {
     padding-top: var(--status-extra-top-padding, 0px);
     position: relative;
   }
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:before,
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:after {
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before,
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):after {
     color: #606984;
     font-size: 14px;
     margin-bottom: 8px;
     position: absolute;
     top: -2px;
   }
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:before {
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
     content: "\\21B6  ";
     left: 48px;
     transform: translateX(-100%)
   }
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:after {
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):after {
     content: "Replying to a conversation";
     left: 63px;
     width: calc(100% - 63px)
+  }
+
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span:after {
+    content: " a reply"
+  }
+
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info .display-name__html:before {
+    content: "\\21B6 ";
+    height: 1lh;
+    aspect-ratio: 1;
+    border-radius: 100%;
+    margin-right: 0.5ch;
+    display: inline-grid;
+    place-content: end center;
+    background: var(--color-grey-7);
   }
 }
 `)
