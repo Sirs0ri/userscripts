@@ -26,7 +26,7 @@
  *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag.
  *      The general restyling shouldn't be affected.
  *      The animated notifications menu entry should work with the aforementioned flag enabled.
- *      The [alt] indicator on media unfortunately doesn#t seem to work in FF at all.
+ *      The [alt] indicator on media unfortunately doesn't seem to work in FF at all.
  *      Affected parts of this stylesheet have a notice at the start.
  *    - If you're on my git, this incorporates the changes found in mastodon_media_improvements.js
  *      Use one of the two userscripts. If you're not on my git, ignore this.
