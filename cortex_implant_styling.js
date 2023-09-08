@@ -2204,8 +2204,13 @@ body {
 
     .dismissable-banner {
         margin-top: 20px;
+        margin-bottom: 0px;
         border-radius: 8px;
         border: 1px solid var(--color-grey-4);
+    }
+    .item-list > .dismissable-banner {
+      margin-top: 0;
+      margin-bottom: 20px;
     }
 
     .dismissable-banner__action button {
