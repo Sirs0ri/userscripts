@@ -3346,50 +3346,104 @@ span.relationship-tag {
 }
 `)
 
-  /* ===== Glitch Effect on notifications ===== */
+  /* ===== Glitch Effect on notifications & default avatars ===== */
   GM_addStyle(`
-/* WARNING: This relies on :has and thus won't work well in FF (as of Jan 2023) */
-.column-link--transparent:has(i+i) {
-    position: relative;
-    z-index: 2;
-    --padding: 15px;
-    --start: 25px;
-    padding: var(--padding);
+@media (prefers-reduced-motion: no-preference) {
 
-    text-decoration: none;
-}
+    :where(
+        .account__avatar, .account__avatar-overlay-overlay
+    )[style*="https://corteximplant.com/avatars/original/missing.png"] {
+        animation: paths 10s step-end infinite;
+        position: relative;
+        --padding: -5px;
+        --start: 5px;
+    }
 
-.column-link--transparent:has(i+i)::before,
-.column-link--transparent:has(i+i)::after {
-    content: attr(title);
-    position: absolute;
-    width: 110%;
-    z-index: -1;
-}
+    :where(
+        .account__avatar, .account__avatar-overlay-overlay
+    )[style*="https://corteximplant.com/avatars/original/missing.png"]:before,
+    :where(
+        .account__avatar, .account__avatar-overlay-overlay
+    )[style*="https://corteximplant.com/avatars/original/missing.png"]:after {
+        content: "";
+        position: absolute;
+        height: 105%;
+        width: 105%;
+        background-size: 110% 110%;
+        background-image: inherit;
+        background-image: url(https://corteximplant.com/avatars/original/missing.png);
+        border-radius: inherit;
+    }
 
-.column-link--transparent:has(i+i)::before {
-    top: calc((10em / 60) + var(--padding));
-    left: calc((15em / 60) + var(--padding) + var(--start));
-    color: #6364ff;
-    animation:
-        paths 10s step-end infinite,
-        opacity 10s step-end infinite,
-        font 16s step-end infinite,
-        movement 20s step-end infinite;
-}
+    :where(
+        .account__avatar, .account__avatar-overlay-overlay
+    )[style*="https://corteximplant.com/avatars/original/missing.png"]:before {
+        top: calc((10em / 6) + var(--padding));
+        left: calc((15em / 6) + var(--padding) + var(--start));
+        color: #6364ff;
+        filter: hue-rotate(300deg);
+        animation:
+            paths 10s step-end infinite,
+            opacity 10s step-end infinite,
+            movement 20s step-end infinite;
+    }
+    :where(
+        .account__avatar, .account__avatar-overlay-overlay
+    )[style*="https://corteximplant.com/avatars/original/missing.png"]:after {
+        top: calc((5em / 6) + var(--padding));
+        left: calc((-30em / 6) + var(--padding) + var(--start));
+        color: #1bc7fb;
+        filter: hue-rotate(122deg);
+        animation:
+            paths 14s step-end infinite,
+            opacity 12s step-end infinite,
+            movement 16s step-end infinite;
+    }
 
-.column-link--transparent:has(i+i)::after {
-    top: calc((5em / 60) + var(--padding));
-    left: calc((-10em / 60) + var(--padding) + var(--start));
-    color: #1bc7fb;
-    animation:
-        paths 10s step-end infinite,
-        opacity 10s step-end infinite,
-        font 14s step-end infinite,
-        movement 16s step-end infinite;
-}
-.column-link--transparent:has(i+i) span {
-    animation: paths 10s step-end infinite;
+    /* WARNING: This relies on :has and thus won't work well in FF (as of Jan 2023) */
+    .column-link--transparent:has(i+i) {
+        position: relative;
+        z-index: 2;
+        --padding: 15px;
+        --start: 25px;
+        padding: var(--padding);
+
+        text-decoration: none;
+    }
+
+    .column-link--transparent:has(i+i)::before,
+    .column-link--transparent:has(i+i)::after {
+        content: attr(title);
+        position: absolute;
+        width: 110%;
+        z-index: -1;
+    }
+
+    .column-link--transparent:has(i+i)::before {
+        top: calc((10em / 60) + var(--padding));
+        left: calc((15em / 60) + var(--padding) + var(--start));
+        color: #6364ff;
+        animation:
+            paths 10s step-end infinite,
+            opacity 10s step-end infinite,
+            font 16s step-end infinite,
+            movement 20s step-end infinite;
+    }
+
+    .column-link--transparent:has(i+i)::after {
+        top: calc((5em / 60) + var(--padding));
+        left: calc((-10em / 60) + var(--padding) + var(--start));
+        color: #1bc7fb;
+        animation:
+            paths 10s step-end infinite,
+            opacity 10s step-end infinite,
+            font 14s step-end infinite,
+            movement 16s step-end infinite;
+    }
+    .column-link--transparent:has(i+i) span {
+        animation: paths 10s step-end infinite;
+    }
+
 }
 
 @keyframes paths {
