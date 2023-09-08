@@ -1665,7 +1665,7 @@ body>div[data-popper-escaped]:last-child {
     padding: 2.4em;
 }
 /* Firefox does some odd things with text-overflow: ellipsis; when en image at the end of the name would exceed the bounding box, this :after makes enough room for the image */
-:is(#fake, .display-name__html):has(img):after {
+.display-name:not(.inline) .display-name__html:has(img):after {
   content: "";
   width: 2.4em;
   display: inline-block;
