@@ -130,12 +130,12 @@
       textDescription: "Enable a glow effect around media content embedded in posts",
       defaultvalue: true,
     },
-    {
-      id: "showImagesUncropped",
-      textLabel: "show images uncropped",
-      textDescription: "Enable full-sized images in posts, instead of cropping images to 16/9. If you're experiencing glitches while scrolling through your feed, turn this off!",
-      defaultvalue: false,
-    },
+    // {
+    //   id: "showImagesUncropped",
+    //   textLabel: "show images uncropped",
+    //   textDescription: "Enable full-sized images in posts, instead of cropping images to 16/9. If you're experiencing glitches while scrolling through your feed, turn this off!",
+    //   defaultvalue: false,
+    // },
     {
       id: "hoverImages",
       textLabel: "enlarge images on hover",
