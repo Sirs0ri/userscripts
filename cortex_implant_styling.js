@@ -1346,12 +1346,6 @@ body.meow [data-avatar-of="@${user}"]:after {
     margin-top: 20px;
 }
 
-.media-gallery,
-.media-gallery__item,
-.video-player.inline {
-    / *overflow: revert; */
-}
-
 .media-gallery {
     gap: calc(var(--border-radius-button-between) + var(--extra-gap, 0px));
     grid-template-columns: 1fr 1fr;
@@ -1369,7 +1363,8 @@ body.meow [data-avatar-of="@${user}"]:after {
 
 /* single item */
 .media-gallery__item--tall.media-gallery__item--wide,
-.video-player.inline {
+.video-player.inline,
+.audio-player {
     border-radius: var(--border-radius-button);
 }
 
@@ -1490,6 +1485,7 @@ code {
     border-radius: 4px;
     padding: 1px 5px;
     margin-inline: -2px;
+    color: inherit;
 }
 /* inline code uses just <code>, code blocks are additionally wrapped in a <pre> */
 pre > code {
