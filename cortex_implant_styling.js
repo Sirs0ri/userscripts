@@ -1480,6 +1480,13 @@ button[disabled] {
 }
 
 
+/* ===== emotes ===== */
+
+:is(.emojione, #fake) {
+    width: auto;
+}
+
+
 /* ===== special formatting ===== */
 
 /* improve visibility of mentions (and thereby hashtags) and code snippets */
