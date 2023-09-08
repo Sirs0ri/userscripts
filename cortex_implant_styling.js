@@ -1035,7 +1035,7 @@ markiere medien ohne alt-text*/
         z-index: 3;
     }
 
-    .columns-area__panels__pane--compositional {
+    .columns-area__panels__pane--compositional.user-focus-within {
         z-index: 3;
     }
 
