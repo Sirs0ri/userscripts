@@ -710,6 +710,10 @@ body {
 
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info .display-name__html:before {
     content: "\\21B6 ";
+    /* FIXME: FF doesn't support lh - https://caniuse.com/mdn-css_types_length_lh
+     * This is a fallback based on Mastodon's default styles:
+     */
+    height: 18px;
     height: 1lh;
     aspect-ratio: 1;
     border-radius: 100%;
@@ -1656,9 +1660,15 @@ body>div[data-popper-escaped]:last-child {
     overflow: hidden;
 }
 
-:is(#fake, .display-name__html):has(img:hover) {
+:is(#fake, .display-name__html):has(img):hover {
     margin: -2.4em;
     padding: 2.4em;
+}
+/* Firefox does some odd things with text-overflow: ellipsis; when en image at the end of the name would exceed the bounding box, this :after makes enough room for the image */
+:is(#fake, .display-name__html):has(img):after {
+  content: "";
+  width: 2.4em;
+  display: inline-block;
 }
 
 .display-name__account {
