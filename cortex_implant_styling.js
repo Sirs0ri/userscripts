@@ -3645,4 +3645,26 @@ span.relationship-tag {
     }
 }
 `)
+
+  GM_addStyle(`
+body.layout-single-column:after {
+    content: "";
+    position: fixed;
+    left: 1vw;
+    top: 100vh;
+    transform: translateY(-100%);
+    height: clamp(75px, 28.09vw + -255.06px, 200px);
+    aspect-ratio: 1;
+
+    background-image: url(/system/site_uploads/files/000/000/007/original/5f3e778f1ff2569e.png);
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position: bottom;
+
+    pointer-events: none;
+    z-index: -9999;
+
+    opacity: 0.8;
+}  
+`)
 })()
