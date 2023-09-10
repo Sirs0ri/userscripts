@@ -2266,12 +2266,12 @@ body {
         box-shadow: 0px 4px 10px -8px var(--color-privacy);
     }
 
-    .detailed-status:not(-detailed-status-public) {
+    .detailed-status:not(.detailed-status-public) {
       position: relative;
     }
 
-    .status:not(.status-public):before, 
-    .detailed-status:not(-detailed-status-public):before {
+    .status:not(.status-public):not(.unread):before, 
+    .detailed-status:not(.detailed-status-public):not(.unread):before {
       content: "";
       background: var(--color-privacy);
       position: absolute;
