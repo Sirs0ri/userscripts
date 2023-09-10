@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.5.3-b.12
+// @version      1.5.3-b.13
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
