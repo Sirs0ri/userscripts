@@ -2010,7 +2010,7 @@ body {
     .column-link--transparent {
         position: relative;
         font-size: 15px;
-        padding: 12.5px 15px;
+        padding: 15px;
     }
 
     .getting-started__trends h4 a:hover:before,
@@ -2046,7 +2046,7 @@ body {
     .getting-started__trends h4 a {
         position: relative;
         text-transform: none;
-        padding: 12.5px 15px;
+        padding: 15px;
         display: block;
         padding-inline-start: calc(25px + 1.28571429em);
     }
