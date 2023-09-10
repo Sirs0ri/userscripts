@@ -2266,16 +2266,21 @@ body {
         box-shadow: 0px 4px 10px -8px var(--color-privacy);
     }
 
-    .status:not(.status-public):before {
+    .detailed-status:not(-detailed-status-public) {
+      position: relative;
+    }
+
+    .status:not(.status-public):before, 
+    .detailed-status:not(-detailed-status-public):before {
       content: "";
       background: var(--color-privacy);
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      -webkit-mask-image: radial-gradient(at 39px 39px, rgba(255 255 255 / 0.1), transparent 60%);
+      -webkit-mask-image: radial-gradient(at 39px 39px, rgba(0 0 0 / 0.05) 5%, transparent 70%);
       -webkit-mask-size: 250px 250px;
       -webkit-mask-repeat: no-repeat;
-      mask-image: radial-gradient(at 39px 39px, rgba(255 255 255 / 0.1), transparent 60%);
+      mask-image: radial-gradient(at 39px 39px, rgba(0 0 0 / 0.05) 5%, transparent 70%);
       mask-size: 250px 250px;
       mask-repeat: no-repeat;
     }
