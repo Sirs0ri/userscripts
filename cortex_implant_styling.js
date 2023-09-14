@@ -1601,6 +1601,12 @@ article:empty {
     z-index: 2;
 }
 
+/* fix emote zoom-on-hover */
+.status__prepend > span {
+    overflow-x: clip;
+    overflow-y: visible;
+}
+
 /* make sure links to user profiles are consistently underlined on hover */
 aside .status__display-name:hover,
 .status.collapsed .display-name:hover .display-name__html {
