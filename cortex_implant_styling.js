@@ -1668,12 +1668,20 @@ body>div[data-popper-escaped]:last-child {
 
 :is(#fake, .display-name__html) {
     text-overflow: ellipsis;
-    overflow: hidden;
+    overflow-x: clip;
+    overflow-y: visible;
+    direction: ltr;
+}
+
+.notification__message > span {
+    text-overflow: ellipsis;
+    overflow-x: clip;
+    overflow-y: visible;
 }
 
 :is(#fake, .display-name__html):has(img):hover {
-    margin: -2.4em;
-    padding: 2.4em;
+    margin: 0 -2.4em;
+    padding: 0 2.4em;
 }
 /* Firefox does some odd things with text-overflow: ellipsis; when en image at the end of the name would exceed the bounding box, this :after makes enough room for the image */
 .display-name:not(.inline) .display-name__html:has(img):after {
@@ -2267,6 +2275,7 @@ body {
     .status:not(.status-public):not(.unread):before, 
     .detailed-status:not(.detailed-status-public):not(.unread):before {
       content: "";
+      pointer-events: none;
       background: var(--color-privacy);
       position: absolute;
       inset: 0;
