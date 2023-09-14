@@ -674,9 +674,8 @@ body {
   settings.highlightReplies && GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
-    
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
-    --status-extra-top-padding: calc(1.5em);
+    --status-extra-top-padding: calc(1.5em + 10px);
   }
   
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info) {
@@ -684,34 +683,29 @@ body {
     position: relative;
   }
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before,
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):after {
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
     color: #606984;
     font-size: 14px;
-    margin-bottom: 8px;
     position: absolute;
-    top: -2px;
+    top: 0px;
   }
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
-    content: "\\21B6  ";
-    left: 48px;
-    transform: translateX(-100%)
-  }
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):after {
-    content: "Replying to a conversation";
-    left: 63px;
-    width: calc(100% - 63px)
+    content: "\\21B6  Replying to a conversation";
+    border: 1px solid;
+    border-radius: 100vmax;
+    padding: 1px 8px;
   }
 
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span:after {
     content: " a reply"
   }
 
+  /* FIXME: FF doesn't support lh - https://caniuse.com/mdn-css_types_length_lh
+   * This is a fallback based on Mastodon's default styles:
+   */
+  /*
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info .display-name__html:before {
     content: "\\21B6 ";
-    /* FIXME: FF doesn't support lh - https://caniuse.com/mdn-css_types_length_lh
-     * This is a fallback based on Mastodon's default styles:
-     */
     height: 18px;
     height: 1lh;
     aspect-ratio: 1;
@@ -721,6 +715,7 @@ body {
     place-content: end center;
     background: var(--color-grey-7);
   }
+  */
 }
 `)
 
