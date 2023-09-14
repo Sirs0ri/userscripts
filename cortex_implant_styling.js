@@ -1131,6 +1131,12 @@ markiere medien ohne alt-text*/
     margin-left: auto;
 }
 
+@supports selector(:has(a, b)) {
+  .status__avatar:has( > [data-avatar-of="@${user}"]) {
+    transform: scale(0.9);
+  }
+}
+
 [data-avatar-of="@${user}"]:before, [data-avatar-of="@${user}"]:after {
     content: "";
     box-sizing: border-box;
