@@ -1630,8 +1630,13 @@ aside .status__display-name:hover,
 .status.collapsed .status__content {
     height: 35px;
     margin-bottom: -15px;
-    -webkit-mask-image: linear-gradient(to bottom, black, transparent 60% );
-    mask-image: linear-gradient(to bottom, black, transparent 60% );
+    margin-top: -30px;
+    padding-top: 40px;
+
+    overflow: visible;
+
+    -webkit-mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
+    mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
 }
 
 :is(#fake, .status.collapsed .status__content):after {
@@ -3706,6 +3711,10 @@ span.relationship-tag {
         overflow: revert;
     }
 
+    .status__display-name:has(img.emojione:hover) {
+      z-index: 2
+  }
+
     /* Add Transition to make it look nice */
     :not(
         .reply-indicator__header strong,
@@ -3730,17 +3739,6 @@ span.relationship-tag {
         opacity: 1;
         /* increase by 1, to have the hovered emoji overlap all others */
         z-index: 102;
-    }
-
-    /* Adjust the "better gradient" on collapsed toots */
-    .status.collapsed .status__content:has(img.emojione:hover) {
-        overflow: visible;
-        margin-top: -30px;
-        padding-top: 40px;
-        z-index: 1;
-
-        -webkit-mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
-        mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
     }
 
     @keyframes heartbeat {
