@@ -1115,7 +1115,7 @@ markiere medien ohne alt-text*/
 
 @supports selector(:has(a, b)) {
   .status__avatar:has( > [data-avatar-of="@${user}"]) {
-    transform: scale(0.9);
+    transform: translateY(2.5%) scale(0.9);
   }
 }
 
