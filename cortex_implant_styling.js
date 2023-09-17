@@ -2233,7 +2233,8 @@ body {
 
     .load-more.load-gap {
         width: calc(100% - 40px);
-        margin: 0 auto 20px 0;
+        margin-block: 0 20px;
+        margin-inline: auto;
         border: 1px solid var(--color-grey-7);
         border-radius: var(--border-radius-button);
         background-color: var(--color-grey-2);
