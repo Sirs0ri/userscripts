@@ -1585,12 +1585,6 @@ article:empty {
     z-index: 2;
 }
 
-/* fix emote zoom-on-hover */
-.status__prepend > span {
-    overflow-x: clip;
-    overflow-y: visible;
-}
-
 /* make sure links to user profiles are consistently underlined on hover */
 aside .status__display-name:hover,
 .status.collapsed .display-name:hover .display-name__html {
@@ -1664,25 +1658,14 @@ aside .status__display-name:hover,
 
 :is(#fake, .display-name__html) {
     text-overflow: ellipsis;
-    overflow-x: clip;
-    overflow-y: visible;
     direction: ltr;
 }
 
 /* Firefox does some odd things with text-overflow: ellipsis; when an image at the end of the name would exceed the bounding box, this :after makes enough room for the image */
-    text-overflow: ellipsis;
-    overflow-x: clip;
-    overflow-y: visible;
-}
-
-:is(#fake, .display-name__html):has(img):hover {
-    margin: 0 -2.4em;
-    padding: 0 2.4em;
-}
 .display-name:not(.inline) .display-name__html:has(img):after {
-  content: "";
-  width: 2.4em;
-  display: inline-block;
+    content: "";
+    width: 2.4em;
+    display: inline-block;
 }
 
 .display-name__account {
@@ -3269,6 +3252,7 @@ body {
         padding-top: calc(58px + var(--status-extra-top-padding, 0px));
         margin-top: calc(-48px - var(--status-extra-top-padding, 0px));
         margin-bottom: 0;
+        overflow: visible;
     }
 
     .status__action-bar-spacer {
@@ -3656,62 +3640,69 @@ span.relationship-tag {
 `)
 
   // This heavily relies on :has(), without it the styling has no effect due to the @supports query.
-  // The :where(...):has(...) statement is used to select a bunch of wrappers that
-  // would otherwise have overflow: hidden, and remove that while an image is hovered.
+  // The statement is used to select a bunch of wrappers that
+  // would otherwise have overflow: hidden, and replace that with an overflow: clip that allows images to be expanded, but keeps e.g. ellipsises.
   //
   // This is mostly part of the Cortex-Implant Custom CSS by now, you shouldn't need this.
   GM_addStyle(`
 /* Hover-Zoom for emotes */
+
 @supports selector(:has(a, b)) {
-    /* Temporarily disable overflow on elements restraining the images while hovering */
-    :where(
-        /* Toots */
-        .status__content,
-        .display-name,
-        .status__display-name,
+    /* Change disable overflow on elements restraining the images while hovering */
 
-        /* Poll Option */
-        label.poll__option,
+    /* Toots */
+    .status__content,
+    .display-name,
+    .display-name__html,
+    .status__display-name,
 
-        /* DMs */
-        .conversation__content__names,
-        .detailed-status__display-name,
-        .detailed-status__display-name strong,
-        .conversation__content__info,
-        .conversation__content,
+    /* Poll Option */
+    label.poll__option,
 
-        /* Boosts */
-        .status__prepend>span,
+    /* DMs */
+    .conversation__content__names,
+    .detailed-status__display-name,
+    .detailed-status__display-name strong,
+    .conversation__content__info,
+    .conversation__content,
 
-        /* follow notifications */
-        .notification__message>span,
-        .account__display-name strong,
-        .account .account__display-name,
+    /* Boosts */
+    .status__prepend > span,
 
-        /* Profiles */
-        .account__header__tabs__name h1,
-        .account__header__content,
+    /* follow notifications */
+    .notification__message > span,
+    .account__display-name strong,
+    .account .account__display-name,
 
-        /* Profile Info Table */
-        .account__header__fields dd,
-        .account__header__fields dt,
+    /* Profiles */
+    .account__header__tabs__name h1,
+    .account__header__content,
 
-        /* Replying to a toot - body only */
-        .reply-indicator,
-        .reply-indicator__content,
-        .status__content,
+    /* Profile Info Table */
+    .account__header__fields dd,
+    .account__header__fields dt,
 
-        /* Picture in picture player */
-        .picture-in-picture__header__account,
-        .picture-in-picture__header .display-name span,
-        .picture-in-picture__header .display-name strong
-    ):has(img.emojione:hover) {
-        overflow: revert;
+    /* Replying to a toot - body only */
+    .reply-indicator,
+    .reply-indicator__content,
+    .status__content,
+
+    /* Picture in picture player */
+    .picture-in-picture__header__account,
+    .picture-in-picture__header .display-name span,
+    .picture-in-picture__header .display-name strong {
+        overflow: clip;
+        overflow-clip-margin: 4em;
     }
 
-    .status__display-name:has(img.emojione:hover) {
-      z-index: 2
-  }
+    .announcements__item__content {
+        overflow-x: hidden;
+    }
+
+    /* fix hovered emotes in a collapsed notification's 1st line */
+    .status__content.status__content--with-action:has(img.emojione:hover) {
+        z-index: 2;
+    }
 
     /* Add Transition to make it look nice */
     :not(
