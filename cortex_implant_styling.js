@@ -2229,6 +2229,30 @@ body {
         min-height: 40px;
     }
 
+    /* ===== "x new items" button when autorefresh is disabled ===== */
+
+    .load-more.load-gap {
+        width: calc(100% - 40px);
+        margin: 0 auto 20px 0;
+        border: 1px solid var(--color-grey-7);
+        border-radius: var(--border-radius-button);
+        background-color: var(--color-grey-2);
+        box-shadow: 0px 0px 10px -3px var(--color-primary);
+        color: var(--color-grey-8);
+        transition: 
+            background-color 200ms, 
+            border-color 200ms, 
+            box-shadow 200ms, 
+            color 200ms;
+    }
+    .load-more.load-gap:hover {
+        background-color: var(--color-grey-3);
+        border-color: var(--color-grey-8);
+        box-shadow: var(--neon-box-shadow-small);
+        color: var(--color-grey-9);
+    }
+
+
     /* ===== Posts styling ===== */
 
     .status {
