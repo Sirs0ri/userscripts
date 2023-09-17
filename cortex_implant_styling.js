@@ -499,10 +499,9 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
 
   // Use TamperMonkey's helper to inject CSS
   // see https://codepen.io/mattgrosswork/pen/VwprebG
+
+  /* general setup */
   GM_addStyle(`
-
-/* general setup */
-
 p {
     line-height: 1.5;
 }
@@ -699,23 +698,6 @@ body {
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span:after {
     content: " a reply"
   }
-
-  /* FIXME: FF doesn't support lh - https://caniuse.com/mdn-css_types_length_lh
-   * This is a fallback based on Mastodon's default styles:
-   */
-  /*
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info .display-name__html:before {
-    content: "\\21B6 ";
-    height: 18px;
-    height: 1lh;
-    aspect-ratio: 1;
-    border-radius: 100%;
-    margin-right: 0.5ch;
-    display: inline-grid;
-    place-content: end center;
-    background: var(--color-grey-7);
-  }
-  */
 }
 `)
 
@@ -1137,7 +1119,8 @@ markiere medien ohne alt-text*/
   }
 }
 
-[data-avatar-of="@${user}"]:before, [data-avatar-of="@${user}"]:after {
+[data-avatar-of="@${user}"]:before,
+[data-avatar-of="@${user}"]:after {
     content: "";
     box-sizing: border-box;
     display: inline-block;
@@ -1152,8 +1135,8 @@ markiere medien ohne alt-text*/
     scale: 0;
 }
 
-body.meow [data-avatar-of="@${user}"]:before,
-body.meow [data-avatar-of="@${user}"]:after {
+[data-avatar-of="@${user}"]:before,
+[data-avatar-of="@${user}"]:after {
     scale: 1;
 }
 
@@ -1173,7 +1156,7 @@ body.meow [data-avatar-of="@${user}"]:after {
 [data-avatar-of="@${user}"]:hover:after {
     animation: earwiggleright 1s ;
 }
-    `)
+`)
 
   if (doCatThings) {
     // most of this code is from https://github.com/zygisS22/color-palette-extraction/blob/master/index.js#L17, adjusted for my needs:
@@ -1492,6 +1475,7 @@ button[disabled] {
 
 /* ===== emotes ===== */
 
+/* allwo non-square emotes */
 :is(.emojione, #fake) {
     width: auto;
 }
@@ -1537,7 +1521,8 @@ article:empty {
     display: none;
 }
 
-/* hide some UI that looks broken from the latest 4.1.2+glitch update */
+
+/* ===== hide some UI that looks broken from the latest 4.1.2+glitch update ===== */
 
 .status__avatar {
     box-shadow: none;
@@ -1547,6 +1532,9 @@ article:empty {
 .notification__line, .status__line {
     display: none;
 }
+
+
+/* ===== Improve posts UI ===== */
 
 /* Make clickable area of posts larger */
 
@@ -1585,10 +1573,6 @@ article:empty {
 }
 .status__content--with-spoiler > div:not(.status__content__spoiler) {
     line-height: 1.5em;
-}
-
-#mastodon[data-props='{"locale":"de"}'] .compose-form__publish-button-wrapper > .button.primary::after {
-    content: "Cybertrööt!"
 }
 
 /* center the "USERNAME boosted" text at the top of a toot */
@@ -1649,12 +1633,7 @@ aside .status__display-name:hover,
     display: none;
 }
 
-/* Make sure the search suggestions are always ontop, the otherwise highest z-index I use is 100 */
-body>div[data-popper-escaped]:last-child {
-    z-index: 1000 !important;
-}
-
-/* Make filtered posts less intrusive */
+/* ===== Make filtered posts less intrusive ===== */
 
 .status__wrapper--filtered {
     padding: 0;
@@ -1690,7 +1669,7 @@ body>div[data-popper-escaped]:last-child {
     direction: ltr;
 }
 
-.notification__message > span {
+/* Firefox does some odd things with text-overflow: ellipsis; when an image at the end of the name would exceed the bounding box, this :after makes enough room for the image */
     text-overflow: ellipsis;
     overflow-x: clip;
     overflow-y: visible;
@@ -1700,7 +1679,6 @@ body>div[data-popper-escaped]:last-child {
     margin: 0 -2.4em;
     padding: 0 2.4em;
 }
-/* Firefox does some odd things with text-overflow: ellipsis; when en image at the end of the name would exceed the bounding box, this :after makes enough room for the image */
 .display-name:not(.inline) .display-name__html:has(img):after {
   content: "";
   width: 2.4em;
@@ -1709,6 +1687,18 @@ body>div[data-popper-escaped]:last-child {
 
 .display-name__account {
     position: relative;
+}
+
+
+/* ===== some other changes ===== */
+
+#mastodon[data-props='{"locale":"de"}'] .compose-form__publish-button-wrapper > .button.primary::after {
+    content: "Cybertrööt!"
+}
+
+/* Make sure the search suggestions are always ontop, the otherwise highest z-index I use is 100 */
+body>div[data-popper-escaped]:last-child {
+    z-index: 1000 !important;
 }
 
 `)
@@ -2238,6 +2228,8 @@ body {
         box-sizing: border-box;
     }
 
+    /* ===== info banners ===== */
+
     .dismissable-banner {
         margin-top: 20px;
         margin-bottom: 0px;
@@ -2245,8 +2237,8 @@ body {
         border: 1px solid var(--color-grey-4);
     }
     .item-list > .dismissable-banner {
-      margin-top: 0;
-      margin-bottom: 20px;
+        margin-top: 0;
+        margin-bottom: 20px;
     }
 
     .dismissable-banner__action button {
