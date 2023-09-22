@@ -2206,13 +2206,12 @@ body {
     }
     .columns-area--mobile .scrollable {
         background: none;
-        contain: style;
-        margin-top: 20px;
-    }
-    .explore__search-results,
-    .explore__links {
-        margin-top: 20px;
-    }
+    contain: style;
+    margin-top: 20px;
+  }
+  .explore__links {
+    margin-top: 20px;
+  }
     .columns-area--mobile {
         padding: 0 10px 10px;
         box-sizing: border-box;
@@ -2330,31 +2329,54 @@ body {
     }
     .hicolor-privacy-icons .privacy-dropdown__option .fa-lock {
         color: var(--color-yellow);
-    }
+  }
 
-    /* All these refer to posts, in feeds... */
-    .columns-area--mobile article,
-    /* the main post in post-detail-view */
-    .columns-area--mobile .scrollable>div[tabindex="-1"],
-    /* and preceeding and following posts in post-detail-view */
-    .columns-area--mobile .scrollable>div>div[tabindex="-1"],
+  /* All these refer to posts, in feeds... */
+  .columns-area--mobile article:not(.explore__search-results article:only-child),
+  /* the main post in post-detail-view */
+  .columns-area--mobile .scrollable>div[tabindex="-1"],
+  /* and preceeding and following posts in post-detail-view */
+  .columns-area--mobile .scrollable>div>div[tabindex="-1"],
 
-    /* not technically posts, but these explore / search result items should have the same styles */
-    .explore__search-results .account,
-    .explore__search-results .empty-column-indicator,
-    .explore__links .dismissable-banner,
-    .regeneration-indicator
-    {
-        margin-bottom: 20px;
+  /* not technically posts, but these explore / search result items should have the same styles */
+  .explore__search-results .empty-column-indicator,
+  .explore__links .dismissable-banner,
+  .search-results__section > div,
+  .regeneration-indicator
+  {
+    margin-bottom: 20px;
         border: 1px solid var(--color-grey-4);
         box-sizing: border-box;
         background: var(--color-grey-2);
-        border-radius: var(--border-radius-button);
-    }
+    border-radius: var(--border-radius-button);
+  }
 
-    .explore__search-results>button {
-        margin-bottom: 20px;
-        border: 1px solid var(--color-grey-4);
+  /* Search Results */
+  .search-results__section {
+    margin-bottom: 20px;
+    border: none;
+  }
+
+  .search-results__section > div:not([tabindex="-1"]) {
+    margin-bottom: var(--border-radius-button-between);
+    border-radius: var(--border-radius-button-between);
+  }
+  .search-results__section > div:first-child {
+    border-top-left-radius: var(--border-radius-button);
+    border-top-right-radius: var(--border-radius-button);
+  }
+  .search-results__section > div:last-child {
+    border-bottom-left-radius: var(--border-radius-button);
+    border-bottom-right-radius: var(--border-radius-button);
+  }
+
+  .search-results__section .search-results__section__header {
+    background: var(--color-grey-3);
+  }
+
+  .explore__search-results>button {
+    margin-bottom: 20px;
+    border: 1px solid var(--color-grey-4);
         border-radius: 8px;
         transition: background 200ms, box-shadow 200ms, color 200ms;
     }
@@ -2367,12 +2389,16 @@ body {
         border-bottom: none;
     }
     .explore__search-results .trends__item+div[tabindex="-1"] {
-        margin-top: 20px
-    }
+    margin-top: 20px
+  }
+
+  .explore__search-results article>.account {
+    border: none;
+  }
 
 
 
-    /* give the selected post in single-post-view a lighter background */
+  /* give the selected post in single-post-view a lighter background */
     .columns-area--mobile .scrollable>div[tabindex="-1"]:has(.detailed-status) {
         box-shadow: var(--neon-box-shadow-small);
         border-color: var(--color-grey-7);
@@ -2418,13 +2444,13 @@ body {
         height: 100%;
     }
 
-    /* Make sure everything inside a post follows the border radius */
-    article > div[tabindex="-1"],
-    .focusable,
-    .columns-area--mobile article > div,
-    .columns-area--mobile article > div > .notification.unread,
-    .columns-area--mobile article > div > .notification.unread:before,
-    .columns-area--mobile article > div > .status__wrapper.unread,
+  /* Make sure everything inside a post follows the border radius */
+  article > div[tabindex="-1"],
+  .focusable,
+  .columns-area--mobile article > div:not(.search-results__section),
+  .columns-area--mobile article > div > .notification.unread,
+  .columns-area--mobile article > div > .notification.unread:before,
+  .columns-area--mobile article > div > .status__wrapper.unread,
     .columns-area--mobile article > div > .status__wrapper.unread:before {
         border-radius: inherit;
     }
