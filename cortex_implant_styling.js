@@ -2828,12 +2828,13 @@ body {
         border-bottom-right-radius: inherit;
     }
 
-    .account__header__fields dt,
-    .account__header__fields dd {
-        border-radius: var(--border-radius-button-between);
-    }
+  .account__header__fields dt,
+  .account__header__fields dd {
+    border-radius: var(--border-radius-button-between);
+    max-height: unset;
+  }
 
-    .account__header__fields dt {
+  .account__header__fields dt {
         /* border: 1px solid var(--color-grey-6); */
         background: var(--color-grey-1);
         border-top-left-radius: inherit;
@@ -2843,12 +2844,13 @@ body {
     }
 
     .account__header__fields dd {
-        border: 1px solid var(--color-grey-6);
-        background: hsl(var(--hsl-offwhite-blue) / 0.05);
-        position: relative;
-    }
+    border: 1px solid var(--color-grey-6);
+    background: hsl(var(--hsl-offwhite-blue) / 0.05);
+    position: relative;
+    white-space: initial;
+  }
 
-    .account__header__fields dd a:before {
+  .account__header__fields dd a:before {
         content: "";
         position: absolute;
         inset: 0;
@@ -2859,12 +2861,13 @@ body {
     }
     .account__header__fields dd a:hover:before {
         opacity: 0.1;
-    }
+  }
 
-    :is(#fake, .account__header__fields dd) {
-        border-top-right-radius: inherit;
-        border-bottom-right-radius: inherit;
-    }
+  :is(#fake, .account__header__fields dd) {
+    border-radius: var(--border-radius-button-between);
+    border-top-right-radius: inherit;
+    border-bottom-right-radius: inherit;
+  }
 
     /* Make sure the "joined at..." date aligns with the text above it */
     :is(#fake, .account__header__joined) {
