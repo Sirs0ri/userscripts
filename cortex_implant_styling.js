@@ -2272,11 +2272,17 @@ body {
         background-color: var(--color-grey-3);
         border-color: var(--color-grey-8);
         box-shadow: var(--neon-box-shadow-small);
-        color: var(--color-grey-9);
-    }
+    color: var(--color-grey-9);
+  }
+
+  /* disable the styling on the article sometimes surrounding the load gap */
+  article[data-id^="gap:"] {
+    background: none !important;
+    border: none !important;
+  }
 
 
-    /* ===== Posts styling ===== */
+  /* ===== Posts styling ===== */
 
     .status {
         display: flex;
