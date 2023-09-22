@@ -1850,21 +1850,28 @@ body {
     }
 
     :is(#fake, .compose-panel) .spacer {
-        margin: 30px 0 !important;
-    }
+    margin: 30px 0 !important;
+  }
 
-    /* Profile Menu */
-    .dropdown-menu {
-        border-radius: 8px;
-        padding: 8px 0;
-    }
+  /* Profile Menu, search */
+  
+  .search__popout,
+  .dropdown-menu {
+    z-index: 101;
+    border-radius: 8px;
+    margin-top: var(--border-radius-button-between);
+    backdrop-filter: blur(3px);
+    background: hsla(var(--hsl-grey-3) / 0.8);
+    border: 1px solid var(--color-grey-7);
+  }
+  .search__popout h4 {
+    color: var(--color-white);
+  }
+  .search__popout__menu__message {
+    color: var(--color-grey-9);
+  }
 
-    /* Search popup */
-    .search-popout {
-        border-radius: 8px;
-    }
-
-    /* ===== Compose form ===== */
+  /* ===== Compose form ===== */
 
     /* I'm abusing a property of :is() to avoid an !important here.
      * :is()'s specificity is the highest spec. of all selectors in it,
