@@ -1681,9 +1681,25 @@ aside .status__display-name:hover,
 
 /* Make sure the search suggestions are always ontop, the otherwise highest z-index I use is 100 */
 body>div[data-popper-escaped]:last-child {
-    z-index: 1000 !important;
+  z-index: 1000 !important;
 }
 
+/* add "follow/unfollow" labels to buttons in followed/following lists */
+.account__relationship button:only-child:not([disabled]):before {
+  content: attr(title);
+  margin-inline-end: 1em;
+  font-size: 1rem;
+}
+
+.account__relationship {
+  padding: 0
+}
+
+.account__relationship button {
+  padding: 10px;
+  height: auto !important;
+  width: auto !important;
+}
 `)
 
   /* Add our logo */
