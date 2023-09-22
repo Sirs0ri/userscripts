@@ -2486,17 +2486,22 @@ body {
         border: none;
         background: none;
         padding: 15px;
-        padding-top: 0;
-    }
+    padding-top: 0;
+  }
 
-    /* Notifications / explore */
+  /* Notifications / explore / Account's post/replies/media tabs  */
+  /* .notification__filter-bar
+   *    notifications use  button > i    and
+   *                       button > span
+   *
+   * .account__section-headline
+   *    explore uses       a      > span
+   *    account uses       a      > span
+   *    "live feeds" uses  a      > div
+   */
 
-    article .account {
-        border: none;
-    }
-
-    .account__section-headline {
-        padding-inline: 10px;
+  .account__section-headline {
+    padding-inline: 10px;
     }
 
     .account__section-headline,
@@ -2518,48 +2523,58 @@ body {
     .account__section-headline :is(button, a),
     .notification__filter-bar button {
         border-radius: inherit;
-        flex: 1 1 0;
-    }
+    flex: 1 1 0;
+  }
 
-    .account__section-headline :is(button, a) div,
-    .notification__filter-bar button span,
-    .notification__filter-bar button i {
-        transition: color 200ms
-    }
-    .account__section-headline :is(button, a):hover div,
-    .notification__filter-bar button:hover span,
-    .notification__filter-bar button:hover i {
-        color: var(--color-white);
+  .account__section-headline :is(button, a) :is(div, span),
+  .notification__filter-bar button span,
+  .notification__filter-bar button i {
+    transition: color 200ms
+  }
+  .account__section-headline :is(button, a):hover :is(div, span),
+  .notification__filter-bar button:hover span,
+  .notification__filter-bar button:hover i {
+    color: var(--color-white);
     }
 
     .notification__filter-bar button i:before {
-        z-index: 1;
-        position: relative;
-    }
-    .account__section-headline :is(button, a) div:before,
-    .notification__filter-bar button span:before {
-        mix-blend-mode: screen;
-    }
-    .account__section-headline :is(button, a) div:before,
-    .notification__filter-bar button span:before,
-    .notification__filter-bar button i:after {
-        content: "";
+    z-index: 1;
+    position: relative;
+  }
+  .account__section-headline :is(button, a) :is(div, span):before,
+  .notification__filter-bar button span:before {
+    mix-blend-mode: screen;
+  }
+  .account__section-headline :is(button, a) :is(div, span):before,
+  .notification__filter-bar button span:before,
+  .notification__filter-bar button i:after {
+    content: "";
         position: absolute;
         inset: 4px;
         background: transparent;
         border-radius: 8px;
-        transition: background 200ms;
-        z-index: 0;
-    }
-    .account__section-headline :is(button, a):hover div:before,
-    .notification__filter-bar button:hover span:before,
-    .notification__filter-bar button:hover i:after {
-        background-color: var(--color-grey-6);
-    }
+    transition: background 200ms;
+    z-index: 0;
+  }
+  .account__section-headline :is(button, a):hover :is(div, span):before,
+  .notification__filter-bar button:hover span:before,
+  .notification__filter-bar button:hover i:after {
+    background-color: var(--color-grey-6);
+  }
+
+  /* adjust the 4.2.0 "active" indicator */
+  .account__section-headline a.active::before, 
+  .account__section-headline button.active::before, 
+  .notification__filter-bar a.active::before, 
+  .notification__filter-bar button.active::before {
+    width: 50%;
+    margin: 0 25%;
+    bottom: 4px;
+  }
 
 
-    /* Mentions use .status__wrapper directly, all other notifications are wrapped in a .notification div */
-    .status.unread:after,
+  /* Mentions use .status__wrapper directly, all other notifications are wrapped in a .notification div */
+  .status.unread:after,
     .notification.unread:after {
         content: "";
         position: absolute;
