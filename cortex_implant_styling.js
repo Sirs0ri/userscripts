@@ -3785,15 +3785,19 @@ span.relationship-tag {
     .reply-indicator__content,
     .status__content,
 
-    /* Picture in picture player */
-    .picture-in-picture__header__account,
-    .picture-in-picture__header .display-name span,
-    .picture-in-picture__header .display-name strong {
-        overflow: clip;
-        overflow-clip-margin: 4em;
-    }
+  /* Picture in picture player */
+  .picture-in-picture__header__account,
+  .picture-in-picture__header .display-name span,
+  .picture-in-picture__header .display-name strong,
 
-    .announcements__item__content {
+  /* admin interface */
+  .batch-table__row__content--with-image
+  {
+    overflow: clip;
+    overflow-clip-margin: 5em;
+  }
+
+  .announcements__item__content {
         overflow-x: hidden;
     }
 
