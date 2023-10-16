@@ -1483,6 +1483,7 @@ button[disabled] {
 
 /* improve visibility of mentions (and thereby hashtags) and code snippets */
 a.mention,
+a.hashtag,
 code {
   background: rgba(255 255 255 / 0.1);
   border-radius: 4px;
@@ -2230,6 +2231,11 @@ body {
   .columns-area--mobile {
     padding: 0 10px 10px;
     box-sizing: border-box;
+  }
+
+  .hashtag-header {
+    border: none;
+    margin-bottom: 20px;
   }
 
   /* ===== info banners ===== */
