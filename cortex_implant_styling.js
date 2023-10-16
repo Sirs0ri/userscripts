@@ -1470,12 +1470,19 @@ button[disabled] {
   border-radius: inherit !important;
 }
 
+.status__content__read-more-button, 
+.status__content__translate-button {
+  padding: 0;
+  margin-top: 1em;
+}
+
 
 /* ===== emotes ===== */
 
 /* allwo non-square emotes */
 :is(.emojione, #fake) {
   width: auto;
+  vertical-align: text-bottom;
 }
 
 
@@ -1689,9 +1696,14 @@ body>div[data-popper-escaped]:last-child {
   margin-inline-end: 1em;
   font-size: 1rem;
 }
+article > .account > .account__wrapper {
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
 
 .account__relationship {
-  padding: 0
+  padding: 0;
+  place-self: auto end;
 }
 
 .account__relationship button {
@@ -2419,7 +2431,7 @@ body {
     margin-top: 20px
   }
 
-  .explore__search-results article>.account {
+  .account {
     border: none;
   }
 
@@ -3777,7 +3789,7 @@ span.relationship-tag {
 
   /* Toots */
   .status__content,
-  .display-name,
+  :is(.display-name, #fake),
   .display-name__html,
   .status__display-name,
 
