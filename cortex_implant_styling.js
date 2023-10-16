@@ -1705,6 +1705,9 @@ article > .account > .account__wrapper {
   display: grid;
   grid-template-columns: auto 1fr;
 }
+article > .account > .account__wrapper > .display-name {
+  max-width: calc(100% - 60px);
+}
 
 .account__relationship {
   padding: 0;
