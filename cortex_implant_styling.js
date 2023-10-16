@@ -18,6 +18,11 @@
 /*
  * == TODO ==
  *    - Cache user's colors instead of recalculating on each reload
+ *    - Posts listed in search are weird, especially when searching for a specific post
+ *    - vanilla flavor:
+ *      - post actions have a broken layout
+ *      - header has a border-bottom
+ *      - Profile view is broken
  */
 
 /*
@@ -1171,7 +1176,7 @@ markiere medien ohne alt-text */
     const buildRgb = (imageData) => {
       const targetLength = imageData.length / 4
       const rgbValues = Array(targetLength)
-      // note that we are loopin every 4!
+      // note that we are looping every 4!
       // for every Red, Green, Blue and Alpha
       for (let i = 0; i < targetLength; i++) {
         const j = i * 4
@@ -2864,6 +2869,7 @@ body {
     border: 1px solid var(--color-grey-6);
     background: hsl(var(--hsl-offwhite-blue) / 0.05);
     position: relative;
+    /* TODO: This looks weird sometimes. e.g. https://corteximplant.com/@LevelUp@mastodon.art */
     white-space: initial;
   }
 
@@ -3425,7 +3431,7 @@ body.layout-multiple-columns .drawer__inner__mastodon {
 .emoji-mart-category-list {
   display: grid;
   grid-template-columns: repeat(6, minmax(42px, 1fr));
-  /* todo: is there a better way for this, considering out cells are supposed to be the same size anyways? */
+  /* todo: is there a better way for this, considering the cells are supposed to be the same size anyways? */
 }
 .emoji-mart-category button img,
 .emoji-mart-category button span {
@@ -3831,6 +3837,11 @@ span.relationship-tag {
 
   /* admin interface */
   .batch-table__row__content--with-image
+
+  /* FIXME: overflof-clip-margin has kinda bad support
+   * this needs a fallback for safari
+   * https://caniuse.com/?search=overflow-clip
+   */
   {
     overflow: clip;
     overflow-clip-margin: 5em;
