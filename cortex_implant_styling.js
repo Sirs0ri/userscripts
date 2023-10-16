@@ -2908,6 +2908,18 @@ body {
     outline-offset: 0px;
   }
 
+
+  .conversation--unread.muted :is(
+    .status__content, 
+    .status__content a, 
+    .status__content p, 
+    .status__content__text, 
+    .status__display-name strong,
+    #important
+  ) {
+    color: var(--fg)
+  }
+
   /* Lists / Follower requests */
   h1#Lists, h1#Follow-requests {
     margin-left: -10px;
