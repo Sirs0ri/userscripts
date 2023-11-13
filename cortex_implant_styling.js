@@ -1493,9 +1493,10 @@ button[disabled] {
 
 /* ===== special formatting ===== */
 
-/* improve visibility of mentions (and thereby hashtags) and code snippets */
+/* improve visibility of mentions, hashtags and code snippets */
 a.mention,
 a.hashtag,
+a.status-link:not(.unhandled-link),
 code {
   background: rgba(255 255 255 / 0.1);
   border-radius: 4px;
