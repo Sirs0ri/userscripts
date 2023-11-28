@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Block Pay2Win Banners
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.0
 // @description  Removes nagging "Subscribe or let us sell your data" banners
-// @author       You
+// @author       https://corteximplant.com/@Sirs0ri
 // @match        http://*/*
 // @match        https://*/*
 // @grant        none
