@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.6.0-b.25
+// @version      1.6.0-b.26
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @match        https://corteximplant.com/*
@@ -1953,6 +1953,11 @@ body {
     top: 0;
   }
 
+  .reply-indicator__cancel {
+    z-index: 1;
+    position: relative;
+  }
+
   /* make sure this isn't covered by the compose area in advanced mode*/
   .emoji-picker-dropdown__menu {
     z-index: 100;
@@ -3851,8 +3856,12 @@ span.relationship-tag {
     overflow-clip-margin: 5em;
   }
 
+  /* some fixes where clip won't work: */
   .announcements__item__content {
     overflow-x: hidden;
+  }
+  .reply-indicator {
+    overflow-y: auto;
   }
 
   /* fix hovered emotes in a collapsed notification's 1st line */
