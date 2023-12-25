@@ -2131,9 +2131,11 @@ body {
 
   .search__input {
     border-radius: 8px;
-    outline: 1px solid var(--color-grey-6);
-    outline-offset: -1px;
+    border: 1px solid var(--color-grey-6);
     background: var(--color-grey-5);
+    box-sizing: border-box;
+    height: 48px;
+    padding-block: 0 !important;
   }
 
   #tabs-bar__portal>button:after,
