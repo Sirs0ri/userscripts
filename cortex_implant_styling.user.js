@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.6.0-b.28
+// @version      1.6.0-b.29
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -20,7 +20,6 @@
 /*
  * == TODO ==
  *    - Cache user's colors instead of recalculating on each reload
- *    - Posts listed in search are weird, especially when searching for a specific post
  *    - vanilla flavor:
  *      - post actions have a broken layout
  *      - header has a border-bottom
@@ -40,7 +39,7 @@
  *        - [off] Letterbox Media
  *        - [off] Full-width media previews
  *        - [on ] Inline preview cards for external links
- *      Alternatively, you can turn off the glow effect entirely via toptions found in the page footer.
+ *      Alternatively, you can turn off the glow effect entirely via the options found in the page footer.
  */
 
 (function () {
@@ -2392,8 +2391,10 @@ body {
   .columns-area--mobile article:not(.explore__search-results article:only-child),
   /* the main post in post-detail-view */
   .columns-area--mobile .scrollable>div[tabindex="-1"],
-  /* and preceeding and following posts in post-detail-view */
+  /* preceeding and following posts in post-detail-view */
   .columns-area--mobile .scrollable>div>div[tabindex="-1"],
+  /* search results */
+  .item-list>article[data-id],
 
   /* not technically posts, but these explore / search result items should have the same styles */
   .explore__search-results .empty-column-indicator,
@@ -2414,7 +2415,7 @@ body {
     border: none;
   }
 
-  .search-results__section > div:not([tabindex="-1"]) {
+  .search-results__section > div {
     margin-bottom: var(--border-radius-button-between);
     border-radius: var(--border-radius-button-between);
   }
@@ -2425,6 +2426,11 @@ body {
   .search-results__section > div:last-child {
     border-bottom-left-radius: var(--border-radius-button);
     border-bottom-right-radius: var(--border-radius-button);
+  }
+  
+  /* remove the drop shadow from posts in search results because otherwise it looks too tight */
+  .search-results__section > div[tabindex="-1"] > :where(.status-unlisted, .status-public, .status-direct, .status-private) {
+    box-shadow: none;
   }
 
   .search-results__section .search-results__section__header {
