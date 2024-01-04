@@ -19,7 +19,6 @@
 
 /*
  * == TODO ==
- *    - Cache user's colors instead of recalculating on each reload
  *    - vanilla flavor:
  *      - post actions have a broken layout
  *      - header has a border-bottom
@@ -170,6 +169,15 @@
       textLabel: "[Advanced view] Bring back the old Cyberpunks",
       textDescription: "Show the two cyberpunks chilling at the bottom of the compose area. When disabled, John Cyberdon will watch over your toots.",
       defaultvalue: false,
+    },
+    /* data only, as long as there's no textLabel a setting will not have a GUI */
+    {
+      id: "catEarColorsStyle",
+      default: null,
+    },
+    {
+      id: "catEarColorsLink",
+      default: null,
     },
   ]
 
@@ -360,7 +368,9 @@
     settingsWrapper.appendChild(createElem("h1", { innerText: "General" }))
 
     for (const option of allOptions) {
-      settingsWrapper.appendChild(_makeSettingsItem(option.id, option.textLabel, option.textDescription))
+      if (option.textLabel) {
+        settingsWrapper.appendChild(_makeSettingsItem(option.id, option.textLabel, option.textDescription))
+      }
     }
 
     modalModal.appendChild(settingsWrapper)
@@ -1133,8 +1143,8 @@ markiere medien ohne alt-text */
   position: relative;
   z-index: -1;
   border: solid 4px currentColor;
-  color: var(--color-1);
-  background: var(--color-6);
+  color: var(--color-1, transparent);
+  background: var(--color-6, transparent);
   transition: scale 300ms;
   scale: 0;
 }
@@ -1276,6 +1286,12 @@ markiere medien ohne alt-text */
     }
 
     const getColors = (link) => {
+      if (settings.catEarColorsStyle && settings.catEarColorsLink === link) {
+        // use existing colors, don't recalculate them
+        GM_addStyle(settings.catEarColorsStyle)
+        return
+      }
+
       const image = new Image()
 
       // Set the canvas size to be 100x100 - enough to extract some "good enough" colors.
@@ -1310,6 +1326,11 @@ markiere medien ohne alt-text */
         document.body.classList.add("meow")
         const style = `body {\n${quantColors.map((p, i) => `--color-${i}: rgb(${p.r}, ${p.g}, ${p.b});`).join("\n")}\n}`
         GM_addStyle(style)
+
+        // Store colors for the next page load
+        settings.catEarColorsStyle = style
+        settings.catEarColorsLink = link
+        storeSettings(settings)
       }
       image.src = link
     }
