@@ -1434,6 +1434,11 @@ markiere medien ohne alt-text */
   background: transparent;
 }
 
+/* Hide the thumbnail-placeholder for horizontal link previews */
+.status-card.horizontal:has(i.fa-file-text) .status-card__image {
+  display: none;
+}
+
 
 /* ===== BUTTONS ===== */
 
@@ -2957,6 +2962,11 @@ body {
     color: var(--fg)
   }
 
+  .conversation__content__names {
+    white-space: normal;
+  }
+
+
   /* Lists / Follower requests */
   h1#Lists, h1#Follow-requests {
     margin-left: -10px;
@@ -3823,7 +3833,6 @@ span.relationship-tag {
 
   /* DMs */
   .conversation__content__names,
-  .detailed-status__display-name,
   .detailed-status__display-name strong,
   .conversation__content__info,
   .conversation__content,
