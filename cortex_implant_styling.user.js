@@ -27,7 +27,8 @@
 
 /*
  * == KNOWN ISSUES ==
- *    - Firefox doesn't support :has() yet, unless you manually turn it on via the layout.css.has-selector.enabled flag.
+ *    - Firefox doesn't support :has() on <121, unless you manually turn it on via the layout.css.has-selector.enabled flag.
+ *      Starting with 121 (Released 2023-12-19) that flag will be on by default!
  *      The general restyling shouldn't be affected either way.
  *      With that flag active, everything should work.
  *      Affected parts of this stylesheet have a notice at the start.
