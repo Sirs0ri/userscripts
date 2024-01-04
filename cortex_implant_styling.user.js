@@ -2434,6 +2434,12 @@ body {
     box-sizing: border-box;
     background: var(--color-grey-2);
     border-radius: var(--border-radius-button);
+    /* TODO: remove old styles */
+
+    background: color-mix(in srgb, transparent 90%, rgb(255, 255, 255));
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid color-mix(in srgb, transparent 85%, white);
+    backdrop-filter: blur(10px) saturate(180%);
   }
 
   /* Search Results */
