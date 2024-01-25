@@ -559,10 +559,10 @@ body {
   --color-gold: hsl(var(--hsl-gold));
   /* boosts */
   --hsl-purple: 240 100% 77%;
-  --color-purple: hsl(var(--hsl-purple)); 
+  --color-purple: hsl(var(--hsl-purple));
   /* reports */
   --hsl-orange: 22 100% 45%;
-  --color-orange: hsl(var(--hsl-orange)); 
+  --color-orange: hsl(var(--hsl-orange));
 
   /* page background  */
   --color-grey-0: hsl(224deg 17% 9%);
@@ -700,7 +700,7 @@ body {
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
     --status-extra-top-padding: calc(1.5em + 10px);
   }
-  
+
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info) {
     padding-top: var(--status-extra-top-padding, 0px);
     position: relative;
@@ -1509,7 +1509,7 @@ button[disabled] {
   border-radius: inherit !important;
 }
 
-.status__content__read-more-button, 
+.status__content__read-more-button,
 .status__content__translate-button {
   padding: 0;
   margin-top: 1em;
@@ -2329,10 +2329,10 @@ body {
     background-color: var(--color-grey-2);
     box-shadow: 0px 0px 10px -3px var(--color-primary);
     color: var(--color-grey-8);
-    transition: 
-      background-color 200ms, 
-      border-color 200ms, 
-      box-shadow 200ms, 
+    transition:
+      background-color 200ms,
+      border-color 200ms,
+      box-shadow 200ms,
       color 200ms;
   }
   .load-more.load-gap:hover {
@@ -2384,7 +2384,7 @@ body {
     position: relative;
   }
 
-  .status:not(.status-public):not(.unread):before, 
+  .status:not(.status-public):not(.unread):before,
   .detailed-status:not(.detailed-status-public):not(.unread):before {
     content: "";
     pointer-events: none;
@@ -2466,7 +2466,7 @@ body {
     border-bottom-left-radius: var(--border-radius-button);
     border-bottom-right-radius: var(--border-radius-button);
   }
-  
+
   /* remove the drop shadow from posts in search results because otherwise it looks too tight */
   .search-results__section > div[tabindex="-1"] > :where(.status-unlisted, .status-public, .status-direct, .status-private) {
     box-shadow: none;
@@ -2665,9 +2665,9 @@ body {
   }
 
   /* adjust the 4.2.0 "active" indicator */
-  .account__section-headline a.active::before, 
-  .account__section-headline button.active::before, 
-  .notification__filter-bar a.active::before, 
+  .account__section-headline a.active::before,
+  .account__section-headline button.active::before,
+  .notification__filter-bar a.active::before,
   .notification__filter-bar button.active::before {
     width: 50%;
     margin: 0 25%;
@@ -2716,7 +2716,7 @@ body {
   .notification-admin-report {
     --hsl-notification: var(--hsl-orange);
   }
-  
+
   /* repurpose the before element adding a border */
   .notification.unread:before, .status.unread:before {
     border-inline-start-color: hsl(var(--hsl-notification, 0 0% 0% / 0));
@@ -2758,13 +2758,13 @@ body {
     margin-left: 5px;
   }
 
-  /* add a transparent tint to the existing background-color. 
+  /* add a transparent tint to the existing background-color.
    * Using a gradient between 2 identical colors because that goes through
    * background-image which stacks ontop of the background-color! */
   .status,
   .notification {
     background-image: linear-gradient(
-      hsl(var(--hsl-notification, transparent) / 0.05), 
+      hsl(var(--hsl-notification, transparent) / 0.05),
       hsl(var(--hsl-notification, transparent) / 0.05));
   }
 
@@ -2986,10 +2986,10 @@ body {
 
 
   .conversation--unread.muted :is(
-    .status__content, 
-    .status__content a, 
-    .status__content p, 
-    .status__content__text, 
+    .status__content,
+    .status__content a,
+    .status__content p,
+    .status__content__text,
     .status__display-name strong,
     #important
   ) {
@@ -3245,11 +3245,11 @@ body {
   }
 
   /* The CI Theme hides the mastodon usually displayed here - let's replace it with something more thematically fitting */
-  
+
   body.layout-multiple-columns .drawer__inner__mastodon {
     background: url(/packs/media/flavours/glitch/images/wave-drawer-glitched-f44fa25589f31f0ee52ab119cea119cb.png) no-repeat bottom/100% auto;
     border-radius: inherit;
-    
+ 
     display: flex;
     align-items: flex-end;
   }
@@ -3379,7 +3379,7 @@ body {
   .account-role::before {
     z-index: -2;
     inset: -1px;
-    background-image: 
+    background-image:
       linear-gradient(60deg, transparent 0%, transparent 40%, hsla(var(--border-shine-hsl) / 0.4) 50%, transparent 60%, transparent 100%),
       linear-gradient(hsl(var(--border-hsl)), hsl(var(--border-hsl)));
   }
@@ -3387,7 +3387,7 @@ body {
   .account-role::after {
     z-index: -1;
     inset: 0px;
-    background-image: 
+    background-image:
       linear-gradient(60deg, transparent 0%, transparent 45%, hsla(var(--bg-shine-hsl) / 0.2) 55%, transparent 65%, transparent 100%),
       linear-gradient(hsl(var(--bg-hsl)), hsl(var(--bg-hsl)));
   }
@@ -3708,7 +3708,7 @@ span.relationship-tag {
 @keyframes paths {
   0% {
     clip-path: polygon(
-       0% 43%, 83% 43%, 83% 22%, 23% 22%, 23% 24%, 91% 24%, 91% 26%, 
+       0% 43%, 83% 43%, 83% 22%, 23% 22%, 23% 24%, 91% 24%, 91% 26%,
       18% 26%, 18% 83%, 29% 83%, 29% 17%, 41% 17%, 41% 39%, 18% 39%,
       18% 82%, 54% 82%, 54% 88%, 19% 88%, 19%  4%, 39%  4%, 39% 14%,
       76% 14%, 76% 52%, 23% 52%, 23% 35%, 19% 35%, 19%  8%, 36%  8%,
@@ -3988,6 +3988,6 @@ body.layout-single-column:after {
   z-index: -9999;
 
   opacity: 0.8;
-}  
+}
 `)
 })()
