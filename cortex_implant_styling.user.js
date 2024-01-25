@@ -112,6 +112,12 @@
 
   const allOptions = [
     {
+      id: "enableTheme",
+      textLabel: "general restyling",
+      textDescription: "Enable my theme across the mastodon webclient.",
+      defaultvalue: true,
+    },
+    {
       id: "hideCheckmarks",
       textLabel: "hide checkmarks",
       textDescription: "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons",
@@ -1352,7 +1358,7 @@ markiere medien ohne alt-text */
 
   // #endregion
 
-  GM_addStyle(`
+  settings.enableTheme && GM_addStyle(`
 
 /* ====================
  * Misc general changes
@@ -1818,7 +1824,7 @@ article > .account > .account__wrapper .display-name {
 `)
 
   /* neon-ify the page and other style adjustments */
-  GM_addStyle(`
+  settings.enableTheme && GM_addStyle(`
 
 body {
   background: var(--color-grey-0)
@@ -3599,7 +3605,7 @@ span.relationship-tag {
 `)
 
   /* ===== Glitch Effect on notifications & default avatars ===== */
-  GM_addStyle(`
+  settings.enableTheme && GM_addStyle(`
 
 @media (prefers-reduced-motion: no-preference) {
 
