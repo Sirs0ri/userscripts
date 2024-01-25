@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.6.0-b.30
+// @version      1.6.0-b.31
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -23,6 +23,11 @@
  *      - post actions have a broken layout
  *      - header has a border-bottom
  *      - Profile view is broken
+ *    - 4.3.0 fixes
+ *      - Icons massive
+ *      - https://corteximplant.com/search bad
+ *      - same for explore
+ *      - actions in DMs too far apart
  */
 
 /*
@@ -120,7 +125,7 @@
     {
       id: "hideCheckmarks",
       textLabel: "hide checkmarks",
-      textDescription: "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons",
+      textDescription: "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons on Mastodon <4.3.0",
       defaultvalue: true,
     },
     {
@@ -327,7 +332,8 @@
         <span>General</span>`,
     }))
 
-    const buttonsWrapper = createElem("div")
+    // const buttonsWrapper = createElem("div", {class: "footer"})
+    const buttonsWrapper = createElem("footer")
 
     buttonsWrapper.appendChild(createElem("p", {
       class: "reload-needed-hint",
@@ -448,15 +454,15 @@ body.userscript-modal--active .userscript-settings__modal {
   flex: 1 0 auto;
 }
 
-.userscript-settings__modal nav *+* {
-  margin-top: 15px
-}
-
-.userscript-settings__modal nav > :last-child {
+.userscript-settings__modal nav footer {
   margin-top: auto;
   padding: 15px;
   display: grid;
   font-size: 13px;
+}
+
+.userscript-settings__modal nav footer > *+* {
+  margin-top: 15px
 }
 
 .userscript-settings__content {
@@ -689,8 +695,10 @@ body {
 
   settings.hideCheckmarks && GM_addStyle(`
 /* disable checkmark on buttons */
-.detailed-status__button .icon-button.active:after, .status__action-bar-button.active:after {
-  content: ""
+.detailed-status__button .icon-button.active:after,
+.status__action-bar-button.active:after {
+  content: "";
+  display: none
 }
 `)
 
@@ -838,6 +846,15 @@ body {
 .media-gallery .media-gallery__item-thumbnail:hover img {
   max-height: 60vh !important;
   max-width: 80vw;
+}
+
+article {
+  z-index: 1;
+  position: relative;
+}
+
+article:has(.media-gallery__item:hover) {
+  z-index: 2;
 }
 `)
 
@@ -1109,6 +1126,8 @@ markiere medien ohne alt-text */
   to  { transform: rotate(-32deg) skew(-28deg) }
 }
 
+/* what does this do? */
+
 .account__header__bar {
   z-index: 1
 }
@@ -1118,7 +1137,7 @@ markiere medien ohne alt-text */
 }
 .status__info>span,
 .detailed-status__display-name {
-  overflow: revert;
+  overflow: unset;
 }
 
 .notification__message {
@@ -1133,11 +1152,29 @@ markiere medien ohne alt-text */
   margin-top: -25%;
   margin-left: auto;
 }
+.account__avatar-overlay-overlay .account__avatar {
+  z-index: 2;
+}
 
 @supports selector(:has(a, b)) {
   .status__avatar:has( > [data-avatar-of="@${user}"]) {
     transform: translateY(2.5%) scale(0.9);
   }
+}
+
+
+/* DMs */
+.account__avatar-composite {
+  overflow: visible;
+}
+
+[data-avatar-of="@${user}"] {
+  overflow: visible;
+}
+
+[data-avatar-of="@${user}"] img {
+  z-index: 1;
+  position: relative;
 }
 
 [data-avatar-of="@${user}"]:before,
@@ -1147,13 +1184,13 @@ markiere medien ohne alt-text */
   display: inline-block;
   height: 50%;
   width: 50%;
-  position: relative;
-  z-index: -1;
+  position: absolute;
+  /* z-index: 1; */
   border: solid 4px currentColor;
   color: var(--color-1, transparent);
   background: var(--color-6, transparent);
   transition: scale 300ms;
-  scale: 0;
+  /* scale: 0; */
 }
 
 [data-avatar-of="@${user}"]:before,
@@ -1164,6 +1201,8 @@ markiere medien ohne alt-text */
 [data-avatar-of="@${user}"]:before {
   border-radius: 0 75% 75%;
   transform: rotate(32deg) skew(28deg);
+  top: 0;
+  left: 0;
 }
 [data-avatar-of="@${user}"]:hover:before {
   animation: earwiggleleft 1s;
@@ -1173,6 +1212,8 @@ markiere medien ohne alt-text */
 [data-avatar-of="@${user}"]:after {
   border-radius: 75% 0 75% 75%;
   transform: rotate(-32deg) skew(-28deg);
+  top: 0;
+  right: 0;
 }
 [data-avatar-of="@${user}"]:hover:after {
   animation: earwiggleright 1s ;
@@ -1529,7 +1570,7 @@ button[disabled] {
 
 /* improve visibility of mentions, hashtags and code snippets */
 a.mention,
-a.hashtag,
+a.hashtag, .hashtag-bar a,
 a.status-link:not(.unhandled-link),
 code {
   background: rgba(255 255 255 / 0.1);
@@ -1538,6 +1579,10 @@ code {
   margin-inline: -2px;
   color: inherit;
 }
+.hashtag-bar a + a {
+  margin-inline-start: 0.2em
+}
+
 /* inline code uses just <code>, code blocks are additionally wrapped in a <pre> */
 pre > code {
   display: block
@@ -1611,6 +1656,7 @@ article:empty {
   justify-items: center;
   align-items: center;
   grid-auto-columns: 1fr;
+  flex-shrink: 0;
 }
 .status__content__spoiler-link {
   border-radius: 100vh;
@@ -1692,6 +1738,9 @@ aside .status__display-name:hover,
   min-width: 0;
 }
 
+.status__info > span {
+  overflow: unset;
+}
 .status__info > span,
 .status__display-name {
   min-width: 0;
@@ -1731,17 +1780,15 @@ body>div[data-popper-escaped]:last-child {
 }
 
 /* add "follow/unfollow" labels to buttons in followed/following lists */
-.account__relationship button:only-child:not([disabled]):before {
-  content: attr(title);
-  margin-inline-end: 1em;
-  font-size: 1rem;
-}
+
 article > .account > .account__wrapper {
   display: grid;
   grid-template-columns: auto 1fr;
 }
-article > .account > .account__wrapper .display-name {
-  max-width: calc(100% - 60px);
+
+.account__contents {
+  max-width: calc(100% - 56px);
+  overflow: unset;
 }
 
 .account__relationship {
@@ -1964,7 +2011,7 @@ body {
     border-radius: 8px;
     border: 1px solid var(--color-grey-7);
     /* Make sure this is above the autosuggest window at z 99 */
-    z-index: 100;
+    /* z-index: 100; */
     transition: box-shadow 200ms;
     background: white;
     padding: 10px 0;
@@ -2168,6 +2215,10 @@ body {
     box-sizing: border-box;
     height: 48px;
     padding-block: 0 !important;
+  }
+
+  .column-header {
+    border-bottom: none;
   }
 
   #tabs-bar__portal>button:after,
@@ -2442,13 +2493,16 @@ body {
     border-radius: var(--border-radius-button);
     /* TODO: remove old styles */
 
-    background: color-mix(in srgb, transparent 90%, rgb(255, 255, 255));
+    /* background: color-mix(in srgb, transparent 90%, rgb(255, 255, 255)); */
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid color-mix(in srgb, transparent 85%, white);
-    backdrop-filter: blur(10px) saturate(180%);
+    /* backdrop-filter: blur(10px) saturate(180%); */
   }
 
   /* Search Results */
+  .explore__search-results {
+    background: none;
+  }
   .search-results__section {
     margin-bottom: 20px;
     border: none;
@@ -2488,7 +2542,7 @@ body {
   }
 
   .explore__search-results .trends__item {
-    border-bottom: none;
+    border-bottom: 1px solid color-mix(in srgb, transparent 85%, white);
   }
   .explore__search-results .trends__item+div[tabindex="-1"] {
     margin-top: 20px
@@ -3969,6 +4023,7 @@ span.relationship-tag {
 `)
 
   GM_addStyle(`
+  /* Dynamically sized Jonny Cyberdon - change to the custom.css style */
 
 body.layout-single-column:after {
   content: "";
