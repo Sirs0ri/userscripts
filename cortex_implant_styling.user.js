@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.6.0-b.32
+// @version      1.6.0-b.33
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -82,6 +82,7 @@
   const elem = document.getElementById("initial-state")
   const data = JSON.parse(elem.text)
   const user = data.accounts[data.meta.me]?.username
+  const isAdvancedView = document.body.classList.contains("layout-multiple-columns")
 
   // get account color
   const avatarLink = data.accounts[data.meta.me]?.avatar_static
@@ -521,7 +522,11 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
     _insertSettingsModal(evt)
   }
 
-  registerLoadHandlerDesktop(insertSettings)
+  if (isAdvancedView) {
+    registerLoadHandlerDesktop((evt) => setTimeout(() => insertSettings(evt), 200))
+  } else {
+    registerLoadHandlerDesktop(insertSettings)
+  }
 
   // #endregion
 
@@ -2510,7 +2515,8 @@ body {
   .explore__search-results .empty-column-indicator,
   .explore__links .dismissable-banner,
   .search-results__section > div,
-  .regeneration-indicator
+  .regeneration-indicator,
+  .getting-started__wrapper
   {
     margin-bottom: 20px;
     border: 1px solid var(--color-grey-4);
@@ -3310,7 +3316,7 @@ body {
   body.layout-multiple-columns .drawer__inner__mastodon {
     background: url(/packs/media/flavours/glitch/images/wave-drawer-glitched-f44fa25589f31f0ee52ab119cea119cb.png) no-repeat bottom/100% auto;
     border-radius: inherit;
- 
+
     display: flex;
     align-items: flex-end;
   }
