@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.6.0-b.33
+// @version      1.6.0-b.34
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -283,7 +283,7 @@
     })
     const codeLink = createElem("a", {
       textContent: document.querySelector(".link-footer [href*='github.com']").textContent,
-      href: "https://github.com/Sirs0ri/userscripts/blob/main/cortex_implant_styling.js",
+      href: "https://github.com/Sirs0ri/userscripts/blob/dev/cortex_implant_styling.js",
       target: "_blank",
     })
     const versionSpan = createElem("span", { innerText: "v" + GM_info.script.version })
@@ -1684,7 +1684,8 @@ article:empty {
 .status__prepend {
   flex-grow: 0;
   align-self: center;
-  margin-left: 26px;
+  margin-left: 36px;
+  max-width: calc(100% - 30px);
 }
 .status__prepend:hover {
   z-index: 2;
