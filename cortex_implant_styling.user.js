@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.6.0-b.31
+// @version      1.6.0-b.32
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -24,10 +24,8 @@
  *      - header has a border-bottom
  *      - Profile view is broken
  *    - 4.3.0 fixes
- *      - Icons massive
- *      - https://corteximplant.com/search bad
- *      - same for explore
- *      - actions in DMs too far apart
+ *      - Icons massive (fixed through custom.css)
+ *      - "fav" animation eiert?
  */
 
 /*
@@ -738,20 +736,29 @@ body {
  * de-springyfy anims
  * ==================== */
 
-.no-reduce-motion .status__collapse-button>.fa-angle-double-up {
+.no-reduce-motion .status__collapse-button>.fa-angle-double-up,
+.no-reduce-motion .status__collapse-button>.icon {
   transition: transform 200ms ease-in-out, color 200ms;
   animation: none !important;
 }
-.no-reduce-motion .icon-button.star-icon>.fa-star {
-  transition: transform 750ms cubic-bezier(0.82, 0.35, 0.31, 1.1), color 750ms;
-  animation: none !important;
+
+@keyframes rotateIn {
+  from { transform: rotate(0turn); }
+  to   { transform: rotate(2.4turn); }
 }
-.no-reduce-motion .icon-button.star-icon.deactivate>.fa-star {
-  transform: rotate(0turn);
+@keyframes rotateOut {
+  from { transform: rotate(2.4turn); }
+  to   { transform: rotate(0turn); }
 }
-.no-reduce-motion .icon-button.star-icon.active>.fa-star,
-.no-reduce-motion .icon-button.star-icon.activate>.fa-star {
-  transform: rotate(2.4turn);
+
+.no-reduce-motion .icon-button.star-icon.deactivate>.fa-star,
+.no-reduce-motion .icon-button.star-icon.deactivate>.icon {
+  animation: rotateOut 750ms;
+}
+
+.no-reduce-motion .icon-button.star-icon.activate>.fa-star,
+.no-reduce-motion .icon-button.star-icon.activate>.icon {
+  animation: rotateIn 750ms;
 }
 `)
 
@@ -786,7 +793,6 @@ body {
   /* overlap emotes */
   z-index: 101;
   overflow: visible;
-  
   container: parent / size;
 }
 .media-gallery:hover {
@@ -796,11 +802,12 @@ body {
 .media-gallery :where(.spoiler-button, .media-gallery__item__badges) {
   transition: opacity 200ms, transform 200ms;
 }
-.media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover), 
+.media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover),
 .media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover) ~ div .media-gallery__item__badges:not(:hover) {
   opacity: 0.5;
   transform: scale(0.9)
 }
+
 .media-gallery .media-gallery__item__badges {
   z-index: 2;
 }
@@ -1135,9 +1142,16 @@ markiere medien ohne alt-text */
   z-index: 1;
   position: relative;
 }
-.status__info>span,
-.detailed-status__display-name {
+/* TODO: move this to general fixes */
+.status__info > span {
   overflow: unset;
+  min-width: 0;
+}
+:is(.status__display-name, #fake) {
+  max-width: calc(100% - 56px);
+}
+.display-name__html {
+  text-overflow: ellipsis;
 }
 
 .notification__message {
@@ -1145,12 +1159,6 @@ markiere medien ohne alt-text */
 }
 .notification__message > :is(#fake, span) {
   text-wrap: wrap;
-}
-
-.account__avatar-overlay-overlay {
-  position: static;
-  margin-top: -25%;
-  margin-left: auto;
 }
 .account__avatar-overlay-overlay .account__avatar {
   z-index: 2;
@@ -1406,7 +1414,7 @@ markiere medien ohne alt-text */
  * ==================== */
 
 
-/* ===== Gallieries, Media, YT, Links ===== */
+/* ===== Galleries, Media, YT, Links ===== */
 
 /* Galleries with 1-4 images, videos, audio */
 
@@ -1682,6 +1690,9 @@ aside .status__display-name:hover,
 .status.collapsed .display-name:hover .display-name__html {
   text-decoration: underline;
 }
+
+/* old replacement for the animated boost icon */
+/*
 @keyframes statusPrependIcon {
   0%   { background-position: 0   0%; }
   20%  { background-position: 0 100%; }
@@ -1701,6 +1712,7 @@ aside .status__display-name:hover,
 .status__prepend .fa-retweet.status__prepend-icon:before {
   display: none;
 }
+*/
 
 /* Better gradient on collapsed toots */
 .status.collapsed .status__content {
@@ -1733,6 +1745,7 @@ aside .status__display-name:hover,
 .detailed-status__display-name,
 .account .account__display-name {
   display: flex;
+  min-width: 0;
 }
 .detailed-status__display-name .display-name {
   min-width: 0;
@@ -1740,10 +1753,10 @@ aside .status__display-name:hover,
 
 .status__info > span {
   overflow: unset;
-}
-.status__info > span,
-.status__display-name {
   min-width: 0;
+}
+.status__display-name {
+  max-width: calc(100% - 56px);
 }
 
 .status__display-name,
@@ -2216,6 +2229,9 @@ body {
     height: 48px;
     padding-block: 0 !important;
   }
+  .search__icon .icon-times-circle {
+    top: 13px;
+  }
 
   .column-header {
     border-bottom: none;
@@ -2354,8 +2370,7 @@ body {
   /* ===== info banners ===== */
 
   .dismissable-banner {
-    margin-top: 20px;
-    margin-bottom: 0px;
+    margin-block: 0;
     border-radius: 8px;
     border: 1px solid var(--color-grey-4);
   }
@@ -2451,22 +2466,33 @@ body {
     mask-repeat: no-repeat;
   }
 
+  /* pre-4.3.0 */
   .hicolor-privacy-icons .status__visibility-icon.fa-unlock,
   .hicolor-privacy-icons .status__visibility-icon.fa-globe,
   .hicolor-privacy-icons .status__visibility-icon.fa-envelope,
-  .hicolor-privacy-icons .status__visibility-icon.fa-lock {
+  .hicolor-privacy-icons .status__visibility-icon.fa-lock,
+  /* >= 4.3.0 */
+  .hicolor-privacy-icons .status__visibility-icon.icon-unlock,
+  .hicolor-privacy-icons .status__visibility-icon.icon-globe,
+  .hicolor-privacy-icons .status__visibility-icon.icon-envelope,
+  .hicolor-privacy-icons .status__visibility-icon.icon-lock
+  {
     color: var(--color-privacy);
   }
 
+  body:has(.hicolor-privacy-icons) .privacy-dropdown__option .icon-unlock,
   .hicolor-privacy-icons .privacy-dropdown__option .fa-unlock {
     color: var(--color-green);
   }
+  body:has(.hicolor-privacy-icons) .privacy-dropdown__option .icon-globe,
   .hicolor-privacy-icons .privacy-dropdown__option .fa-globe {
     color: var(--color-grey-8);
   }
+  body:has(.hicolor-privacy-icons) .privacy-dropdown__option .icon-envelope,
   .hicolor-privacy-icons .privacy-dropdown__option .fa-envelope {
     color: var(--color-red);
   }
+  body:has(.hicolor-privacy-icons) .privacy-dropdown__option .icon-lock,
   .hicolor-privacy-icons .privacy-dropdown__option .fa-lock {
     color: var(--color-yellow);
   }
@@ -2541,7 +2567,8 @@ body {
     color: var(--color-white);
   }
 
-  .explore__search-results .trends__item {
+  .search-results__section .account:last-child,
+  .search-results__section .trends__item:last-child {
     border-bottom: 1px solid color-mix(in srgb, transparent 85%, white);
   }
   .explore__search-results .trends__item+div[tabindex="-1"] {
@@ -2596,6 +2623,9 @@ body {
     border-radius: 8px;
     z-index: 1;
   }
+  .status__action-bar-button {
+    transition: color 200ms
+  }
   .detailed-status__action-bar-dropdown span {
     height: 100%;
   }
@@ -2620,18 +2650,6 @@ body {
   }
   article>a {
     border-radius: inherit;
-  }
-
-  /* Edge cases for single status view */
-  /* group of posts before the one opened post */
-  .columns-area--mobile .scrollable>div:first-of-type:not(:where(
-    .account__section-headline, .account-timeline__header, [role=feed], [tabindex="-1"]
-  )) {
-    border: none;
-    background: none;
-  }
-  .columns-area--mobile .scrollable>div:first-of-type:not([role=feed]):not(.account__section-headline):first-child .status {
-    border: none;
   }
 
   .detailed-status {
@@ -2668,18 +2686,22 @@ body {
   /* notifications header */
   .notification__filter-bar {
     margin-top: -20px;
-    padding-top: 40px;
+    padding-top: 20px;
   }
   /* explore / live feeds header */
   .account__section-headline {
-    margin-top: -41px;
-    padding-top: 40px;
+    margin-top: -20px;
+    padding-top: 20px;
   }
 
   .account__section-headline :is(button, a),
   .notification__filter-bar button {
     border-radius: inherit;
     flex: 1 1 0;
+    padding: 0;
+    min-height: 48px;
+    display: grid;
+    place-items: center;
   }
 
   .account__section-headline :is(button, a) :is(div, span),
@@ -2693,39 +2715,26 @@ body {
     color: var(--color-white);
   }
 
-  .notification__filter-bar button i:before {
-    z-index: 1;
+  .account__section-headline a,
+  .notification__filter-bar button {
+    isolation: isolate;
     position: relative;
   }
-  .account__section-headline :is(button, a) :is(div, span):before,
-  .notification__filter-bar button span:before {
-    mix-blend-mode: screen;
-  }
-  .account__section-headline :is(button, a) :is(div, span):before,
-  .notification__filter-bar button span:before,
-  .notification__filter-bar button i:after {
+
+  /* hover background */
+  .account__section-headline a::after,
+  .notification__filter-bar button::after{
     content: "";
     position: absolute;
     inset: 4px;
     background: transparent;
     border-radius: 8px;
     transition: background 200ms;
-    z-index: 0;
+    z-index: -1;
   }
-  .account__section-headline :is(button, a):hover :is(div, span):before,
-  .notification__filter-bar button:hover span:before,
-  .notification__filter-bar button:hover i:after {
+  .account__section-headline a:hover::after,
+  .notification__filter-bar button:hover::after{
     background-color: var(--color-grey-6);
-  }
-
-  /* adjust the 4.2.0 "active" indicator */
-  .account__section-headline a.active::before,
-  .account__section-headline button.active::before,
-  .notification__filter-bar a.active::before,
-  .notification__filter-bar button.active::before {
-    width: 50%;
-    margin: 0 25%;
-    bottom: 4px;
   }
 
 
@@ -2752,20 +2761,22 @@ body {
     color: hsl(var(--hsl-notification))
   }
 
+  .notification__filter-bar + .scrollable .status,
   [data-column="notifications"] .status {
     --hsl-notification: var(--hsl-grey-8);
   }
 
+  .notification__filter-bar + .scrollable .status[data-favourited-by],
   [data-column="notifications"] .status[data-favourited-by] {
     --hsl-notification: var(--hsl-gold);
   }
 
+  .notification__filter-bar + .scrollable .status[data-boosted-by],
   .notification-follow,
   .notification-admin-sign-up,
   [data-column="notifications"] .status[data-boosted-by] {
     --hsl-notification: var(--hsl-purple);
   }
-
 
   .notification-admin-report {
     --hsl-notification: var(--hsl-orange);
@@ -2783,21 +2794,6 @@ body {
       .notification-admin-report)
   .notification__message {
     margin-left: 15px;
-  }
-  :is(.notification-admin-sign-up,
-      .notification-follow,
-      .notification-admin-report
-  ).unread .notification__message {
-    margin-left: 11px;
-  }
-
-  :is(.notification-admin-sign-up,
-      .notification-follow,
-  ).unread .account {
-    padding-left: 6px;
-  }
-  .notification-admin-report.unread .notification__report {
-    margin-left: -4px;
   }
 
   :is(.notification-admin-sign-up,
@@ -2848,6 +2844,14 @@ body {
   .account__header__bar {
     border-radius: 0 0 8px 8px;
     border-bottom: 1px solid var(--color-grey-4);
+  }
+
+  .account__header__tabs,
+  .account__header__tabs__name{
+    padding-inline: 0
+  }
+  .account__header__badges {
+    padding-block-end: 10px;
   }
 
   .account__header__image {
@@ -3009,7 +3013,7 @@ body {
     padding: 5px 15px;
   }
 
-  .account__section-headline:not(:first-child) {
+  .account-timeline__header .account__section-headline:not(:first-child) {
     background: none;
     border: none;
   }
@@ -3052,6 +3056,9 @@ body {
 
   .conversation__content__names {
     white-space: normal;
+  }
+  .conversation__content .status__action-bar {
+    justify-content: start;
   }
 
 
@@ -3146,8 +3153,8 @@ body {
 
 
   /* ===== Profile directory ===== */
-  .account-card {
-    margin: 20px 0 !important;
+  :is(.account-card, #fake) {
+    margin: 0 0 20px 0;
     border-radius: 8px;
     border: 1px solid var(--color-grey-6);
   }
@@ -3615,6 +3622,12 @@ button.emoji-mart-emoji:hover span, button.emoji-mart-emoji:hover img {
 .spoiler-button--minified button {
   border-radius: 8px !important;
 }
+.spoiler-button--minified button .icon {
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+}
+
 /* same for the "follows you" tag on profiles */
 .account__header__info {
   top: 4px;
@@ -3627,9 +3640,13 @@ span.relationship-tag {
   opacity: 1;
 }
 
-/* force alt/gif badges to lowercase since i think it looks nicer */
 .media-gallery__item__badges {
+  /* force alt/gif badges to lowercase since i think it looks nicer */
   text-transform: lowercase;
+  border-radius: 8px;
+  /* and align them with the spoiler button */
+  bottom: 4px;
+  inset-inline-start: 4px;
 }
 
 /* Add "alt" indicator on audio, videos */
@@ -3650,12 +3667,14 @@ span.relationship-tag {
   border-radius: 8px;
 }
 
+.media-gallery__alt__label,
+.media-gallery__gifv__label,
 .sensitive-marker {
   background: rgba(0 0 0 / 0.6);
   color: hsla(0 0% 100% / .7);
-  line-height: 23.141px;
   border-radius: 8px;
 }
+
 `)
 
   /* ===== Glitch Effect on notifications & default avatars ===== */
