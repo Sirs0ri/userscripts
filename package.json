@@ -1,0 +1,20 @@
+{
+  "name": "userscripts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Sirs0ri/userscripts.git",
+  "author": "Maximilian Ertl <ertl.maxi@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {},
+  "scripts": {
+    "lint": "eslint --ext .js,.vue ./"
+  },
+  "devDependencies": {
+    "eslint": "8.0.1",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^16.0.1",
+    "eslint-plugin-promise": "^6.1.1"
+  }
+}

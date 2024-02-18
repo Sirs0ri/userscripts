@@ -10,7 +10,7 @@
 // @grant        GM_addStyle
 // ==/UserScript==
 
-/* 
+/*
  * ==KNOWN ISSUES==
  *    - This straight up removes overflow: hidden on the emoji's parents,
  *      I'd be surprised if that *doesn't* break something!
@@ -41,13 +41,13 @@
  *    - Add highlight-on-hover to emojione emotes in toots
  */
 
-(function() {
-    'use strict';
+(function () {
+  "use strict"
 
-    // Use TamperMonkey's helper to inject CSS
-    // This heavily relies on :has(), without it the styling has no effect due to the @supports query.
-    
-    GM_addStyle(`
+  // Use TamperMonkey's helper to inject CSS
+  // This heavily relies on :has(), without it the styling has no effect due to the @supports query.
+
+  GM_addStyle(`
 /* Add "alt" indicator on images, gifs... */
 .media-gallery__item:has(img[alt]):after,
 .media-gallery__item:has(video[aria-label]):after{
@@ -72,10 +72,10 @@
     padding: 0 5px;
 }
 `)
- 
-    // The :where(...):has(...) statement is used to select a bunch of wrappers that
-    // would otherwise have overflow: hidden, and remove that while an image is hovered.
-    GM_addStyle(`
+
+  // The :where(...):has(...) statement is used to select a bunch of wrappers that
+  // would otherwise have overflow: hidden, and remove that while an image is hovered.
+  GM_addStyle(`
 /* Hover-Zoom for emotes */
 @supports selector(:has(a, b)) {
   /* Temporarily disable overflow on elements restraining the images while hovering */
@@ -147,4 +147,4 @@
   }
 }
 `)
-})();
+})()
