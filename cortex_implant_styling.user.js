@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.6.0-b.34
+// @version      1.6.0-b.35
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -1602,6 +1602,7 @@ markiere medien ohne alt-text */
 }
 
 /* Hide the thumbnail-placeholder for horizontal link previews */
+.status-card.horizontal:has(svg.icon-file-text) .status-card__image,
 .status-card.horizontal:has(i.fa-file-text) .status-card__image {
   display: none;
 }
@@ -1677,8 +1678,11 @@ code {
   margin-inline: -2px;
   color: inherit;
 }
-.hashtag-bar a + a {
-  margin-inline-start: 0.2em
+.hashtag-bar {
+  gap: 0.4em 0.3em;
+}
+.hashtag-bar a {
+  margin-inline: 0;
 }
 
 /* inline code uses just <code>, code blocks are additionally wrapped in a <pre> */
@@ -1783,6 +1787,7 @@ aside .status__display-name:hover,
 }
 
 /* old replacement for the animated boost icon */
+/* will be scaled to 17px via transform to keep the multi-sprite layout intact */
 /*
 @keyframes statusPrependIcon {
   0%   { background-position: 0   0%; }
@@ -1794,7 +1799,6 @@ aside .status__display-name:hover,
   background-image: url("${boostSvg}");
   background-position: 0 0;
   width: 22px;
-  /* scale to 17px via transform to keep the multi-sprite layout intact */
   transform: scale(calc(17 / 22)) translateY(-1px);
   aspect-ratio: 22 / 19;
   background-size: cover;
@@ -1837,6 +1841,7 @@ aside .status__display-name:hover,
 .account .account__display-name {
   display: flex;
   min-width: 0;
+  overflow: visible;
 }
 .detailed-status__display-name .display-name {
   min-width: 0;
@@ -2115,7 +2120,7 @@ body {
     border-radius: 8px;
     border: 1px solid var(--color-grey-7);
     /* Make sure this is above the autosuggest window at z 99 */
-    /* z-index: 100; */
+    z-index: 100;
     transition: box-shadow 200ms;
     background: white;
     padding: 10px 0;
@@ -2132,6 +2137,7 @@ body {
     top: 6px;
     right: 2px;
     bottom: 0;
+    z-index: 101;
   }
   .compose-form .emoji-picker-dropdown .emoji-button {
     position: sticky;
@@ -2715,6 +2721,7 @@ body {
     border-radius: 8px;
     z-index: 1;
   }
+  .detailed-status__button button,
   .status__action-bar-button {
     transition: color 200ms
   }
@@ -2815,7 +2822,7 @@ body {
 
   /* hover background */
   .account__section-headline a::after,
-  .notification__filter-bar button::after{
+  .notification__filter-bar button::after {
     content: "";
     position: absolute;
     inset: 4px;
@@ -2825,8 +2832,18 @@ body {
     z-index: -1;
   }
   .account__section-headline a:hover::after,
-  .notification__filter-bar button:hover::after{
+  .notification__filter-bar button:hover::after {
     background-color: var(--color-grey-6);
+  }
+
+  :is(
+    #fake,
+    .account__section-headline,
+    .notification__filter-bar button
+  )::before {
+    width: auto;
+    inset-inline: 4px;
+    inset-block-end: 4px;
   }
 
 
@@ -2936,14 +2953,23 @@ body {
   .account__header__bar {
     border-radius: 0 0 8px 8px;
     border-bottom: 1px solid var(--color-grey-4);
+
+    padding: 10px;
+    display: grid;
+    --gap: 10px;
+    gap: var(--gap);
   }
 
-  .account__header__tabs,
-  .account__header__tabs__name{
-    padding-inline: 0
+  .account__header__tabs {
+    margin-inline-start: 0;
+    padding: 0;
   }
+  .account__header__tabs__name {
+    padding: 0 var(--gap);
+  }
+
   .account__header__badges {
-    padding-block-end: 10px;
+    adding: 0;
   }
 
   .account__header__image {
@@ -2955,6 +2981,15 @@ body {
     border: 1px solid #42485a;
     border-radius: 8px;
     margin: 0;
+
+    padding: 0;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .account__header__account-note :is(textarea, #important) {
+    margin: 0;
+    width: 100%;
   }
 
   .account__header__tabs__buttons .icon-button {
@@ -2963,6 +2998,18 @@ body {
     width: unset !important;
     min-width: 36px;
     box-sizing: border-box;
+  }
+
+  .account__header__extra {
+    margin: 0;
+    padding: 0;
+  }
+
+  .account__header__bio {
+    margin: 0;
+    display: grid;
+    gap: calc(2 * var(--gap));
+    margin-block-end: var(--gap);
   }
 
   .account__disclaimer {
@@ -2974,6 +3021,21 @@ body {
     border: none;
     margin: 10px;
   }
+
+  .account__header__fields {
+    margin: 0 !important;
+  }
+  .account__header__content.translate {
+    padding: 0 var(--gap);
+  }
+  .account__header__joined {
+    padding:  0 var(--gap) !important;
+  }
+  .account-role {
+    margin: 0 !important;
+  }
+
+  /* Tabs below the accoutn info */
 
   .account__action-bar-links {
     border-radius: inherit;
