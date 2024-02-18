@@ -170,6 +170,12 @@
       defaultvalue: false,
     },
     {
+      id: "freezeTopPosition",
+      textLabel: "Keep scrollposition in feeds",
+      textDescription: "When loading new posts on timelines, keep the previously first post in view, instead of staying scrolled all the way to the top. [Simple View only]",
+      defaultvalue: false,
+    },
+    {
       id: "imACat",
       textLabel: "imACat 🐈",
       textDescription: "Meow?",
@@ -778,6 +784,85 @@ body {
   aspect-ratio: 16 / 9;
 }
 `)
+
+  settings.freezeTopPosition && GM_addStyle(`
+body.layout-single-column.at-top .column[aria-label] {
+  margin-top: 1px;
+}
+
+.tabs-bar__wrapper {
+  transition: box-shadow 300ms;
+}
+
+body.layout-single-column.pinned .tabs-bar__wrapper {
+  box-shadow: 0px 5px 25px -20px var(--color-blue);
+}
+
+/* add a "pause" icon to the column header */
+.column-header > button::after {
+  content: "";
+  font: normal normal normal 14px/1 FontAwesome;
+  opacity: 0;
+  transition: opacity 300ms;
+  margin-inline-start: 5px;
+  color: var(--color-grey-7);
+  display: inline-block;
+  scale: 0.9;
+  align-self: center;
+}
+body.layout-single-column.pinned .column-header > button::after {
+  opacity: 1;
+}
+`)
+
+  if (settings.freezeTopPosition) {
+    let atTop = true
+    let debounce = null
+
+    const scrollHandler = evt => {
+      const previousAtTop = atTop
+
+      let pinned = false
+
+      if (window.scrollY === 0) {
+        // when the user's scrolled to the very top, scroll down 1px to keep the currently first post "pinned" at its current position
+        // Otherwise, Mastodon will keep the newest post at the top and you'll use your scrolling position.
+        atTop = true
+      } else if (window.scrollY === 1) {
+        // When the window's scrolled to 1px, add some UI later to display that the feed is "pinned"
+        pinned = true
+      } else {
+        atTop = false
+      }
+
+      if (pinned) {
+        document.body.classList.add("pinned")
+      } else {
+        document.body.classList.remove("pinned")
+      }
+
+      if (atTop !== previousAtTop) {
+        if (debounce) clearTimeout(debounce)
+        debounce = setTimeout(topChangeHandler, atTop ? 500 : 0)
+      }
+    }
+
+    const topChangeHandler = () => {
+      if (atTop) {
+        const el = document.querySelector("body.layout-single-column .column[aria-label]")
+        if (el == null) return
+
+        document.body.classList.add("at-top")
+        window.scrollBy(0, 1)
+      } else {
+        document.body.classList.remove("at-top")
+      }
+    }
+
+    settings.freezeTopPosition && window.addEventListener("scroll", scrollHandler)
+
+    settings.freezeTopPosition && topChangeHandler()
+  }
 
   // TODO:
   //   - [x] Images overlap Emotes
