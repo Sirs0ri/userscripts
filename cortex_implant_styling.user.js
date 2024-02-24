@@ -1792,8 +1792,8 @@ article:empty {
 }
 .status__content__spoiler-link {
   border-radius: 100vh;
-  padding-inline: 10px;
-  vertical-align: text-bottom;
+  vertical-align: baseline;
+  padding: 0.2em 1em 0;
 }
 .status__content--with-spoiler > div:not(.status__content__spoiler) {
   line-height: 1.5em;
