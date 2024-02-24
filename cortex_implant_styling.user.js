@@ -2868,12 +2868,14 @@ body {
 
   :is(
     #fake,
-    .account__section-headline,
+    .account__section-headline a,
     .notification__filter-bar button
   )::before {
-    width: auto;
-    inset-inline: 4px;
     inset-block-end: 4px;
+
+    inset-inline: 0;
+    margin-inline: auto;
+    width: 80%;
   }
 
 
@@ -3171,6 +3173,7 @@ body {
     position: relative;
     /* TODO: This looks weird sometimes. e.g. https://corteximplant.com/@LevelUp@mastodon.art */
     white-space: initial;
+    word-break: break-all;
   }
 
   .account__header__fields dd a:before {
