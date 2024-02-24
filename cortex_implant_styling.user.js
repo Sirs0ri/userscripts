@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.7.0-b.0
+// @version      1.7.0
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -378,7 +378,7 @@
       innerHTML: `Hi there choom! <br>
         This userscript has a settings UI now! You're seeing this because you're running the new version of the script for
         the first time. <br>
-    
+
         If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to
         this instance's about page.`,
     }))
