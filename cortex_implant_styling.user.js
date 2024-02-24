@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.6.1
+// @version      1.7.0
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/main/cortex_implant_styling.user.js
@@ -378,7 +378,7 @@
       innerHTML: `Hi there choom! <br>
         This userscript has a settings UI now! You're seeing this because you're running the new version of the script for
         the first time. <br>
-    
+
         If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to
         this instance's about page.`,
     }))
@@ -869,11 +869,33 @@ body.layout-single-column.pinned .column-header > button::after {
   //   - [ ] Make sure images are always fully visible, like a position sticky?
 
   /* Firefox animates the max-height from the image's original height to 100cqh for some reason, every time the image is added to the DOM
-   * This worakround onyl applies the transition on hover, meaning the images won't animate on load. */
+   * This worakround only applies the transition on hover, meaning the images won't animate on load. */
   const mouseoverHandler = e => {
-    if (e.target.nodeName !== "IMG") return
-    if (!e.target.parentElement.classList.contains("media-gallery__item-thumbnail")) return
-    e.target.style.transition = "background 200ms, max-height 200ms"
+    if (!["IMG", "CANVAS", "VIDEO"].includes(e.target.nodeName)) return
+
+    let target
+
+    if (e.target.parentElement.classList.contains("media-gallery__item-thumbnail") ||
+        e.target.classList.contains("media-gallery__item-gifv-thumbnail")) {
+      target = e.target
+    } else if (e.target.nextElementSibling?.classList.contains("media-gallery__item-thumbnail")){
+      target = e.target.nextElementSibling.querySelector("img")
+    }
+
+    if (!target) return
+
+    target.style.transition = "background 200ms, max-height 200ms, min-height 200ms"
+
+    // Remove the data-hovered attribute from any previously hovered article
+    document.querySelectorAll("article[data-hovered]").forEach(el => {
+      delete el.dataset.hovered
+    })
+
+    // Apply the data-hovered attribute to the parent article of this media item's post
+    const article = e.target.closest("article[data-id]")
+    if (article) {
+      article.dataset.hovered = true
+    }
   }
 
   settings.hoverImages && document.addEventListener("mouseover", mouseoverHandler)
@@ -917,31 +939,38 @@ body.layout-single-column.pinned .column-header > button::after {
   height: var(--height);
 }
 
-.media-gallery :is(#fake, .media-gallery__item-thumbnail) {
+.media-gallery :is(#fake, .media-gallery__item-thumbnail, .media-gallery__gifv) {
   overflow: visible !important;
   position: relative;
   height: auto;
   transition: transform 200ms ease-out, border-radius 200ms;
 }
-.media-gallery .media-gallery__item-thumbnail:hover {
+.media-gallery .media-gallery__item:hover :is(.media-gallery__item-thumbnail, .media-gallery__gifv) {
   transform: scale(1.15);
   border-radius: var(--border-radius-button);
 }
-.layout-multiple-columns .media-gallery .media-gallery__item-thumbnail:hover {
+.layout-multiple-columns .media-gallery .media-gallery__item:hover :is(.media-gallery__item-thumbnail, .media-gallery__gifv) {
   transform: scale(1.05)
 }
 
-.media-gallery .media-gallery__item-thumbnail img {
+.media-gallery .media-gallery__item-thumbnail img,
+.media-gallery .media-gallery__gifv video {
   height: auto;
   display: block;
   max-height: 100cqh;
+  min-height: 50cqh;
 }
-.media-gallery .media-gallery__item:not(.media-gallery__item--tall) .media-gallery__item-thumbnail img {
+.media-gallery .media-gallery__item--tall :is(img, video) {
+  min-height: 65cqh;
+}
+.media-gallery .media-gallery__item:not(.media-gallery__item--tall) .media-gallery__item-thumbnail img,
+.media-gallery .media-gallery__item:not(.media-gallery__item--tall) .media-gallery__gifv video {
   max-height: var(--height);
 }
 
-.media-gallery .media-gallery__item-thumbnail:hover img {
+.media-gallery .media-gallery__item:hover :where(img, video) {
   max-height: 60vh !important;
+  min-height: 0cqh;
   max-width: 80vw;
 }
 
@@ -950,7 +979,8 @@ article {
   position: relative;
 }
 
-article:has(.media-gallery__item:hover) {
+article:has(.media-gallery__item:hover),
+article[data-hovered] {
   z-index: 2;
 }
 `)
@@ -1762,8 +1792,8 @@ article:empty {
 }
 .status__content__spoiler-link {
   border-radius: 100vh;
-  padding-inline: 10px;
-  vertical-align: text-bottom;
+  vertical-align: baseline;
+  padding: 0.2em 1em 0;
 }
 .status__content--with-spoiler > div:not(.status__content__spoiler) {
   line-height: 1.5em;
@@ -2838,12 +2868,14 @@ body {
 
   :is(
     #fake,
-    .account__section-headline,
+    .account__section-headline a,
     .notification__filter-bar button
   )::before {
-    width: auto;
-    inset-inline: 4px;
     inset-block-end: 4px;
+
+    inset-inline: 0;
+    margin-inline: auto;
+    width: 80%;
   }
 
 
@@ -3141,6 +3173,7 @@ body {
     position: relative;
     /* TODO: This looks weird sometimes. e.g. https://corteximplant.com/@LevelUp@mastodon.art */
     white-space: initial;
+    word-break: break-all;
   }
 
   .account__header__fields dd a:before {
