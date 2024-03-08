@@ -765,6 +765,26 @@ body {
 }
 `)
 
+  /* General layout improvements */
+  GM_addStyle(`
+
+  :root {
+    scrollbar-gutter: stable;
+    margin-right: 0 !important;
+  }
+
+  /* Status layout - enable easy insertion of the "replying to..." hint */
+  header.status__info {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+  }
+
+  .status__info__icons {
+    height: fit-content;
+  }
+  `)
+
   settings.hideCheckmarks && GM_addStyle(`
 /* disable checkmark on buttons */
 .detailed-status__button .icon-button.active:after,
@@ -777,22 +797,11 @@ body {
   settings.highlightReplies && GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
-    --status-extra-top-padding: calc(1.5em + 10px);
-  }
-
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info) {
-    padding-top: var(--status-extra-top-padding, 0px);
-    position: relative;
-  }
-
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
     color: #606984;
     font-size: 14px;
-    position: absolute;
-    top: 0px;
-  }
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
+    grid-column: 1 / -1;
+    place-self: start;
     content: "\\21B6  Replying to a conversation";
     border: 1px solid;
     border-radius: 100vmax;
