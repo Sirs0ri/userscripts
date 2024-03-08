@@ -950,7 +950,7 @@ body.layout-single-column.pinned .column-header > button::after {
     target.style.transition = "background 200ms, max-height 200ms, min-height 200ms"
 
     // Remove the data-hovered attribute from any previously hovered article
-    document.querySelectorAll("article[data-hovered]").forEach(el => {
+    document.querySelectorAll("[data-hovered]").forEach(el => {
       delete el.dataset.hovered
     })
 
@@ -959,6 +959,7 @@ body.layout-single-column.pinned .column-header > button::after {
     if (article) {
       article.dataset.hovered = true
     }
+    target.parentElement.dataset.hovered = true
   }
 
   settings.hoverImages && document.addEventListener("mouseover", mouseoverHandler)
@@ -979,7 +980,7 @@ body.layout-single-column.pinned .column-header > button::after {
 }
 .media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover),
 .media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover) ~ div .media-gallery__item__badges:not(:hover) {
-  opacity: 0.5;
+  --opacity: 0.2;
   transform: scale(0.9)
 }
 
@@ -1043,7 +1044,9 @@ article {
 }
 
 article:has(.media-gallery__item:hover),
-article[data-hovered] {
+article[data-hovered],
+a[data-hovered],
+div[data-hovered] {
   z-index: 2;
 }
 `)
@@ -1067,6 +1070,11 @@ options in the "app settings" (left sidebar):
 @keyframes fadeIn {
   0%   { opacity: 0; }
   100% { opacity: 1; }
+}
+
+.media-gallery__item {
+  outline: 8px solid var(--color-grey-5);
+  outline-offset: -8px;
 }
 
 .media-gallery__item canvas {
