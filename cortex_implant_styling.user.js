@@ -3991,11 +3991,13 @@ span.relationship-tag {
 
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"] {
+  )[style*="https://corteximplant.com/avatars/original/missing.png"],
+  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]) {
     animation: paths 10s step-end infinite;
     position: relative;
     --padding: -5px;
     --start: 5px;
+    overflow: visible;
   }
 
   :where(
@@ -4003,7 +4005,9 @@ span.relationship-tag {
   )[style*="https://corteximplant.com/avatars/original/missing.png"]:before,
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:after {
+  )[style*="https://corteximplant.com/avatars/original/missing.png"]:after,
+  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]):before,
+  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]):after {
     content: "";
     position: absolute;
     height: 105%;
@@ -4016,7 +4020,8 @@ span.relationship-tag {
 
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:before {
+  )[style*="https://corteximplant.com/avatars/original/missing.png"]:before,
+  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]):before {
     top: calc((10em / 6) + var(--padding));
     left: calc((15em / 6) + var(--padding) + var(--start));
     color: #6364ff;
@@ -4028,7 +4033,8 @@ span.relationship-tag {
   }
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:after {
+  )[style*="https://corteximplant.com/avatars/original/missing.png"]:after,
+  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]):after{
     top: calc((5em / 6) + var(--padding));
     left: calc((-30em / 6) + var(--padding) + var(--start));
     color: #1bc7fb;
