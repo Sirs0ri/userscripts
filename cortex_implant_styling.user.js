@@ -3952,21 +3952,34 @@ span.relationship-tag {
   pointer-events: none;
 }
 .media-gallery__gifv__label {
-  padding: 0 5px;
   line-height: 27.1429px;
-  font-size: 1em;
-  background: rgba(0 0 0 / 0.6);
-  color: hsla(0 0% 100% / .7);
-  font-weight: normal;
-  border-radius: 8px;
+  padding: 0 5px;
 }
 
 .media-gallery__alt__label,
 .media-gallery__gifv__label,
-.sensitive-marker {
-  background: rgba(0 0 0 / 0.6);
-  color: hsla(0 0% 100% / .7);
+.sensitive-marker,
+/* "hide media" button */
+.icon-button.overlayed,
+/* "click to show" for galleries */
+.spoiler-button__overlay__label,
+/* play/open actions on YT videos */
+.status-card__actions > div
+{
   border-radius: 8px;
+
+  color: hsla(0 0% 100% / .7);
+  font-size: 0.8em;
+  font-weight: normal;
+  line-height: 1.5;
+
+  background: rgba(0 0 0 / 0.5);
+
+  -webkit-backdrop-filter: grayscale(1) invert(1) brightness(.7) contrast(0.2) opacity(0.5);
+  backdrop-filter: grayscale(1) invert(1) brightness(.7) contrast(0.2) opacity(0.5);
+
+  transition: opacity 200ms;
+  opacity: var(--opacity, 1);
 }
 
 `)
