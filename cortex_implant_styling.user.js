@@ -71,10 +71,48 @@
 
   /** Register a handler to the "load" event, and when the vew switches from mobile to desktop */
   function registerLoadHandlerDesktop (handler) {
-    addEventListener("load", handler, { once: true })
+    addEventListener("load", evt => {
+      // console.log("load event")
+
+      const ui = document.querySelector(".ui")
+
+      if (ui) {
+        // console.log("ui already present")
+        handler(evt)
+        return
+      }
+
+      // Mastodon UI isn't loaded in yet, set up a MutationObserver to catch the mounting event
+      const appContainer = document.getElementById("mastodon")
+
+      if (!appContainer) {
+        // console.log("no app container found, returning")
+        return
+      }
+
+      const cb = (mutationList, observer) => {
+        const ui = document.querySelector(".ui")
+
+        if (ui) {
+          // console.log("ui found through mutation observer")
+          handler(evt)
+          observer.disconnect()
+          return
+        }
+
+        console.warn("load event failed to execute with valid Mastodon UI")
+      }
+
+      const observer = new MutationObserver(cb);
+
+      observer.observe(appContainer, { childList: true });
+    }, { once: true })
     addEventListener("desktopViewVisible", evt => {
       // Run the handler on the next frame, to give the DOM a chance to update
-      setTimeout(() => handler(evt), 0)
+      setTimeout(() => {
+        // console.log("desktopViewVisible event")
+        handler(evt)
+      }, 0)
     })
   }
 
@@ -82,7 +120,6 @@
   const elem = document.getElementById("initial-state")
   const data = JSON.parse(elem.text)
   const user = data.accounts[data.meta.me]?.username
-  const isAdvancedView = document.body.classList.contains("layout-multiple-columns")
 
   // get account color
   const avatarLink = data.accounts[data.meta.me]?.avatar_static
@@ -264,12 +301,42 @@
     else document.querySelector(".userscript-modal-root").classList.remove("needs-reload")
   }
 
-  const _insertFooter = (evt) => {
-    const footer = document.querySelector(".link-footer")
+  const _insertFooter = async (evt) => {
+    let footer = document.querySelector(".link-footer")
 
     if (!footer) {
-      console.warn("footer not found")
-      return
+      const isAdvancedUi = document.body.classList.contains("layout-multiple-columns")
+      if (!isAdvancedUi) {
+        console.warn("not using advanced UI, the footer *should* be here by now!")
+        return
+      }
+
+      footer = await new Promise((resolve, reject) => {
+        let resolved = false
+        setTimeout(() => {
+          if (resolved) return
+          console.warn("timeout while searching footer")
+          resolve(undefined)
+        }, 1000)
+
+        const columnsArea = document.querySelector(".columns-area")
+
+        const cb = (mutationList, observer) => {
+          const footer = document.querySelector(".link-footer")
+
+          if (footer) {
+            observer.disconnect()
+            resolved = true
+            resolve(footer)
+          }
+        }
+
+        const observer = new MutationObserver(cb);
+
+        observer.observe(columnsArea, { childList: true, subtree: true, });
+      })
+
+      if (!footer) return
     }
 
     const insert = createElem("p", { innerHTML: "<strong>Sirs0ri's userscript</strong>: " })
@@ -528,11 +595,7 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
     _insertSettingsModal(evt)
   }
 
-  if (isAdvancedView) {
-    registerLoadHandlerDesktop((evt) => setTimeout(() => insertSettings(evt), 200))
-  } else {
-    registerLoadHandlerDesktop(insertSettings)
-  }
+  registerLoadHandlerDesktop(insertSettings)
 
   // #endregion
 
