@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.7.0
+// @version      1.7.1-b2
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -26,11 +26,19 @@
  *    - 4.3.0 fixes
  *      - Icons massive (fixed through custom.css)
  *      - "fav" animation eiert?
+ *    - Settings insert inconsistent on https://corteximplant.com/notifications
+ *    - Refactor for new CSS features Nesting
+ *      - CSS Nesting
+ *      - color-mix() instead of HSL combining
+ *    - Make style changes hot-swappable through the stylesheet returned by GM_addStyle
+ *    - items under a post might wrap weirdly:
+ *      see https://corteximplant.com/@kaiserkiwi/112044242777155596
+ *      .detailed-status__meta { flex-wrap: wrap; gap: 0.4em; }
  */
 
 /*
  * == KNOWN ISSUES ==
- *    - Firefox doesn't support :has() on <121, unless you manually turn it on via the layout.css.has-selector.enabled flag.
+ *    - Firefox didn't support :has() before v121, unless you manually turned it on via the layout.css.has-selector.enabled flag.
  *      Starting with 121 (Released 2023-12-19) that flag will be on by default!
  *      The general restyling shouldn't be affected either way.
  *      With that flag active, everything should work.
