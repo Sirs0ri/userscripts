@@ -485,7 +485,6 @@
 
 body.userscript-modal--active {
   overflow-y: hidden !important;
-  margin-right: 12px;
 }
 
 body.userscript-modal--active .userscript-modal-root {
@@ -599,10 +598,7 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
 
   // #endregion
 
-  // Use TamperMonkey's helper to inject CSS
-  // see https://codepen.io/mattgrosswork/pen/VwprebG
-
-  /* general setup */
+  /* variables & animations */
   GM_addStyle(`
 p {
   line-height: 1.5;
@@ -1781,8 +1777,7 @@ a.status-link:not(.unhandled-link),
 code {
   background: rgba(255 255 255 / 0.1);
   border-radius: 4px;
-  padding: 1px 5px;
-  margin-inline: -2px;
+  padding: 1px 4px;
   color: inherit;
 }
 .hashtag-bar {
@@ -1859,7 +1854,6 @@ article:empty {
   position: relative;
 }
 .status__info__icons {
-  height: 100%;
   display: grid;
   grid-auto-flow: column;
   justify-items: center;
@@ -1949,6 +1943,7 @@ aside .status__display-name:hover,
   display: flex;
   min-width: 0;
   overflow: visible;
+  gap: 15px;
 }
 .detailed-status__display-name .display-name {
   min-width: 0;
@@ -2783,8 +2778,6 @@ body {
   .account {
     border: none;
   }
-
-
 
   /* give the selected post in single-post-view a lighter background */
   .columns-area--mobile .scrollable>div[tabindex="-1"]:has(.detailed-status) {
@@ -4231,7 +4224,6 @@ span.relationship-tag {
   /* Change disable overflow on elements restraining the images while hovering */
 
   /* Toots */
-  .status__content,
   :is(.display-name, #fake),
   .display-name__html,
   .status__display-name,
@@ -4264,7 +4256,6 @@ span.relationship-tag {
   /* Replying to a toot - body only */
   .reply-indicator,
   .reply-indicator__content,
-  .status__content,
 
   /* Picture in picture player */
   .picture-in-picture__header__account,
