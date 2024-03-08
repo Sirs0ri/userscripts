@@ -2894,6 +2894,11 @@ body {
     padding-top: 20px;
   }
 
+  /*
+   * .account__section-headline a          account sections, also explore tabs
+   * .account__section-headline button     search results
+   * .notification__filter-bar button      notification filters
+   */
   .account__section-headline :is(button, a),
   .notification__filter-bar button {
     border-radius: inherit;
@@ -2915,14 +2920,14 @@ body {
     color: var(--color-white);
   }
 
-  .account__section-headline a,
+  .account__section-headline :is(button, a),
   .notification__filter-bar button {
     isolation: isolate;
     position: relative;
   }
 
   /* hover background */
-  .account__section-headline a::after,
+  .account__section-headline :is(button, a)::after,
   .notification__filter-bar button::after {
     content: "";
     position: absolute;
@@ -2932,7 +2937,7 @@ body {
     transition: background 200ms;
     z-index: -1;
   }
-  .account__section-headline a:hover::after,
+  .account__section-headline :is(button, a):hover::after,
   .notification__filter-bar button:hover::after {
     background-color: var(--color-grey-6);
   }
@@ -2940,6 +2945,7 @@ body {
   :is(
     #fake,
     .account__section-headline a,
+    .account__section-headline button,
     .notification__filter-bar button
   )::before {
     inset-block-end: 4px;
