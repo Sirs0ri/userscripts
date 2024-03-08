@@ -1354,9 +1354,6 @@ markiere medien ohne alt-text */
   text-overflow: ellipsis;
 }
 
-.notification__message {
-  padding-inline-end: 10px;
-}
 .notification__message > :is(#fake, span) {
   text-wrap: wrap;
 }
@@ -2872,7 +2869,8 @@ body {
     padding-top: 0;
   }
 
-  /* Notifications / explore / Account's post/replies/media tabs  */
+  /* ===== Notifications / explore / Account's post/replies/media tabs ===== */
+
   /* .notification__filter-bar
    *    notifications use  button > i    and
    *                       button > span
@@ -2882,6 +2880,34 @@ body {
    *    account uses       a      > span
    *    "live feeds" uses  a      > div
    */
+
+  .notification {
+    padding: 10px 14px;
+
+    .account {
+      padding: 0;
+    }
+  }
+
+  .notification__message {
+
+    :is(&, #important) {
+      margin-top: 0;
+    }
+
+    padding-top: 0;
+    min-height: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+
+    & > span {
+      max-width: calc(100% - 10px);
+    }
+
+    .icon {
+      display: block;
+    }
+  }
 
   .account__section-headline {
     padding-inline: 10px;
@@ -3020,19 +3046,13 @@ body {
       .notification-follow,
       .notification-admin-report)
   .notification__message {
-    margin-left: 15px;
+    margin-left: 0px;
   }
 
   :is(.notification-admin-sign-up,
       .notification-follow
   ) .account__wrapper {
-    margin-block: 1em 0.5em;
-  }
-
-  :is(.notification-admin-sign-up,
-      .notification-follow
-  ) .account__avatar-wrapper {
-    margin-left: 5px;
+    margin-top: 10px;
   }
 
   /* add a transparent tint to the existing background-color.
@@ -3045,8 +3065,22 @@ body {
       hsl(var(--hsl-notification, transparent) / 0.05));
   }
 
-  .notification-follow, .notification-follow-request {
+  .notification-follow, .notification-follow-request, .notification__report {
     border-bottom: none;
+    padding: 10px 0 0 60px;
+    min-height: 46px;
+
+    .notification__report__avatar {
+      inset-inline-start: 0;
+    }
+  }
+
+  :is(.notification__report, #important) {
+    padding: 10px 0 0 61px;
+  }
+
+  .notification-follow {
+    padding: 10px 14px;
   }
 
 
@@ -3074,6 +3108,7 @@ body {
 
     padding: 10px;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     --gap: 10px;
     gap: var(--gap);
   }
@@ -3782,13 +3817,6 @@ body {
   .status__action-bar > :last-child button {
     border-start-end-radius: var(--border-radius-button);
     border-end-end-radius: var(--border-radius-button);
-  }
-
-  :is(.status:not(.collapsed) .status__content--with-action, #fake) {
-    padding-top: calc(58px + var(--status-extra-top-padding, 0px));
-    margin-top: calc(-48px - var(--status-extra-top-padding, 0px));
-    margin-bottom: 0;
-    overflow: visible;
   }
 
   .status__action-bar-spacer {
