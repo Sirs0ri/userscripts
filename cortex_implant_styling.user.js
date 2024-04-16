@@ -2080,6 +2080,10 @@ aside .status__display-name:hover,
 
 /* improve long usernames by adding an ellipsis (that doesn't break the zoom-on-hover!) */
 
+.account--minimal.account .account__display-name {
+  align-items: stretch;
+}
+
 .detailed-status__display-name,
 .account .account__display-name {
   display: flex;
@@ -2423,6 +2427,28 @@ body {
     border-radius: 8px;
   }
 
+
+  /* 4.3.x fixes */
+  .compose-form__footer {
+
+    .compose-form__buttons {
+
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+
+
+      :where(div, button) {
+        width: 100%;
+        box-sizing: border-box !important;
+      }
+
+      .character-counter {
+        grid-column-end: -1;
+        padding-inline-end: 2px;
+      }
+    }
+  }
+
   /* This is actually the language selector */
   .privacy-dropdown.active .privacy-dropdown__value {
     border-radius: 8px 8px 0 0;
@@ -2673,6 +2699,7 @@ body {
 
   .column-header__collapsible {
     background: var(--color-grey-5);
+    border-bottom: none;
   }
   .column-header__collapsible,
   .announcements {
@@ -3036,13 +3063,35 @@ body {
     padding-top: 0;
     min-height: 24px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
+    gap: 10px;
 
     & > span {
       max-width: calc(100% - 10px);
     }
 
+    & > .notification__favourite-icon-wrapper {
+      position: initial;
+    }
+
     .icon {
+      display: block;
+    }
+  }
+
+  /* "x liked your toot" post in 4.3 */
+  .status__wrapper > .notification__message {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 10px;
+
+    & + .status.collapsed .status__content {
+      margin-top: ;
+      padding-top: 30px;
+    }
+    .status__collapse-button {
+      margin: 0;
       display: block;
     }
   }
@@ -3389,10 +3438,31 @@ body {
 
   /* ===== Account links ===== */
 
+  .account__header__account-note {
+    border-color: var(--color-grey-6);
+    border-radius: var(--border-radius-button);
+  }
+
   .account__header__bio .account__header__fields {
     border-radius: var(--border-radius-button);
     margin: 10px;
     border: none;
+  }
+
+  .account__header__bio .account__header__fields:last-child {
+
+    dl {
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    dl:not(.verified) {
+      border-color: var(--color-grey-6);
+    }
+
+    dl + dl {
+      margin-top: var(--border-radius-button-between);
+    }
   }
 
   .account__header__fields dl {
@@ -3407,8 +3477,8 @@ body {
     border-top-right-radius: inherit;
   }
   .account__header__fields dl:last-of-type {
-    border-bottom-left-radius: inherit;
-    border-bottom-right-radius: inherit;
+    border-bottom-left-radius: inherit !important;
+    border-bottom-right-radius: inherit !important;
   }
 
   .account__header__fields dt,
@@ -3425,16 +3495,21 @@ body {
     margin-right: var(--border-radius-button-between);
   }
 
-  .account__header__fields dd {
-    border: 1px solid var(--color-grey-6);
-    background: hsl(var(--hsl-offwhite-blue) / 0.05);
+  .account__header__fields:not(:last-child) dd {
+    border-style: solid;
+    border-width: 1px;
     position: relative;
     /* TODO: This looks weird sometimes. e.g. https://corteximplant.com/@LevelUp@mastodon.art */
     white-space: initial;
     word-break: break-all;
+
+    &:not(.verified) {
+      border-color: var(--color-grey-6);
+      background: color-mix(in srgb, var(--color-offwhite-primary) 5%, transparent);
+    }
   }
 
-  .account__header__fields dd a:before {
+  .account__header__fields dd a::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -3451,6 +3526,10 @@ body {
     border-radius: var(--border-radius-button-between);
     border-top-right-radius: inherit;
     border-bottom-right-radius: inherit;
+
+    word-break: break-word;
+    text-align: start;
+    text-wrap: balance;
   }
 
   /* Make sure the "joined at..." date aligns with the text above it */
@@ -3481,6 +3560,7 @@ body {
   .follow_requests-unlocked_explanation {
     background: none;
     margin-top: -20px;
+    border-bottom: none;
   }
   .status.status-direct {
     outline: 1px solid hsl(225 15% 35% / 1);
