@@ -3353,7 +3353,47 @@ body {
   }
 
   .account__disclaimer {
-    margin: 10px 5px;
+    /* this is the "Information below may reflect the user's profile incompletely." hint.
+    Make sure the "view full profile" link looks like a button. */
+    margin: 10px 0;
+    gap: 10px;
+    position: relative;
+
+    & > div {
+      display: contents;
+
+      & > span {
+        text-wrap: balance;
+      }
+
+      & > a {
+        padding: 7px 18px;
+        min-width: calc(calc(100% - 2 * var(--border-radius-button-between)) / 3);
+        box-sizing: border-box;
+
+        border: 1px solid var(--color-grey-5);
+        border-radius: var(--border-radius-button);
+
+
+        color: var(--color-grey-7);
+        white-space: nowrap;
+        text-decoration: navajowhite;
+        text-align: center;
+
+        transition:
+          background-color 200ms,
+          border-color 200ms,
+          color 200ms,
+          box-shadow 200ms;
+
+        &:hover {
+          border-color: var(--color-grey-7) !important;
+          background: var(--color-grey-2);
+          color: var(--color-grey-9);
+          box-shadow: var(--neon-box-shadow-small);
+        }
+      }
+    }
   }
 
   .account__action-bar {
