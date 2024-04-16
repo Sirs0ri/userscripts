@@ -803,7 +803,8 @@ body {
   }
   `)
 
-  settings.hideCheckmarks && GM_addStyle(`
+  if (settings.hideCheckmarks) {
+    GM_addStyle(`
 /* disable checkmark on buttons */
 .detailed-status__button .icon-button.active:after,
 .status__action-bar-button.active:after {
@@ -811,8 +812,10 @@ body {
   display: none
 }
 `)
+  }
 
-  settings.highlightReplies && GM_addStyle(`
+  if (settings.highlightReplies) {
+    GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
   .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
@@ -831,8 +834,10 @@ body {
   }
 }
 `)
+  }
 
-  settings.disableBouncyAnimations && GM_addStyle(`
+  if (settings.disableBouncyAnimations) {
+    GM_addStyle(`
 /* ====================
  * de-springyfy anims
  * ==================== */
@@ -875,7 +880,8 @@ body {
 }
 `)
 
-  settings.freezeTopPosition && GM_addStyle(`
+  if (settings.freezeTopPosition) {
+    GM_addStyle(`
 body.layout-single-column.at-top .column[aria-label] {
   margin-top: 1px;
 }
@@ -905,7 +911,6 @@ body.layout-single-column.pinned .column-header > button::after {
 }
 `)
 
-  if (settings.freezeTopPosition) {
     let atTop = true
     let debounce = null
 
@@ -990,9 +995,10 @@ body.layout-single-column.pinned .column-header > button::after {
     target.parentElement.dataset.hovered = true
   }
 
-  settings.hoverImages && document.addEventListener("mouseover", mouseoverHandler)
+  if (settings.hoverImages) {
+    document.addEventListener("mouseover", mouseoverHandler)
 
-  settings.hoverImages && GM_addStyle(`
+    GM_addStyle(`
 .media-gallery {
   /* overlap emotes */
   z-index: 101;
@@ -1078,8 +1084,10 @@ div[data-hovered] {
   z-index: 2;
 }
 `)
+  }
 
-  settings.enableGlowOnMedia && GM_addStyle(`
+  if (settings.enableGlowOnMedia) {
+    GM_addStyle(`
 /* ====================
  *    Glow on Media
  * ==================== */
@@ -1170,8 +1178,10 @@ canvas.status-card__image-preview--hidden {
   pointer-events: none;
 }
 `)
+  }
 
-  settings.highlightMediaWithoutAlt && GM_addStyle(`
+  if (settings.highlightMediaWithoutAlt) {
+    GM_addStyle(`
 /* inspired von chaos.social:
 markiere medien ohne alt-text */
 
@@ -1192,6 +1202,7 @@ markiere medien ohne alt-text */
   border-bottom: none;
 }
 `)
+  }
 
   const debugFocus = false
 
@@ -1276,10 +1287,11 @@ markiere medien ohne alt-text */
   }
 
   // register initial event hander
-  settings.popoutComposeBox && registerLoadHandlerDesktop(onLoadHandler)
+  if (settings.popoutComposeBox) {
+    registerLoadHandlerDesktop(onLoadHandler)
 
   // load relevant styles
-  settings.popoutComposeBox && GM_addStyle(`
+    GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
   .navigation-bar {
@@ -1331,10 +1343,12 @@ markiere medien ohne alt-text */
   }
 }
 `)
+  }
 
   const doCatThings = avatarLink && user && settings.imACat
 
-  doCatThings && GM_addStyle(`
+  if (doCatThings) {
+    GM_addStyle(`
 
 @keyframes earwiggleleft {
   0%  { transform: rotate(35deg) skew(28deg) }
@@ -1444,7 +1458,6 @@ markiere medien ohne alt-text */
 }
 `)
 
-  if (doCatThings) {
     // most of this code is from https://github.com/zygisS22/color-palette-extraction/blob/master/index.js#L17, adjusted for my needs:
     // - lower fidelity: less quantizising for fewer colors,
     const calculateLuminance = (p) => 0.2126 * p.r + 0.7152 * p.g + 0.0722 * p.b
@@ -1612,8 +1625,8 @@ markiere medien ohne alt-text */
     setTimeout(() => getColors(avatarLink), 750)
   }
 
-
-  settings.enableTheme && GM_addStyle(`
+  if (settings.enableTheme) {
+    GM_addStyle(`
 
 /* ====================
  * Misc general changes
@@ -2026,6 +2039,7 @@ article > .account > .account__wrapper {
   width: auto !important;
 }
 `)
+  }
 
   /* Add our logo */
   GM_addStyle(`
@@ -2095,7 +2109,8 @@ article > .account > .account__wrapper {
 `)
 
   /* neon-ify the page and other style adjustments */
-  settings.enableTheme && GM_addStyle(`
+  if (settings.enableTheme) {
+    GM_addStyle(`
 
 body {
   background: var(--color-grey-0)
@@ -3836,8 +3851,10 @@ body {
   }
 }
 `)
+  }
 
-  settings.showOldPunks && GM_addStyle(`
+  if (settings.showOldPunks) {
+    GM_addStyle(`
 
 body.layout-multiple-columns .drawer__inner__mastodon {
   content: url(https://corteximplant.com/system/site_uploads/files/000/000/006/@1x/68f324b193475041.png);
@@ -3851,6 +3868,7 @@ body.layout-multiple-columns .drawer__inner__mastodon {
   -webkit-mask-repeat: no-repeat;
 }
 `)
+  }
 
   /* emoji picker improvements */
   GM_addStyle(`
@@ -3992,11 +4010,11 @@ span.relationship-tag {
   transition: opacity 200ms;
   opacity: var(--opacity, 1);
 }
-
 `)
 
   /* ===== Glitch Effect on notifications & default avatars ===== */
-  settings.enableTheme && GM_addStyle(`
+  if (settings.enableTheme) {
+    GM_addStyle(`
 
 @media (prefers-reduced-motion: no-preference) {
 
@@ -4240,6 +4258,7 @@ span.relationship-tag {
   }
 }
 `)
+  }
 
   // This relies on :has(), without it the styling has no effect due to the @supports query.
   // The statement is used to select a bunch of wrappers that
