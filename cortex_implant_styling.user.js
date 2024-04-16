@@ -27,15 +27,19 @@
  *      - Profile view is broken
  *    - 4.3.0 fixes
  *      - Icons massive (fixed through custom.css)
- *      - "fav" animation eiert?
- *    - Settings insert inconsistent on https://corteximplant.com/notifications
- *    - Refactor for new CSS features Nesting
+ *      - poll: winning option is spaced weirdy by massive checkmark
+ *       -> https://corteximplant.com/@marta/112134741728666664
+ *    - Refactor for new CSS features
  *      - CSS Nesting
  *      - color-mix() instead of HSL combining
  *    - Make style changes hot-swappable through the stylesheet returned by GM_addStyle
  *    - items under a post might wrap weirdly:
  *      see https://corteximplant.com/@kaiserkiwi/112044242777155596
  *      .detailed-status__meta { flex-wrap: wrap; gap: 0.4em; }
+ *    - 4.3.0-alpha fixes
+ *      - account links highlights broken
+ *    - Long usernames
+ *      - Break the layout in the pip viewer
  */
 
 /*
@@ -784,22 +788,22 @@ body {
 
   /* General layout improvements */
   GM_addStyle(`
-  :root {
-    scrollbar-gutter: stable;
-    margin-right: 0 !important;
-  }
+:root {
+  scrollbar-gutter: stable;
+  margin-right: 0 !important;
+}
 
-  /* Status layout - enable easy insertion of the "replying to..." hint */
-  header.status__info {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 10px;
-  }
+/* Status layout - enable easy insertion of the "replying to..." hint */
+header.status__info {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
 
-  .status__info__icons {
-    height: fit-content;
-  }
-  `)
+.status__info__icons {
+  height: fit-content;
+}
+`)
 
   if (settings.hideCheckmarks) {
     GM_addStyle(`
@@ -1406,7 +1410,7 @@ markiere medien ohne alt-text */
   if (settings.popoutComposeBox) {
     registerLoadHandlerDesktop(onLoadHandler)
 
-  // load relevant styles
+    // load relevant styles
     GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
