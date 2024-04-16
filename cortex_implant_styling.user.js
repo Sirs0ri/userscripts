@@ -827,7 +827,11 @@ body {
     padding: 1px 8px;
   }
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span:after {
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted):has(.status__info:not(aside + .status__info)) {
+    --extra-top-spacing: 32px;
+  }
+
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span::after {
     content: " a reply"
   }
 }
@@ -1508,7 +1512,7 @@ markiere medien ohne alt-text */
 
 @supports selector(:has(a, b)) {
   .status__avatar:has( > [data-avatar-of="@${user}"]) {
-    transform: translateY(2.5%) scale(0.9);
+    transform: translateY(3%);
   }
 }
 
@@ -2761,22 +2765,27 @@ body {
   .status {
     display: flex;
     flex-direction: column;
+    padding: 15px;
+  }
+
+  .detailed-status__wrapper {
+    position: relative;
   }
 
   .status-unlisted,
-  .detailed-status-unlisted {
+  .detailed-status__wrapper-unlisted {
     --color-privacy: var(--color-green, white);
   }
   .status-public,
-  .detailed-status-public {
+  .detailed-status__wrapper-public {
     --color-privacy: var(--color-grey-8, white);
   }
   .status-direct,
-  .detailed-status-direct {
+  .detailed-status__wrapper-direct {
     --color-privacy: var(--color-red, white);
   }
   .status-private,
-  .detailed-status-private {
+  .detailed-status__wrapper-private {
     --color-privacy: var(--color-yellow, white);
   }
 
@@ -2787,24 +2796,28 @@ body {
     box-shadow: 0px 4px 10px -8px var(--color-privacy);
   }
 
-  .detailed-status:not(.detailed-status-public) {
-    position: relative;
-  }
-
-  .status:not(.status-public):not(.unread):before,
-  .detailed-status:not(.detailed-status-public):not(.unread):before {
+  .status:not(.status-public)::after,
+  .detailed-status__wrapper:not(.detailed-status__wrapper-public)::after {
     content: "";
     pointer-events: none;
     background: var(--color-privacy);
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    -webkit-mask-image: radial-gradient(at 39px 39px, rgba(0 0 0 / 0.05) 5%, transparent 70%);
-    -webkit-mask-size: 250px 250px;
-    -webkit-mask-repeat: no-repeat;
-    mask-image: radial-gradient(at 39px 39px, rgba(0 0 0 / 0.05) 5%, transparent 70%);
-    mask-size: 250px 250px;
-    mask-repeat: no-repeat;
+
+    -webkit-mask-image:
+      radial-gradient(at 39px calc(39px + var(--extra-top-spacing, 0px)), rgba(0, 0, 0, 0.2) 5%, rgba(0 0 0 / 0.06) 20%, transparent 70%),
+      var(--noise-url);
+    -webkit-mask-size: 600px 600px, 200px;
+    -webkit-mask-composite: intersect;
+    -webkit-mask-repeat: no-repeat, repeat;
+
+    mask-image:
+      radial-gradient(at 39px calc(39px + var(--extra-top-spacing, 0px)), rgba(0, 0, 0, 0.2) 5%, rgba(0 0 0 / 0.06) 20%,  transparent 70%),
+      var(--noise-url);
+    mask-size: 600px 600px, 200px;
+    mask-composite: intersect;
+    mask-repeat: no-repeat, repeat;
   }
 
   /* pre-4.3.0 */
@@ -2921,19 +2934,41 @@ body {
     border: none;
   }
 
+  /* ==== detailed status ==== */
+
   /* give the selected post in single-post-view a lighter background */
   .columns-area--mobile .scrollable>div[tabindex="-1"]:has(.detailed-status) {
     box-shadow: var(--neon-box-shadow-small);
     border-color: var(--color-grey-7);
     background: var(--color-grey-3);
   }
-  .detailed-status {
-    border-top: none
+
+  .detailed-status__wrapper {
+    padding: 15px;
+    gap: 15px;
+    display: flex;
+    flex-direction: column;
   }
-  .detailed-status .status__content {
-    font-size: 15px;
-    line-height: 20px;
+
+  :is(.detailed-status, #important) {
+    position: relative;
+    border-top: none;
+    padding: 0;
+    background: none;
+
+    .status__content {
+      font-size: 15px;
+      line-height: 20px;
+    }
   }
+
+  :is(.detailed-status__action-bar, #important) {
+    padding: 0;
+    border-radius: 0 0 8px 8px;
+    border: none;
+    background: none;
+  }
+
 
   /* remove bottom border on all kinds of posts */
   .status,
@@ -2948,27 +2983,6 @@ body {
   :is(#fake, .status__action-bar) {
     margin-top: 15px;
     margin-bottom: 0;
-  }
-
-  .status__action-bar,
-  .detailed-status__action-bar {
-    height: 40px;
-    gap: var(--border-radius-button-between);
-  }
-
-  :where(.status__action-bar, .detailed-status__action-bar)
-  :is(button, .status__action-bar-dropdown, detailed-status__action-bar-dropdown) {
-    height: 100% !important;
-    min-width: 40px !important;
-    border-radius: 8px;
-    z-index: 1;
-  }
-  .detailed-status__button button,
-  .status__action-bar-button {
-    transition: color 200ms
-  }
-  .detailed-status__action-bar-dropdown span {
-    height: 100%;
   }
 
   /* Make sure everything inside a post follows the border radius */
@@ -2991,17 +3005,6 @@ body {
   }
   article>a {
     border-radius: inherit;
-  }
-
-  .detailed-status {
-    background: none;
-  }
-  .detailed-status__action-bar {
-    border-radius: 0 0 8px 8px;
-    border: none;
-    background: none;
-    padding: 15px;
-    padding-top: 0;
   }
 
   /* ===== Notifications / explore / Account's post/replies/media tabs ===== */
@@ -3127,8 +3130,7 @@ body {
 
 
   /* Mentions use .status__wrapper directly, all other notifications are wrapped in a .notification div */
-  .status.unread:after,
-  .notification.unread:after {
+  article:has(.unread)::before {
     content: "";
     position: absolute;
     top: 4px;
@@ -3913,6 +3915,29 @@ body {
 
   /* This makes the buttons beneath toots look different */
 
+  .status__action-bar,
+  .detailed-status__action-bar {
+    /* height: 40px; */
+    gap: var(--border-radius-button-between);
+    position: relative;
+    align-items: stretch;
+  }
+
+  :where(.status__action-bar, .detailed-status__action-bar)
+  :is(button, .status__action-bar-dropdown, detailed-status__action-bar-dropdown) {
+    height: 100% !important;
+    min-width: 40px !important;
+    border-radius: 8px;
+    z-index: 1;
+  }
+  .detailed-status__button button,
+  .status__action-bar-button {
+    transition: color 200ms
+  }
+  .detailed-status__action-bar-dropdown span {
+    height: 100%;
+  }
+
   .status__action-bar :where(button, a),
   .detailed-status__button,
   .detailed-status__action-bar-dropdown {
@@ -3924,7 +3949,7 @@ body {
 
   .status__action-bar a {
     flex: 1 1 22px;
-    height: 40px;
+    /* height: 40px; */
     box-sizing: border-box;
     padding-inline: 10px;
     display: flex;
@@ -3936,8 +3961,6 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    left: unset;
-    width: 100%;
     background-color: var(--color-grey-7);
     opacity: 0.1;
     border-radius: inherit;
@@ -3953,8 +3976,10 @@ body {
     background-image: radial-gradient(currentColor, transparent);
   }
 
-  .status__action-bar > * {
+  .status__action-bar > *,
+  .detailed-status__action-bar button {
     margin-inline: 0 !important;
+    padding: 7px;
   }
 
   :where(.status__action-bar, .detailed-status__action-bar) > :first-child {
