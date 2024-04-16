@@ -8,7 +8,8 @@
 // @downloadURL  https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
 // @supportURL   https://github.com/Sirs0ri/userscripts/issues
 // @match        https://corteximplant.com/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=corteximplant.com
+// @match        https://cyber.ms/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=obeythesystem.com
 // @grant        GM_addStyle
 // @grant        GM_getResourceURL
 //
@@ -4134,8 +4135,8 @@ span.relationship-tag {
 
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"],
-  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]) {
+  )[style*="/avatars/original/missing.png"],
+  .account__avatar:has(img[src*="avatars/original/missing.png"]) {
     animation: paths 10s step-end infinite;
     position: relative;
     --padding: -5px;
@@ -4145,26 +4146,32 @@ span.relationship-tag {
 
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:before,
+  ) img {
+    border-radius: inherit;
+  }
+
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:after,
-  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]):before,
-  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]):after {
+  )[style*="/avatars/original/missing.png"]::before,
+  :where(
+    .account__avatar, .account__avatar-overlay-overlay
+  )[style*="/avatars/original/missing.png"]::after,
+  .account__avatar:has(img[src*="/avatars/original/missing.png"])::before,
+  .account__avatar:has(img[src*="/avatars/original/missing.png"])::after {
     content: "";
     position: absolute;
     height: 105%;
     width: 105%;
     background-size: 110% 110%;
     background-image: inherit;
-    background-image: url(https://corteximplant.com/avatars/original/missing.png);
+    background-image: url(/avatars/original/missing.png);
     border-radius: inherit;
   }
 
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:before,
-  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]):before {
+  )[style*="/avatars/original/missing.png"]::before,
+  .account__avatar:has(img[src*="/avatars/original/missing.png"])::before {
     top: calc((10em / 6) + var(--padding));
     left: calc((15em / 6) + var(--padding) + var(--start));
     color: #6364ff;
@@ -4176,8 +4183,8 @@ span.relationship-tag {
   }
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:after,
-  .account__avatar:has(img[src="https://corteximplant.com/avatars/original/missing.png"]):after{
+  )[style*="/avatars/original/missing.png"]::after,
+  .account__avatar:has(img[src*="/avatars/original/missing.png"])::after{
     top: calc((5em / 6) + var(--padding));
     left: calc((-30em / 6) + var(--padding) + var(--start));
     color: #1bc7fb;
