@@ -57,6 +57,17 @@
 (function () {
   "use strict"
 
+  // #region raw images
+
+  // alpha mask of the people and the logo from the header image
+  const footerImgMask = GM_getResourceURL("ci_header_mask.avif")
+  // The CORTEX IMPLANT Logo
+  const logoSvg = GM_getResourceURL("ci_logo_min.svg")
+  // The animateable "boost" svg
+  const boostSvg = GM_getResourceURL("m_boost_sprites.svg")
+
+  // #endregion
+
   // ====================
   //      Helpers
   // ====================
@@ -1596,16 +1607,6 @@ markiere medien ohne alt-text */
     setTimeout(() => getColors(avatarLink), 750)
   }
 
-  // #region raw images
-
-  // alpha mask of the people and the logo from the header image
-  const footerImgMask = GM_getResourceURL("ci_header_mask.avif")
-  // The CORTEX IMPLANT Logo
-  const logoSvg = GM_getResourceURL("ci_logo_min.svg")
-  // The animateable "boost" svg
-  const boostSvg = GM_getResourceURL("m_boost_sprites.svg")
-
-  // #endregion
 
   settings.enableTheme && GM_addStyle(`
 
