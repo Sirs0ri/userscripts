@@ -837,6 +837,41 @@ body {
   }
 
   if (settings.disableBouncyAnimations) {
+    const clickHandler = (evt) => {
+      let target = evt.target
+
+      if (evt.target.ownerSVGElement) {
+        const allButtons = document.querySelectorAll("button.icon-button.bookmark-icon")
+
+        target = [...allButtons].find(b => b.contains(evt.target))
+      }
+
+      if (target == null) return
+
+      const closestBookmarkButton = target.closest("button.icon-button.bookmark-icon")
+
+      if (closestBookmarkButton == null) return
+
+      closestBookmarkButton.parentElement.classList.add("clicked")
+
+      const cb = (mutationList, observer) => {
+        if (closestBookmarkButton.classList.contains("active")) {
+          closestBookmarkButton.classList.add("activate")
+          closestBookmarkButton.classList.remove("deactivate")
+        } else {
+          closestBookmarkButton.classList.add("deactivate")
+          closestBookmarkButton.classList.remove("activate")
+        }
+
+        observer.disconnect()
+      }
+
+      const observer = new MutationObserver(cb)
+      observer.observe(closestBookmarkButton, { childList: true })
+    }
+
+    document.addEventListener("click", clickHandler, true)
+
     GM_addStyle(`
 /* ====================
  * de-springyfy anims
@@ -857,6 +892,15 @@ body {
   to   { transform: rotate(0turn); }
 }
 
+.icon.icon-star {
+  transform-origin: 50% 50% !important;
+
+  & > path {
+    /* optically center the star */
+    transform: translateY(-60px);
+  }
+}
+
 .no-reduce-motion .icon-button.star-icon.deactivate>.fa-star,
 .no-reduce-motion .icon-button.star-icon.deactivate>.icon {
   animation: rotateOut 750ms;
@@ -866,9 +910,78 @@ body {
 .no-reduce-motion .icon-button.star-icon.activate>.icon {
   animation: rotateIn 750ms;
 }
-`)
 
-  settings.showImagesUncropped && GM_addStyle(`
+/* When activating the button, the icon does a flip and changes color. The flip is split
+   into two halves, so that it only does a 180° rotation, but doesn't end up upside down.
+   The color change during the flip animation is slightly delayed so that it mostly happens
+   during the 2nd part of the flip. Both animations together run for 2x --anim-halftime.
+
+   When deactivating the bookmark button, the icon only changes color (fading to grey).
+   The animation runs for 1.5x --anim-halftime.
+
+   The mask-image makes it so that the icon looks like the background is filled in the moment
+   the icon passes the halfway point in the animation, instead of at the beginnign of the
+   animation. A --_m property of "white" disables the mask by filling it completely in white.
+
+   The .clicked class is applied to the button' parent as soon as the button's been clicked.
+   The .activate class is applied just after Mastodon handles the click, when the inline SVGs
+   have already been switched.
+   */
+
+.no-reduce-motion .icon-button.bookmark-icon {
+  --anim-halftime: 250ms;
+  transition: color calc(1.5 * var(--anim-halftime));
+}
+.no-reduce-motion .icon-button.bookmark-icon.active {
+  transition: color calc(1.5 * var(--anim-halftime)) calc(0.5 * var(--anim-halftime));
+}
+
+.no-reduce-motion .icon-button.bookmark-icon svg {
+  --_m: white;
+  mask-image:
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0 0V-960H960V0H0ZM280-242 480-328 680-242V-760H280V-242ZM280-760H680 280Z"></path></svg>'),
+    linear-gradient(var(--_m), var(--_m));
+  mask-position: center;
+}
+
+.no-reduce-motion .status__action-bar .icon-button.bookmark-icon svg {
+  mask-size: 20px 20px;
+}
+
+/* the value of --_m will be overwritten by the animation with "white" */
+.no-reduce-motion .clicked > .icon-button.bookmark-icon.active svg {
+  --_m: transparent;
+}
+
+.no-reduce-motion .clicked > .icon-button.bookmark-icon.activate svg {
+  animation: flip-over-1 var(--anim-halftime) ease-in,
+             flip-over-2 var(--anim-halftime) var(--anim-halftime) ease-out forwards;
+}
+
+@keyframes flip-over-1 {
+  0%   {
+    transform: perspective(3em) rotateX(0deg);
+  }
+  100%  {
+    transform: perspective(3em) rotateX(-90deg);
+  }
+}
+
+@keyframes flip-over-2 {
+  0%   {
+    transform: perspective(3em) rotateX(-270deg);
+    --_m: white;
+  }
+  100% {
+    transform: perspective(3em) rotateX(-360deg);
+    --_m: white;
+  }
+}
+`)
+  }
+
+  if (settings.showImagesUncropped) {
+    GM_addStyle(`
 /* Force all images to be in their original aspect ratio, not 16/9 */
 
 .media-gallery, video {
@@ -879,6 +992,7 @@ body {
   aspect-ratio: 16 / 9;
 }
 `)
+  }
 
   if (settings.freezeTopPosition) {
     GM_addStyle(`
