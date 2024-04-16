@@ -633,33 +633,32 @@ body {
   --border-radius-button-between: 3px;
 
   /* COLORS */
-  --hsl-white: 0deg 0% 100%;
-  --color-white: hsl(var(--hsl-white));
+  --color-white: white;
 
-  --neon-glow-hsl: 219deg 100% 50%;
+  --color-neon-glow: hsl(219deg 100% 50%);
 
   /* hl is a color to be used as highlight ontop of another color */
   --color-primary: hsl(239.65deg 100% 66.47%);
   --color-hl-primary: hsl(240deg 100% 83%);
 
   /* used in the neon bars in the menu */
-  --hsl-offwhite-blue: 224deg 60% 81%;
   --color-offwhite-primary: hsl(224deg 60% 81%);
 
-  --color-green: #388e3c; /* Unlisted posts */
-  --color-blue: #1976d2; /* formerly public posts */
-  --color-red: #d32f2f; /* Direct posts */
-  --color-yellow: hsl(48 71% 54%); /* Private posts - original: ffa000*/
+  /* Unlisted posts */
+  --color-green: #388e3c;
+  /* formerly public posts */
+  --color-blue: #1976d2;
+  /* Direct posts */
+  --color-red: #d32f2f;
+  /* Private posts - original: ffa000*/
+  --color-yellow: hsl(48 71% 54%);
 
   /* favs */
-  --hsl-gold: 41 100% 45%;
-  --color-gold: hsl(var(--hsl-gold));
+  --color-gold: hsl(41 100% 45%);
   /* boosts */
-  --hsl-purple: 240 100% 77%;
-  --color-purple: hsl(var(--hsl-purple));
+  --color-purple: hsl(240 100% 77%);
   /* reports */
-  --hsl-orange: 22 100% 45%;
-  --color-orange: hsl(var(--hsl-orange));
+  --color-orange: hsl(22 100% 45%);
 
   /* page background  */
   --color-grey-0: hsl(224deg 17% 9%);
@@ -690,8 +689,7 @@ body {
    * scrollbars                                       -> ???
    * body.layout-multiple-columns .column-header      -> background
    */
-  --hsl-grey-3: 227deg 17% 23%;
-  --color-grey-3: hsl(var(--hsl-grey-3));
+  --color-grey-3: hsl(227deg 17% 23%);
 
   /* .dismissable-banner                              -> border
    * posts                                            -> border
@@ -743,8 +741,7 @@ body {
 
   /* Notifications                                    -> border
    */
-  --hsl-grey-8: 227deg 17% 71%;
-  --color-grey-8: hsl(var(--hsl-grey-8));
+  --color-grey-8: hsl(227deg 17% 71%);
 
   /* .compose-form__buttons-wrapper                   -> background
    */
@@ -754,26 +751,26 @@ body {
 
   --neon-box-shadow:
     /* White glow */
-    0 0 7px hsla(var(--hsl-white) / 1),
-    0 0 10px hsla(var(--hsl-white) / 1),
-    0 0 21px hsla(var(--hsl-white) / 1),
+    0 0   7px color-mix(in srgb, var(--color-white) 100%, transparent),
+    0 0  10px color-mix(in srgb, var(--color-white) 100%, transparent),
+    0 0  21px color-mix(in srgb, var(--color-white) 100%, transparent),
     /* Colored glow */
-    0 0 42px hsla(var(--neon-glow-hsl) / 1),
-    0 0 82px hsla(var(--neon-glow-hsl) / 1),
-    0 0 92px hsla(var(--neon-glow-hsl) / 1),
-    0 0 102px hsla(var(--neon-glow-hsl) / 1),
-    0 0 151px hsla(var(--neon-glow-hsl) / 1);
+    0 0  42px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
+    0 0  82px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
+    0 0  92px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
+    0 0 102px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
+    0 0 151px color-mix(in srgb, var(--color-neon-glow) 100%, transparent);
   --neon-box-shadow-small:
     /* White glow */
-    0 0 6px -2px hsla(var(--hsl-white) / 0.4),
-    0 0 10px hsla(var(--hsl-white) / 0.2),
-    0 0 15px hsla(var(--hsl-white) / 0.1),
+    0 0 6px -2px color-mix(in srgb, var(--color-white) 40%, transparent),
+    0 0 10px color-mix(in srgb, var(--color-white) 20%, transparent),
+    0 0 15px color-mix(in srgb, var(--color-white) 10%, transparent),
     /* Colored glow */
-    0 0 10px hsla(var(--neon-glow-hsl) / 0.07),
-    0 0 25px hsla(var(--neon-glow-hsl) / 0.05),
-    0 0 47px hsla(var(--neon-glow-hsl) / 0.12),
+    0 0 10px color-mix(in srgb, var(--color-neon-glow)   7%, transparent),
+    0 0 25px color-mix(in srgb, var(--color-neon-glow)   5%, transparent),
+    0 0 47px color-mix(in srgb, var(--color-neon-glow)  12%, transparent),
     /* White inside glow */
-    inset 0 0 5px hsla(var(--hsl-white) / 0.3);
+    inset 0 0 5px color-mix(in srgb, var(--color-white) 30%, transparent);
 
   --noise-url: url(${noiseSvg});
 }
@@ -807,8 +804,8 @@ body {
   if (settings.hideCheckmarks) {
     GM_addStyle(`
 /* disable checkmark on buttons */
-.detailed-status__button .icon-button.active:after,
-.status__action-bar-button.active:after {
+.detailed-status__button .icon-button.active::after,
+.status__action-bar-button.active::after {
   content: "";
   display: none
 }
@@ -819,7 +816,7 @@ body {
     GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
+  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info)::before {
     color: #606984;
     font-size: 14px;
     grid-column: 1 / -1;
@@ -2333,7 +2330,7 @@ body {
     border-radius: 8px;
     margin-top: var(--border-radius-button-between);
     backdrop-filter: blur(3px);
-    background: hsla(var(--hsl-grey-3) / 0.8);
+    background: color-mix(in srgb, var(--color-grey-3) 80%, transparent);
     border: 1px solid var(--color-grey-7);
   }
   .search__popout h4 {
@@ -2495,7 +2492,9 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, hsl(var(--hsl-offwhite-blue) / 0.05), hsl(var(--hsl-offwhite-blue) / 0.1));
+    background: linear-gradient(to right,
+      color-mix(in srgb, var(--color-offwhite-primary)  5%, transparent),
+      color-mix(in srgb, var(--color-offwhite-primary) 10%, transparent));
     border-radius: 8px;
 
     animation: 200ms flicker-in ease-out;
@@ -2596,7 +2595,7 @@ body {
   .column-header__wrapper {
     border-radius: 8px;
     backdrop-filter: blur(3px);
-    background: hsla(var(--hsl-grey-3) / 0.8);
+    background: color-mix(in srgb, var(--color-grey-3) 80%, transparent);
     transition: box-shadow 200ms;
   }
   #tabs-bar__portal>button:hover,
@@ -3147,33 +3146,34 @@ body {
 
   /* Color the icon */
   .notification__message :is(#fake, .fa) {
-    color: hsl(var(--hsl-notification))
+    color: var(--color-notification);
   }
 
   .notification__filter-bar + .scrollable .status,
   [data-column="notifications"] .status {
-    --hsl-notification: var(--hsl-grey-8);
+    --color-notification: var(--color-grey-8);
   }
 
   .notification__filter-bar + .scrollable .status[data-favourited-by],
   [data-column="notifications"] .status[data-favourited-by] {
-    --hsl-notification: var(--hsl-gold);
+    --color-notification: var(--color-gold);
   }
 
   .notification__filter-bar + .scrollable .status[data-boosted-by],
   .notification-follow,
   .notification-admin-sign-up,
   [data-column="notifications"] .status[data-boosted-by] {
-    --hsl-notification: var(--hsl-purple);
+    --color-notification: var(--color-purple);
   }
 
   .notification-admin-report {
-    --hsl-notification: var(--hsl-orange);
+    --color-notification: var(--color-orange);
   }
 
   /* repurpose the before element adding a border */
-  .notification.unread:before, .status.unread:before {
-    border-inline-start-color: hsl(var(--hsl-notification, 0 0% 0% / 0));
+  .notification.unread::before, .status.unread::before {
+    border-inline-start-color: var(--color-notification, transparent);
+    
     border-radius: inherit;
     left: -1px;
   }
@@ -3197,8 +3197,8 @@ body {
   .status,
   .notification {
     background-image: linear-gradient(
-      hsl(var(--hsl-notification, transparent) / 0.05),
-      hsl(var(--hsl-notification, transparent) / 0.05));
+      color-mix(in srgb, var(--color-notification) 5%, transparent),
+      color-mix(in srgb, var(--color-notification) 5%, transparent));
   }
 
   .notification-follow, .notification-follow-request, .notification__report {
@@ -3365,18 +3365,18 @@ body {
     position: relative;
   }
 
-  .account__action-bar__tab.active:before {
+  .account__action-bar__tab.active::before {
     content: "";
     position: absolute;
     inset: 0;
     border-bottom: 4px solid var(--color-primary);
   }
 
-  .account__action-bar__tab.active:first-child:before {
+  .account__action-bar__tab.active:first-child::before {
     border-bottom-left-radius: inherit;
   }
 
-  .account__action-bar__tab.active:last-child:before {
+  .account__action-bar__tab.active:last-child::before {
     border-bottom-right-radius: inherit;
   }
 
@@ -3441,7 +3441,7 @@ body {
     background-image: radial-gradient(currentColor, transparent);
     transition: opacity 200ms;
   }
-  .account__header__fields dd a:hover:before {
+  .account__header__fields dd a:hover::before {
     opacity: 0.1;
   }
 
@@ -3511,7 +3511,7 @@ body {
     margin-right: -10px;
     border-radius: 8px;
     backdrop-filter: blur(3px);
-    background: hsla(var(--hsl-grey-3) / 0.8);
+    background: color-mix(in srgb, var(--color-grey-3) 80%, transparent);
     transition: box-shadow 200ms;
     position: sticky;
     top: 10px;
@@ -3546,7 +3546,7 @@ body {
     padding: 20px 0px;
   }
 
-  body:not(.layout-multiple-columns) .scrollable.about:before {
+  body:not(.layout-multiple-columns) .scrollable.about::before {
     content: "";
     display: block;
     position: relative;
@@ -3805,16 +3805,18 @@ body {
     color: white;
   }
 
-  div[data-column="getting-started"] .column-link:hover span:before {
+  div[data-column="getting-started"] .column-link:hover span::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, hsl(var(--hsl-offwhite-blue) / 0.05), hsl(var(--hsl-offwhite-blue) / 0.1));
+    background: linear-gradient(to right,
+      color-mix(in srgb, var(--color-offwhite-primary)  5%, transparent),
+      color-mix(in srgb, var(--color-offwhite-primary) 10%, transparent));
     border-radius: 8px;
 
     animation:  200ms flicker-in ease-out;
   }
-  div[data-column="getting-started"] .column-link:hover span:after {
+  div[data-column="getting-started"] .column-link:hover span::after {
     content: "";
     position: absolute;
     top: 8px;
@@ -3841,26 +3843,26 @@ body {
     /* Start a new stacking context */
     z-index: 1;
 
-    --bg-hsl: 225deg 10% 30%;
-    --border-hsl: 227deg 16% 76%;
-    --bg-shine-hsl: 227deg 16% 54%;
-    --border-shine-hsl: 227deg 16% 10%;
+    --color-role-bg: hsl(225deg 10% 30%);
+    --color-role-border: hsl(227deg 16% 76%);
+    --color-role-bg-shine: hsl(227deg 16% 54%);
+    --color-role-border-shine: hsl(227deg 16% 10%);
   }
 
   /* owner */
   .user-role-3 {
-    --border-hsl: 330deg 100% 50%;
-    --border-shine-hsl: 254deg 100% 65%;
+    --color-role-border: hsl(330deg 100% 50%);
+    --color-role-border-shine: hsl(254deg 100% 65%);
   }
   /* moderator */
   .user-role-1 {
-    --border-hsl: 149.12deg 34% 60.78%;
-    --border-shine-hsl: 240deg 100% 69%;
+    --color-role-border: hsl(149.12deg 34% 60.78%);
+    --color-role-border-shine: hsl(240deg 100% 69%);
   }
   /* supporter */
   .user-role-34 {
-    --border-shine-hsl: 58deg 100% 47%;
-    --border-hsl: 187deg 98% 48%;
+    --color-role-border: hsl(187deg 98% 48%);
+    --color-role-border-shine: hsl(58deg 100% 47%);
   }
 
   /* User badges */
@@ -3884,16 +3886,28 @@ body {
     z-index: -2;
     inset: -1px;
     background-image:
-      linear-gradient(60deg, transparent 0%, transparent 40%, hsla(var(--border-shine-hsl) / 0.4) 50%, transparent 60%, transparent 100%),
-      linear-gradient(hsl(var(--border-hsl)), hsl(var(--border-hsl)));
+      linear-gradient(60deg,
+        transparent 0%,
+        transparent 40%,
+        color-mix(in srgb, var(--color-role-border-shine) 40%, transparent) 50%,
+        transparent 60%,
+        transparent 100%
+      ),
+      linear-gradient(var(--color-role-border), var(--color-role-border));
   }
   /* background */
   .account-role::after {
     z-index: -1;
     inset: 0px;
     background-image:
-      linear-gradient(60deg, transparent 0%, transparent 45%, hsla(var(--bg-shine-hsl) / 0.2) 55%, transparent 65%, transparent 100%),
-      linear-gradient(hsl(var(--bg-hsl)), hsl(var(--bg-hsl)));
+      linear-gradient(60deg,
+        transparent 0%,
+        transparent 45%,
+        color-mix(in srgb, var(--color-role-bg-shine) 20%, transparent) 55%,
+        transparent 65%,
+        transparent 100%
+      ),
+      linear-gradient(var(--color-role-bg), var(--color-role-bg));
   }
 
 
