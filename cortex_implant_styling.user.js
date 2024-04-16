@@ -38,8 +38,9 @@
 
 /*
  * == KNOWN ISSUES ==
- *    - Firefox didn't support :has() before v121, unless you manually turned it on via the layout.css.has-selector.enabled flag.
- *      Starting with 121 (Released 2023-12-19) that flag will be on by default!
+ *    - Firefox didn't support :has() before v121, unless you manually turned it on via
+ *      the layout.css.has-selector.enabled flag. Starting with 121 (Released 2023-12-19)
+ *      that flag will be on by default!
  *      The general restyling shouldn't be affected either way.
  *      With that flag active, everything should work.
  *      Affected parts of this stylesheet have a notice at the start.
@@ -66,7 +67,7 @@
   let _currentInnerWidth = window.innerWidth
   const _desktopMinWidth = 1175
 
-  const onResize = evt => {
+  const onResize = () => {
     if (_currentInnerWidth < _desktopMinWidth && innerWidth >= _desktopMinWidth) {
       dispatchEvent(desktopViewVisible)
     } else if (innerWidth < _desktopMinWidth && _currentInnerWidth >= _desktopMinWidth) {
@@ -80,12 +81,9 @@
   /** Register a handler to the "load" event, and when the vew switches from mobile to desktop */
   function registerLoadHandlerDesktop (handler) {
     addEventListener("load", evt => {
-      // console.log("load event")
-
       const ui = document.querySelector(".ui")
 
       if (ui) {
-        // console.log("ui already present")
         handler(evt)
         return
       }
@@ -94,7 +92,6 @@
       const appContainer = document.getElementById("mastodon")
 
       if (!appContainer) {
-        // console.log("no app container found, returning")
         return
       }
 
@@ -111,10 +108,11 @@
         console.warn("load event failed to execute with valid Mastodon UI")
       }
 
-      const observer = new MutationObserver(cb);
+      const observer = new MutationObserver(cb)
 
-      observer.observe(appContainer, { childList: true });
+      observer.observe(appContainer, { childList: true })
     }, { once: true })
+
     addEventListener("desktopViewVisible", evt => {
       // Run the handler on the next frame, to give the DOM a chance to update
       setTimeout(() => {
@@ -190,12 +188,6 @@
       textDescription: "Enable a glow effect around media content embedded in posts",
       defaultvalue: true,
     },
-    // {
-    //   id: "showImagesUncropped",
-    //   textLabel: "show images uncropped",
-    //   textDescription: "Enable full-sized images in posts, instead of cropping images to 16/9. If you're experiencing glitches while scrolling through your feed, turn this off!",
-    //   defaultvalue: false,
-    // },
     {
       id: "hoverImages",
       textLabel: "enlarge images on hover",
@@ -339,9 +331,9 @@
           }
         }
 
-        const observer = new MutationObserver(cb);
+        const observer = new MutationObserver(cb)
 
-        observer.observe(columnsArea, { childList: true, subtree: true, });
+        observer.observe(columnsArea, { childList: true, subtree: true })
       })
 
       if (!footer) return
@@ -451,11 +443,11 @@
     settingsWrapper.appendChild(createElem("p", {
       class: "first-run-notice",
       innerHTML: `Hi there choom! <br>
-        This userscript has a settings UI now! You're seeing this because you're running the new version of the script for
-        the first time. <br>
+        This userscript has a settings UI now! You're seeing this because you're
+        running the new version of the script for the first time. <br>
 
-        If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to
-        this instance's about page.`,
+        If you want to access this UI in the future, you'll be able to find it 
+        in the page's footer, next to the links to this instance's about page.`,
     }))
 
     settingsWrapper.appendChild(createElem("h1", { innerText: "General" }))
@@ -468,9 +460,16 @@
 
     modalModal.appendChild(settingsWrapper)
 
-    modalWrapper.appendChild(createElem("div", { class: "modal-root__overlay", role: "presentation", onclick: closeSettings }))
+    modalWrapper.appendChild(createElem("div", {
+      class: "modal-root__overlay",
+      role: "presentation",
+      onclick: closeSettings,
+    }))
 
-    const modalContainer = createElem("div", { class: "modal-root__container", role: "dialog" })
+    const modalContainer = createElem("div", {
+      class: "modal-root__container",
+      role: "dialog",
+    })
     modalWrapper.appendChild(modalContainer)
     modalContainer.appendChild(modalModal)
 
@@ -607,6 +606,7 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
   // #endregion
 
   /* variables & animations */
+
   GM_addStyle(`
 p {
   line-height: 1.5;
@@ -655,9 +655,9 @@ body {
   --color-grey-1: hsl(223deg 17% 14%);
 
   /* .search__input                                   -> background
-   * .column-back-button--slim [role="button"]:after  -> border
-   * #tabs-bar__portal>button:after                   -> border
-   * .column-header__wrapper:after                    -> border
+   * .column-back-button--slim [role="button"]::after -> border
+   * #tabs-bar__portal>button::after                  -> border
+   * .column-header__wrapper::after                   -> border
    * posts                                            -> background
    * search results                                   -> background
    * explore links                                    -> background
@@ -671,7 +671,7 @@ body {
    * #tabs-bar__portal>button                         -> background 0.8
    * .column-header__wrapper                          -> background 0.8
    * selected post                                    -> background
-   * .about:before                                    -> background
+   * .about::before                                   -> background
    * scrollbars                                       -> ???
    * body.layout-multiple-columns .column-header      -> background
    */
@@ -701,11 +701,11 @@ body {
    */
   --color-grey-5: hsl(227deg 17% 31%);
 
-  /* .column-header__button:hover:before              -> background
-   * .column-header__back-button:hover:before         -> background
-   * .account__section-headline :is(button, a):hover span:before  -> background
-   * .notification__filter-bar button:hover span:before  -> background
-   * .notification__filter-bar button:hover i:after   -> background
+  /* .column-header__button:hover::before             -> background
+   * .column-header__back-button:hover::before        -> background
+   * .account__section-headline :is(button, a):hover span::before  -> background
+   * .notification__filter-bar button:hover span::before  -> background
+   * .notification__filter-bar button:hover i::after  -> background
    * .account-card                                    -> border
    * ::-webkit-scrollbar-thumb:hover                  -> border
    * ::-webkit-scrollbar-thumb:active                 -> background
@@ -717,11 +717,11 @@ body {
   /* .compose-form__autosuggest-wrapper               -> border
    * .compose-form__buttons-wrapper                   -> border
    * .compose-form .spoiler-input                     -> border
-   * .column-back-button--slim [role="button"]:hover:after -> border
-   * #tabs-bar__portal>button:hover:after             -> border
-   * .column-header__wrapper:hover:after              -> border
+   * .column-back-button--slim [role="button"]:hover::after -> border
+   * #tabs-bar__portal>button:hover::after             -> border
+   * .column-header__wrapper:hover::after              -> border
    * selected post                                    -> border
-   * .about:before                                    -> border
+   * .about::before                                   -> border
    * ::-webkit-scrollbar-thumb:active                 -> border
    */
   --color-grey-7: hsl(227deg 17% 51%);
@@ -766,12 +766,10 @@ body {
   40%  { opacity: 0.7 }
   75%  { opacity: 0.4 }
   100% { opacity: 1   }
-}
-`)
+}`)
 
   /* General layout improvements */
   GM_addStyle(`
-
   :root {
     scrollbar-gutter: stable;
     margin-right: 0 !important;
@@ -944,7 +942,8 @@ body.layout-single-column.pinned .column-header > button::after {
   //   - [x] Images overlap Emotes
   //   - [ ] Make sure images are always fully visible, like a position sticky?
 
-  /* Firefox animates the max-height from the image's original height to 100cqh for some reason, every time the image is added to the DOM
+  /* Firefox animates the max-height from the image's original height to 100cqh for some reason,
+   * every time the image is added to the DOM
    * This worakround only applies the transition on hover, meaning the images won't animate on load. */
   const mouseoverHandler = e => {
     if (!["IMG", "CANVAS", "VIDEO"].includes(e.target.nodeName)) return
@@ -954,7 +953,7 @@ body.layout-single-column.pinned .column-header > button::after {
     if (e.target.parentElement.classList.contains("media-gallery__item-thumbnail") ||
         e.target.classList.contains("media-gallery__item-gifv-thumbnail")) {
       target = e.target
-    } else if (e.target.nextElementSibling?.classList.contains("media-gallery__item-thumbnail")){
+    } else if (e.target.nextElementSibling?.classList.contains("media-gallery__item-thumbnail")) {
       target = e.target.nextElementSibling.querySelector("img")
     }
 
@@ -1121,7 +1120,7 @@ options in the "app settings" (left sidebar):
   animation: 200ms ease-out 0s 1 fadeIn;
 }
 
-.media-gallery__item>*:not(canvas, .media-gallery__item__badges):after {
+.media-gallery__item>*:not(canvas, .media-gallery__item__badges)::after {
   content: "";
   outline: 3px solid rgba(128 128 128 / 0.1);
   outline-offset: -2px;
@@ -1143,7 +1142,7 @@ options in the "app settings" (left sidebar):
 canvas.status-card__image-preview--hidden {
   display: revert;
 }
-.status-card__image:after {
+.status-card__image::after {
   content: "";
   outline: 3px solid rgba(128 128 128 / 0.1);
   outline-offset: -2px;
@@ -1239,9 +1238,9 @@ markiere medien ohne alt-text */
       debugFocus && console.log("bg-click", evt)
       if (composeForm.contains(document.activeElement)) return
 
-      // This should only be handled if the user clicked on the backdrop, ie. the compose-form's :before element.
+      // This should only be handled if the user clicked on the backdrop, ie. the compose-form's ::before element.
       // Since pseudoelements can't be targeted directly, this handler has to be registered on the parent, and
-      // the class "ignore-clicks" is used to mimic the :before's pointer-events: none;
+      // the class "ignore-clicks" is used to mimic the ::before's pointer-events: none;
       if (evt.target !== backDrop) return
       if (evt.target.classList.contains("ignore-clicks")) return
 
@@ -1288,7 +1287,7 @@ markiere medien ohne alt-text */
     z-index: 2;
   }
 
-  .compose-form:before {
+  .compose-form::before {
     content: "";
     position: fixed;
     inset: 0;
@@ -1298,7 +1297,7 @@ markiere medien ohne alt-text */
     transition: background-color 200ms;
   }
 
-  .user-focus-within .compose-form:before {
+  .user-focus-within .compose-form::before {
     background-color: rgba(0 0 0 / 0.25);
     pointer-events: all;
   }
@@ -1386,8 +1385,8 @@ markiere medien ohne alt-text */
   position: relative;
 }
 
-[data-avatar-of="@${user}"]:before,
-[data-avatar-of="@${user}"]:after {
+[data-avatar-of="@${user}"]::before,
+[data-avatar-of="@${user}"]::after {
   content: "";
   box-sizing: border-box;
   display: inline-block;
@@ -1402,29 +1401,29 @@ markiere medien ohne alt-text */
   /* scale: 0; */
 }
 
-[data-avatar-of="@${user}"]:before,
-[data-avatar-of="@${user}"]:after {
+[data-avatar-of="@${user}"]::before,
+[data-avatar-of="@${user}"]::after {
   scale: 1;
 }
 
-[data-avatar-of="@${user}"]:before {
+[data-avatar-of="@${user}"]::before {
   border-radius: 0 75% 75%;
   transform: rotate(32deg) skew(28deg);
   top: 0;
   left: 0;
 }
-[data-avatar-of="@${user}"]:hover:before {
+[data-avatar-of="@${user}"]:hover::before {
   animation: earwiggleleft 1s;
   animation-iteration-count: 1;
 }
 
-[data-avatar-of="@${user}"]:after {
+[data-avatar-of="@${user}"]::after {
   border-radius: 75% 0 75% 75%;
   transform: rotate(-32deg) skew(-28deg);
   top: 0;
   right: 0;
 }
-[data-avatar-of="@${user}"]:hover:after {
+[data-avatar-of="@${user}"]:hover::after {
   animation: earwiggleright 1s ;
 }
 `)
@@ -1913,7 +1912,7 @@ aside .status__display-name:hover,
   background-size: cover;
   animation: 4.5s infinite normal statusPrependIcon steps(10);
 }
-.status__prepend .fa-retweet.status__prepend-icon:before {
+.status__prepend .fa-retweet.status__prepend-icon::before {
   display: none;
 }
 */
@@ -1931,7 +1930,7 @@ aside .status__display-name:hover,
   mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
 }
 
-:is(#fake, .status.collapsed .status__content):after {
+:is(#fake, .status.collapsed .status__content)::after {
   display: none;
 }
 
@@ -1975,8 +1974,8 @@ aside .status__display-name:hover,
   direction: ltr;
 }
 
-/* Firefox does some odd things with text-overflow: ellipsis; when an image at the end of the name would exceed the bounding box, this :after makes enough room for the image */
-.display-name:not(.inline) .display-name__html:has(img):after {
+/* Firefox does some odd things with text-overflow: ellipsis; when an image at the end of the name would exceed the bounding box, this ::after makes enough room for the image */
+.display-name:not(.inline) .display-name__html:has(img)::after {
   content: "";
   width: 2.4em;
   display: inline-block;
@@ -2027,7 +2026,7 @@ article > .account > .account__wrapper {
 
 @media screen and (min-width: 1175px) {
 
-  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner:before {
+  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::before {
     content: "";
     object-fit: contain;
     background: url(${logoSvg});
@@ -2048,7 +2047,7 @@ article > .account > .account__wrapper {
     100% { background-position: 600% 50%; }
   }
 
-  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner:after {
+  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::after {
     content: "";
     -webkit-mask-image: url(${logoSvg});
     display: block;
@@ -2081,7 +2080,7 @@ article > .account > .account__wrapper {
     margin-top: 0;
     height: calc(100% - 68px);
   }
-  body.flavour-glitch .navigation-panel:before {
+  body.flavour-glitch .navigation-panel::before {
     content: "";
     width: 100%;
     margin: 20px 0;
@@ -2176,7 +2175,7 @@ body {
   }
 
   /* Glowy horizontal lines */
-  .navigation-panel:before,
+  .navigation-panel::before,
   :is(#fake, .compose-panel, .navigation-panel) hr {
     box-shadow: var(--neon-box-shadow);
     border-top: 1px solid var(--color-grey-9);
@@ -2332,7 +2331,7 @@ body {
     display: none;
   }
 
-  .column-link--logo:before {
+  .column-link--logo::before {
     content: "";
     object-fit: contain;
     background: url(${logoSvg});
@@ -2355,8 +2354,8 @@ body {
     padding: 15px;
   }
 
-  .getting-started__trends h4 a:hover:before,
-  .column-link--transparent:hover:before {
+  .getting-started__trends h4 a:hover::before,
+  .column-link--transparent:hover::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -2365,8 +2364,8 @@ body {
 
     animation: 200ms flicker-in ease-out;
   }
-  .getting-started__trends h4 a:hover:after,
-  .column-link--transparent:hover span:after {
+  .getting-started__trends h4 a:hover::after,
+  .column-link--transparent:hover span::after {
     content: "";
     position: absolute;
     top: 8px;
@@ -2404,7 +2403,7 @@ body {
     text-transform: none;
     padding-inline-start: calc(5px + 1.28571429em);
   }
-  .getting-started__trends h4 span:before {
+  .getting-started__trends h4 span::before {
     content: "";
     font-family: FontAwesome;
     margin-right: 5px;
@@ -2444,9 +2443,9 @@ body {
     border-bottom: none;
   }
 
-  #tabs-bar__portal>button:after,
-  .column-header__wrapper:after,
-  h1:where(#Lists, #Follow-requests):after
+  #tabs-bar__portal>button::after,
+  .column-header__wrapper::after,
+  h1:where(#Lists, #Follow-requests)::after
   {
     content: "";
     position: absolute;
@@ -2469,9 +2468,9 @@ body {
   h1:where(#Lists, #Follow-requests):hover {
     box-shadow: var(--neon-box-shadow-small);
   }
-  #tabs-bar__portal>button:hover:after,
-  .column-header__wrapper:hover:after,
-  h1:where(#Lists, #Follow-requests):hover:after {
+  #tabs-bar__portal>button:hover::after,
+  .column-header__wrapper:hover::after,
+  h1:where(#Lists, #Follow-requests):hover::after {
     border-color: var(--color-grey-7);
   }
 
@@ -2511,9 +2510,9 @@ body {
     color: var(--color-white);
   }
 
-  .column-header__button:before,
-  .column-header__back-button:before,
-  .column-back-button:before {
+  .column-header__button::before,
+  .column-header__back-button::before,
+  .column-back-button::before {
     content: "";
     position: absolute;
     inset: 4px;
@@ -2523,9 +2522,9 @@ body {
     z-index: -1;
   }
 
-  .column-header__button:hover:before,
-  .column-header__back-button:hover:before,
-  .column-back-button:hover:before {
+  .column-header__button:hover::before,
+  .column-header__back-button:hover::before,
+  .column-back-button:hover::before {
     background: var(--color-grey-6);
   }
 
@@ -2842,9 +2841,9 @@ body {
   .focusable,
   .columns-area--mobile article > div:not(.search-results__section),
   .columns-area--mobile article > div > .notification.unread,
-  .columns-area--mobile article > div > .notification.unread:before,
+  .columns-area--mobile article > div > .notification.unread::before,
   .columns-area--mobile article > div > .status__wrapper.unread,
-  .columns-area--mobile article > div > .status__wrapper.unread:before {
+  .columns-area--mobile article > div > .status__wrapper.unread::before {
     border-radius: inherit;
   }
 
@@ -3281,7 +3280,6 @@ body {
   }
 
   .account__header__fields dt {
-    /* border: 1px solid var(--color-grey-6); */
     background: var(--color-grey-1);
     border-top-left-radius: inherit;
     border-bottom-left-radius: inherit;
@@ -3784,7 +3782,7 @@ body {
     justify-content: flex-end;
   }
 
-  :where(.status__action-bar, .detailed-status__action-bar) :where(button, a):before {
+  :where(.status__action-bar, .detailed-status__action-bar) :where(button, a)::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -3800,7 +3798,7 @@ body {
     background-color: var(--color-grey-1);
   }
 
-  :where(.status__action-bar, .detailed-status__action-bar) button.active:before {
+  :where(.status__action-bar, .detailed-status__action-bar) button.active::before {
     opacity: 0.2;
     background-image: radial-gradient(currentColor, transparent);
   }
@@ -3846,7 +3844,6 @@ body.layout-multiple-columns .drawer__inner__mastodon {
   -webkit-mask-position: bottom;
   -webkit-mask-repeat: no-repeat;
 }
-
 `)
 
   /* emoji picker improvements */
@@ -3880,7 +3877,7 @@ body.layout-multiple-columns .drawer__inner__mastodon {
 
 
 /* make sure the grey hover outline is *behind* the emoji */
-.emoji-mart-category .emoji-mart-emoji:hover:before {
+.emoji-mart-category .emoji-mart-emoji:hover::before {
   z-index: -1;
 }
 
@@ -3896,7 +3893,7 @@ button.emoji-mart-emoji:hover span, button.emoji-mart-emoji:hover img {
 .emoji-button>img {
   height: 0;
 }
-.emoji-button:after {
+.emoji-button::after {
   content: "";
   background: url(https://corteximplant.com/system/custom_emojis/images/000/025/784/original/aa6fb2394bcb9f0a.png);
   filter: grayscale(100%);
@@ -3909,7 +3906,7 @@ button.emoji-mart-emoji:hover span, button.emoji-mart-emoji:hover img {
 
   transition: filter 200ms, opacity 200ms;
 }
-.emoji-button:hover:after {
+.emoji-button:hover::after {
   filter: none;
   opacity: 1;
 }
@@ -3952,8 +3949,8 @@ span.relationship-tag {
 }
 
 /* Add "alt" indicator on audio, videos */
-.audio-player:has(canvas.audio-player__canvas[aria-label]) .video-player__buttons.right:before,
-.video-player video[aria-label] ~ .video-player__controls .video-player__buttons.right:before{
+.audio-player:has(canvas.audio-player__canvas[aria-label]) .video-player__buttons.right::before,
+.video-player video[aria-label] ~ .video-player__controls .video-player__buttons.right::before{
   content: "alt";
   color: hsla(0 0% 100% / .7);
   padding: 0 5px;
@@ -4363,7 +4360,7 @@ span.relationship-tag {
   GM_addStyle(`
   /* Dynamically sized Jonny Cyberdon - change to the custom.css style */
 
-body.layout-single-column:after {
+body.layout-single-column::after {
   content: "";
   position: fixed;
   left: 1vw;
