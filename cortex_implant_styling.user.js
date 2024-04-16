@@ -15,6 +15,7 @@
 // @resource     ci_header_mask.avif     https://raw.githubusercontent.com/Sirs0ri/userscripts/main/assets/ci_header_mask.avif
 // @resource     ci_logo_min.svg         https://raw.githubusercontent.com/Sirs0ri/userscripts/main/assets/ci_logo_min.svg
 // @resource     m_boost_sprites.svg     https://raw.githubusercontent.com/Sirs0ri/userscripts/main/assets/m_boost_sprites.svg
+// @resource     noise_bw.svg            https://raw.githubusercontent.com/Sirs0ri/userscripts/main/assets/noise_bw.svg
 // ==/UserScript==
 
 /*
@@ -65,6 +66,8 @@
   const logoSvg = GM_getResourceURL("ci_logo_min.svg")
   // The animateable "boost" svg
   const boostSvg = GM_getResourceURL("m_boost_sprites.svg")
+  // The animateable "boost" svg
+  const noiseSvg = GM_getResourceURL("noise_bw.svg")
 
   // #endregion
 
@@ -770,6 +773,8 @@ body {
     0 0 47px hsla(var(--neon-glow-hsl) / 0.12),
     /* White inside glow */
     inset 0 0 5px hsla(var(--hsl-white) / 0.3);
+
+  --noise-url: url(${noiseSvg});
 }
 
 @keyframes flicker-in {
