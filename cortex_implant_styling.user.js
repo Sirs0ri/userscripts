@@ -1101,18 +1101,6 @@ body.layout-single-column.pinned .column-header > button::after {
     if (!target) return
 
     target.style.transition = "background 200ms, max-height 200ms, min-height 200ms"
-
-    // Remove the data-hovered attribute from any previously hovered article
-    document.querySelectorAll("[data-hovered]").forEach(el => {
-      delete el.dataset.hovered
-    })
-
-    // Apply the data-hovered attribute to the parent article of this media item's post
-    const article = e.target.closest("article[data-id]")
-    if (article) {
-      article.dataset.hovered = true
-    }
-    target.parentElement.dataset.hovered = true
   }
 
   if (settings.hoverImages) {
@@ -1148,8 +1136,22 @@ body.layout-single-column.pinned .column-header > button::after {
 
   overflow: visible;
 }
-.media-gallery .media-gallery__item:hover {
+
+article:hover,
+.media-gallery__item:hover {
   z-index: 3;
+}
+
+article:not(:hover),
+.media-gallery__item:not(:hover) {
+  animation: keep-up 400ms;
+}
+
+@keyframes keep-up {
+  0%,
+  100% {
+    z-index: 2;
+  }
 }
 
 .media-gallery .media-gallery__item:not(.media-gallery__item--tall) {
@@ -1197,12 +1199,6 @@ article {
   position: relative;
 }
 
-article:has(.media-gallery__item:hover),
-article[data-hovered],
-a[data-hovered],
-div[data-hovered] {
-  z-index: 2;
-}
 `)
   }
 
