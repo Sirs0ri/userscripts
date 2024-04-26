@@ -878,7 +878,7 @@ body.layout-single-column.pinned .column-header > button::after {
     if (e.target.parentElement.classList.contains("media-gallery__item-thumbnail") ||
         e.target.classList.contains("media-gallery__item-gifv-thumbnail")) {
       target = e.target
-    } else if (e.target.nextElementSibling?.classList.contains("media-gallery__item-thumbnail")){
+    } else if (e.target.nextElementSibling?.classList.contains("media-gallery__item-thumbnail")) {
       target = e.target.nextElementSibling.querySelector("img")
     }
 
@@ -4240,7 +4240,7 @@ body.layout-single-column:after {
   height: clamp(75px, 28.09vw + -255.06px, 200px);
   aspect-ratio: 1;
 
-  background-image: url(/system/site_uploads/files/000/000/007/original/5f3e778f1ff2569e.png);
+  /* background-image: url(/system/site_uploads/files/000/000/007/original/5f3e778f1ff2569e.png);*/
   background-repeat: no-repeat;
   background-size: 100%;
   background-position: bottom;
