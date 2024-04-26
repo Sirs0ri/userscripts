@@ -145,6 +145,7 @@
   const elem = document.getElementById("initial-state")
   const data = JSON.parse(elem.text)
   const user = data.accounts[data.meta.me]?.username
+  // const mascot = data.meta.mascot
 
   // get account color
   const avatarLink = data.accounts[data.meta.me]?.avatar_static
@@ -4689,7 +4690,7 @@ body.layout-single-column::after {
   height: clamp(75px, 28.09vw + -255.06px, 200px);
   aspect-ratio: 1;
 
-  background-image: url(/system/site_uploads/files/000/000/007/original/5f3e778f1ff2569e.png);
+  /* background-image: url(/system/site_uploads/files/000/000/007/original/5f3e778f1ff2569e.png); */
   background-repeat: no-repeat;
   background-size: 100%;
   background-position: bottom;
