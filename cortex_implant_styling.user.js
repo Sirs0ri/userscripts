@@ -2361,6 +2361,20 @@ body {
    */
 
   /* I'm not *quite* happy with these colors. Waiting for more inspiration */
+  .reply-indicator__header {
+    overflow: visible;
+  }
+
+  .reply-indicator__display-name {
+    display: grid;
+    align-items: center;
+    grid-template-columns: auto 1fr;
+    overflow: visible;
+
+    & :is(.display-name.inline, #fake) {
+      overflow: hidden;
+    }
+  }
 
   :is(#fake, .compose-form__warning) {
     border-radius: 8px;
@@ -2373,7 +2387,8 @@ body {
     z-index: 100;
     transition: box-shadow 200ms;
     background: white;
-    padding: 10px 0;
+    padding: 0;
+    padding-block-end: 10px;
   }
   :is(#fakeId, .compose-form__autosuggest-wrapper):focus-within {
     box-shadow: var(--neon-box-shadow-small);
