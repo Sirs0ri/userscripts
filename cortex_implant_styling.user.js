@@ -29,6 +29,10 @@
  *      - Icons massive (fixed through custom.css)
  *      - poll: winning option is spaced weirdy by massive checkmark
  *       -> https://corteximplant.com/@marta/112134741728666664
+ *      - overflow in posts for cat ears
+ *      - reply ui with the new compose box
+ *      - post actions menu has no highlighting
+ *      - like animation is offcenter again
  *    - Refactor for new CSS features
  *      - CSS Nesting
  *      - color-mix() instead of HSL combining
@@ -146,6 +150,13 @@
   const data = JSON.parse(elem.text)
   const user = data.accounts[data.meta.me]?.username
   // const mascot = data.meta.mascot
+
+  const authorizedFetch = async url => {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${data.meta.access_token}` } }).then(res => res.json())
+    console.log(res)
+    return res
+  }
+  // authorizedFetch("/api/v1/markers?timeline[]=home")
 
   // get account color
   const avatarLink = data.accounts[data.meta.me]?.avatar_static
@@ -628,11 +639,7 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
   /* variables & animations */
 
   GM_addStyle(`
-p {
-  line-height: 1.5;
-}
-
-body {
+:root {
   /* border radii */
   --border-radius-button: 10px;
   --border-radius-button-between: 3px;
@@ -792,6 +799,14 @@ body {
 :root {
   scrollbar-gutter: stable;
   margin-right: 0 !important;
+}
+
+p {
+  line-height: 1.5;
+}
+
+.e-content ol, .e-content ul, .reply-indicator__content ol, .reply-indicator__content ul, .status__content__text ol, .status__content__text ul{
+  margin-inline-start: 3ch;
 }
 
 /* Status layout - enable easy insertion of the "replying to..." hint */
@@ -1328,6 +1343,8 @@ markiere medien ohne alt-text */
     const composeForm = document.querySelector(".compose-form")
     let backDrop = document.querySelector(".compose-form")
 
+    const textarea = document.querySelector(".compose-form textarea.autosuggest-textarea__textarea")
+
     if (!composePanel || !composeForm || !backDrop) {
       console.warn("an element is missing, the popout compose box can't be initialized.")
       console.log(composePanel)
@@ -1357,6 +1374,10 @@ markiere medien ohne alt-text */
         backDrop = document.querySelector(".compose-form")
         backDrop.classList.remove("ignore-clicks")
       }, 100)
+
+      if (evt instanceof InputEvent) {
+        textarea.parentElement.dataset.value = textarea.value
+      }
     }
     const handlerOut = (evt) => {
       debugFocus && console.log("out", evt)
@@ -1377,6 +1398,9 @@ markiere medien ohne alt-text */
 
       composePanel.classList.remove("user-focus-within")
       backDrop.classList.add("ignore-clicks")
+
+      textarea.style.height = null
+      textarea.parentElement.dataset.value = textarea.value
     }
     const handlerBackdropClick = (evt) => {
       debugFocus && console.log("bg-click", evt)
@@ -1421,15 +1445,22 @@ markiere medien ohne alt-text */
 
   .compose-form {
     position: relative;
+  }
+
+  .compose-form > :not(.compose-form__warning, .reply-indicator) {
     width: 100%;
+    margin-left: 0;
     transition: width 200ms, margin-left 200ms;
   }
 
   .user-focus-within .compose-form {
+    z-index: 2;
+  }
+
+  .user-focus-within .compose-form > :not(.compose-form__warning, .reply-indicator) {
     --width: clamp(100%, calc( ( 100vw - clamp(0px, calc(4vw - 48px), 50px) - 600px ) / 2 - 30px), 450px);
     width: var(--width);
     margin-left: calc( 285px - var(--width));
-    z-index: 2;
   }
 
   .compose-form::before {
@@ -1449,7 +1480,7 @@ markiere medien ohne alt-text */
 
   :is(#fake, .autosuggest-textarea__textarea) {
     transition: min-height 200ms;
-    padding: 3px 40px 0px 15px;
+    /* padding: 3px 40px 0px 15px; */
   }
   .user-focus-within .autosuggest-textarea__textarea {
     min-height: 200px !important;
@@ -1458,7 +1489,29 @@ markiere medien ohne alt-text */
   .link-footer {
     margin-top: auto
   }
-}
+
+  /* autogrow shenannigans */
+  .autosuggest-textarea label {
+    display: grid;
+    overflow-x: hidden;
+
+    textarea {
+      grid-area: 1 / 1 / 2 / 2;
+      line-height: inherit;
+    }
+
+    &::after {
+      content: attr(data-value);
+      grid-area: 1 / 1 / 2 / 2;
+      padding: 10px 32px 0 10px;
+      color: transparent;
+      font-family: inherit;
+      font-size: 14px;
+      white-space: pre-wrap;
+      pointer-events: none;
+    }
+  }
+
 `)
   }
 
@@ -1499,6 +1552,7 @@ markiere medien ohne alt-text */
 }
 :is(.status__display-name, #fake) {
   max-width: calc(100% - 56px);
+  gap: 15px;
 }
 .display-name__html {
   text-overflow: ellipsis;
@@ -1964,7 +2018,6 @@ article:empty {
 
 .status__avatar {
   box-shadow: none;
-  margin-inline-end: 15px;
 }
 
 .notification__line, .status__line {
@@ -2361,6 +2414,11 @@ body {
    * Docs: https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
    */
 
+  .reply-indicator {
+    max-height: min(40%, 360px);
+    box-sizing: border-box;
+  }
+
   /* I'm not *quite* happy with these colors. Waiting for more inspiration */
   .reply-indicator__header {
     overflow: visible;
@@ -2404,10 +2462,12 @@ body {
     right: 2px;
     bottom: 0;
     z-index: 101;
+    pointer-events: none;
   }
   .compose-form .emoji-picker-dropdown .emoji-button {
     position: sticky;
     top: 0;
+    pointer-events: all;
   }
 
   .reply-indicator__cancel {
@@ -2491,7 +2551,7 @@ body {
     padding-top: 5px;
   }
   .compose-form .spoiler-input.spoiler-input--visible {
-    margin-bottom: -13px;
+    margin-bottom: -23px;
     height: 69px; /* nice */
   }
 
@@ -2602,10 +2662,15 @@ body {
    *    Main Feed
    * =================== */
 
+   .column > .scrollable {
+     border: none;
+   }
+
   /* ===== Header of feeds (e.g. the main feed) styling ===== */
 
   .tabs-bar__wrapper {
     background: none;
+    --background-filter: none;
   }
 
   .search__input {
@@ -2621,7 +2686,7 @@ body {
   }
 
   .column-header {
-    border-bottom: none;
+    border: none;
   }
 
   #tabs-bar__portal>button::after,
@@ -3062,6 +3127,7 @@ body {
    *    "live feeds" uses  a      > div
    */
 
+/*
   .notification {
     padding: 10px 14px;
 
@@ -3069,6 +3135,7 @@ body {
       padding: 0;
     }
   }
+*/
 
   .notification__message {
 
@@ -3191,6 +3258,7 @@ body {
     inset-inline: 0;
     margin-inline: auto;
     width: 80%;
+    transform: none;
   }
 
 
@@ -3198,8 +3266,8 @@ body {
   article:has(.unread)::before {
     content: "";
     position: absolute;
-    top: 4px;
-    bottom: 4px;
+    top: 5px;
+    bottom: 5px;
     left: 1px;
     width: 2px;
     background: white;
@@ -3212,80 +3280,72 @@ body {
   /* Notification Coloring */
 
   /* Color the icon */
-  .notification__message :is(#fake, .fa) {
+  .notification__message :is(#fake, .fa, svg.icon) {
     color: var(--color-notification);
   }
 
-  .notification__filter-bar + .scrollable .status,
-  [data-column="notifications"] .status {
-    --color-notification: var(--color-grey-8);
-  }
+  .notification__filter-bar + .scrollable {
 
-  .notification__filter-bar + .scrollable .status[data-favourited-by],
-  [data-column="notifications"] .status[data-favourited-by] {
-    --color-notification: var(--color-gold);
-  }
+    /* article > div[tabindex="-1"] > ... */
 
-  .notification__filter-bar + .scrollable .status[data-boosted-by],
-  .notification-follow,
-  .notification-admin-sign-up,
-  [data-column="notifications"] .status[data-boosted-by] {
-    --color-notification: var(--color-purple);
-  }
+    /* report       -> has .notification__message and .notification__report */
+    .notification,
+    /* reply        -> has .status
+       like, boost  -> has aside.notification__message and .status
+    */
+    .status__wrapper {
+      --color-notification: var(--color-grey-8);
 
-  .notification-admin-report {
-    --color-notification: var(--color-orange);
-  }
+      background-image: linear-gradient(
+        color-mix(in srgb, var(--color-notification) 5%, transparent),
+        color-mix(in srgb, var(--color-notification) 5%, transparent));
 
-  /* repurpose the before element adding a border */
-  .notification.unread::before, .status.unread::before {
-    border-inline-start-color: var(--color-notification, transparent);
-    
-    border-radius: inherit;
-    left: -1px;
-  }
+      /* report */
+      &.notification-admin-report {
+        --color-notification: var(--color-orange);
 
-  :is(.notification-admin-sign-up,
-      .notification-follow,
-      .notification-admin-report)
-  .notification__message {
-    margin-left: 0px;
-  }
+        .notification__report {
+          gap: 15px;
+          padding: 10px 15px;
+          border: 0;
+        }
+      }
 
-  :is(.notification-admin-sign-up,
-      .notification-follow
-  ) .account__wrapper {
-    margin-top: 10px;
-  }
+      /* follow */
+      &.notification-follow,
+      /* boost */
+      &[data-boosted-by] {
+        --color-notification: var(--color-purple);
+      }
 
-  /* add a transparent tint to the existing background-color.
-   * Using a gradient between 2 identical colors because that goes through
-   * background-image which stacks ontop of the background-color! */
-  .status,
-  .notification {
-    background-image: linear-gradient(
-      color-mix(in srgb, var(--color-notification) 5%, transparent),
-      color-mix(in srgb, var(--color-notification) 5%, transparent));
-  }
+      /* like */
+      &[data-favourited-by] {
+        --color-notification: var(--color-gold);
+      }
 
-  .notification-follow, .notification-follow-request, .notification__report {
-    border-bottom: none;
-    padding: 10px 0 0 60px;
-    min-height: 46px;
+      /* reply */
+      &.status__wrapper-reply { }
 
-    .notification__report__avatar {
-      inset-inline-start: 0;
+      /* dm */
+      &.status__wrapper-direct { }
+
+      /* polls and edits of boosted posts have a [data-undefined-by] if I'd want to style them */
+
+      .notification__message,
+      .account {
+        padding: 10px 15px;
+      }
+
+      .notification__message {
+        padding-bottom: 0;
+      }
+
+      .status {
+        backround: none;
+      }
     }
-  }
 
-  :is(.notification__report, #important) {
-    padding: 10px 0 0 61px;
   }
-
-  .notification-follow {
-    padding: 10px 14px;
-  }
-
 
   /* ===== Profile ===== */
 
@@ -3565,11 +3625,14 @@ body {
     }
   }
 
+  .account__header__fields dd {
+    position: relative;
+  }
+
   .account__header__fields dd a::before {
     content: "";
     position: absolute;
     inset: 0;
-    z-index: -1;
     opacity: 0;
     background-image: radial-gradient(currentColor, transparent);
     transition: opacity 200ms;
@@ -3758,49 +3821,65 @@ body {
    *     Scrollbars
    * ==================== */
 
-  html {
-    scrollbar-color: var(--color-grey-3) rgba(0,0,0,.1);
+  /* everything but Safari */
+  @supports (scrollbar-color: auto) {
+
+    html {
+      scrollbar-color: var(--color-grey-3) transparent;
+    }
+
+    .layout-multiple-columns .scrollable {
+      scrollbar-width: thin;
+      padding-inline-end: 5px;
+    }
+
   }
 
-  ::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-  }
+  /* everything but Firefox */
+  @supports selector(::-webkit-scrollbar) {
 
-  ::-webkit-scrollbar-thumb {
-    margin: 0 2px;
-    width: 8px;
-    background: var(--color-grey-2);
-    border: 1px solid var(--color-grey-4);
-    border-radius: 50px;
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+      background: red;
+    }
 
-    transition: background-color 200ms;
-  }
+    ::-webkit-scrollbar-thumb {
+      margin: 0 2px;
+      width: 8px;
+      background: var(--color-grey-2);
+      border: 1px solid var(--color-grey-4);
+      border-radius: 50px;
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-grey-4);
-    border-color: var(--color-grey-6);
-  }
+      transition: background-color 200ms;
+    }
 
-  ::-webkit-scrollbar-thumb:active {
-    background: var(--color-grey-6);
-    border-color: var(--color-grey-7);
-  }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-grey-4);
+      border-color: var(--color-grey-6);
+    }
 
-  ::-webkit-scrollbar-track {
-    border: 0 #fff;
-    border-radius: 8px;
-    background: rgba(0,0,0,.1);
-  }
+    ::-webkit-scrollbar-thumb:active {
+      background: var(--color-grey-6);
+      border-color: var(--color-grey-7);
+    }
 
-  ::-webkit-scrollbar-track:active,
-  ::-webkit-scrollbar-track:hover {
-    background: var(--color-grey-2);
-    background: rgba(0,0,0,.2);
-  }
+    ::-webkit-scrollbar-track {
+      border: 0 #fff;
+      border-radius: 8px;
+      background: rgba(0,0,0,.1);
+    }
 
-  ::-webkit-scrollbar-corner {
-    background: transparent:
+    ::-webkit-scrollbar-track:active,
+    ::-webkit-scrollbar-track:hover {
+      background: var(--color-grey-2);
+      background: rgba(0,0,0,.2);
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: transparent:
+    }
+
   }
 
   /* ====================
@@ -3919,6 +3998,25 @@ body {
 
   /* ===== "getting started" page / last column ===== */
 
+  .getting-started__wrapper {
+
+    & > div {
+      border-radius: inherit;
+    }
+
+    .column-link {
+      border: none;
+      border-radius: inherit;
+      background-color: transparent;
+      transition: background-color 200ms;
+
+      &:hover {
+        background-color: var(--color-grey-4);
+      }
+    }
+  }
+
+  /*
   div[data-column="getting-started"] .getting-started__wrapper {
     background: none;
   }
@@ -3971,6 +4069,7 @@ body {
     margin-top: auto;
     border-radius: inherit;
   }
+  */
 
 
   /* user badges */
@@ -4371,7 +4470,8 @@ span.relationship-tag {
   }
 
   /* WARNING: This relies on :has and thus won't work well in FF (as of Jan 2023) */
-  .column-link--transparent:has(i+i) {
+  .column-link--transparent:has(i+i),
+  .column-link--transparent:has(i>i) {
     position: relative;
     z-index: 2;
     --padding: 15px;
@@ -4382,14 +4482,17 @@ span.relationship-tag {
   }
 
   .column-link--transparent:has(i+i)::before,
-  .column-link--transparent:has(i+i)::after {
+  .column-link--transparent:has(i>i)::before,
+  .column-link--transparent:has(i+i)::after,
+  .column-link--transparent:has(i>i)::after {
     content: attr(title);
     position: absolute;
     width: 110%;
     z-index: -1;
   }
 
-  .column-link--transparent:has(i+i)::before {
+  .column-link--transparent:has(i+i)::before,
+  .column-link--transparent:has(i>i)::before {
     top: calc((10em / 60) + var(--padding));
     left: calc((15em / 60) + var(--padding) + var(--start));
     color: #6364ff;
@@ -4400,7 +4503,8 @@ span.relationship-tag {
       movement 20s step-end infinite;
   }
 
-  .column-link--transparent:has(i+i)::after {
+  .column-link--transparent:has(i+i)::after,
+  .column-link--transparent:has(i>i)::after {
     top: calc((5em / 60) + var(--padding));
     left: calc((-10em / 60) + var(--padding) + var(--start));
     color: #1bc7fb;
@@ -4410,7 +4514,8 @@ span.relationship-tag {
       font 14s step-end infinite,
       movement 16s step-end infinite;
   }
-  .column-link--transparent:has(i+i) span {
+  .column-link--transparent:has(i+i) span,
+  .column-link--transparent:has(i>i) span {
     animation: paths 10s step-end infinite;
   }
 
