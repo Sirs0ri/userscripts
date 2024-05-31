@@ -387,7 +387,7 @@
     })
     const codeLink = createElem("a", {
       textContent: document.querySelector(".link-footer [href*='github.com']").textContent,
-      href: "https://github.com/Sirs0ri/userscripts/blob/dev/cortex_implant_styling.js",
+      href: GM_info.script.downloadURL + "#bypass=true",
       target: "_blank",
     })
     const versionSpan = createElem("span", { innerText: "v" + GM_info.script.version })
