@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.8.0-b5
+// @version      1.8.0-b6
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
