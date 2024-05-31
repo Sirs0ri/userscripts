@@ -30,9 +30,9 @@
  *      - poll: winning option is spaced weirdy by massive checkmark
  *       -> https://corteximplant.com/@marta/112134741728666664
  *      - overflow in posts for cat ears
- *      - reply ui with the new compose box
  *      - post actions menu has no highlighting
  *      - like animation is offcenter again
+ *      - alignment in top bars
  *    - Refactor for new CSS features
  *      - CSS Nesting
  *      - color-mix() instead of HSL combining
@@ -1480,7 +1480,6 @@ markiere medien ohne alt-text */
 
   :is(#fake, .autosuggest-textarea__textarea) {
     transition: min-height 200ms;
-    /* padding: 3px 40px 0px 15px; */
   }
   .user-focus-within .autosuggest-textarea__textarea {
     min-height: 200px !important;
@@ -2388,7 +2387,7 @@ body {
 
   .search__popout,
   .dropdown-menu {
-    z-index: 101;
+    z-index: 102;
     border-radius: 8px;
     margin-top: var(--border-radius-button-between);
     backdrop-filter: blur(3px);
@@ -2417,6 +2416,33 @@ body {
   .reply-indicator {
     max-height: min(40%, 360px);
     box-sizing: border-box;
+    position: relative;
+  }
+
+  .reply-indicator::after {
+    content: "";
+    width: 100%;
+    background: var(--color-grey-0);
+    position: absolute;
+    top: 100%;
+    height: 150px;
+    z-index: 101;
+  }
+
+  .navigation-bar {
+    z-index: 101;
+  }
+
+  .reply-indicator__line::before {
+    z-index: 102;
+  }
+
+  .compose-form__highlightable {
+    border-radius: var(--border-radius-button);
+    border: none;
+    outline: 1px solid var(--color-grey-7);
+    outline-offset: -1px;
+    z-index: 101;
   }
 
   /* I'm not *quite* happy with these colors. Waiting for more inspiration */
@@ -2457,22 +2483,8 @@ body {
     background: none;
   }
 
-  .compose-form .emoji-picker-dropdown {
-    top: 6px;
-    right: 2px;
-    bottom: 0;
-    z-index: 101;
-    pointer-events: none;
-  }
-  .compose-form .emoji-picker-dropdown .emoji-button {
-    position: sticky;
-    top: 0;
-    pointer-events: all;
-  }
-
-  .reply-indicator__cancel {
-    z-index: 1;
-    position: relative;
+  :is(.autosuggest-textarea__textarea, #important) {
+    padding-right: 40px;
   }
 
   /* make sure this isn't covered by the compose area in advanced mode*/
@@ -2507,22 +2519,68 @@ body {
   /* 4.3.x fixes */
   .compose-form__footer {
 
+    .compose-form__dropdowns::after {
+      /* block the space of 4 digits for the character counter that's moved up here*/
+      content: "0000";
+      font-family: "mastodon-font-sans-serif",sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: transparent;
+    }
+
     .compose-form__buttons {
 
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(var(--cols), 1fr);
+      gap: var(--border-radius-button-between);
 
+      /* dynamic column count, ignoring the char counter in the last child */
+      --cols : 5;
+      &:has(:nth-child(6 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
+        --cols: 6;
+      }
+      &:has(:nth-child(7 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
+        --cols: 7;
+      }
+
+      & > * {
+        grid-row: 1;
+      }
+
+      & :nth-child(1 of :not(.emoji-picker-dropdown)) { grid-column: 1 }
+      & :nth-child(2 of :not(.emoji-picker-dropdown)) { grid-column: 2 }
+      & :nth-child(3 of :not(.emoji-picker-dropdown)) { grid-column: 3 }
+      & :nth-child(4 of :not(.emoji-picker-dropdown)) { grid-column: 4 }
+      & :nth-child(5 of :not(.emoji-picker-dropdown)) { grid-column: 5 }
+      & :nth-child(6 of :not(.emoji-picker-dropdown)) { grid-column: 6 }
+      & :nth-child(7 of :not(.emoji-picker-dropdown)) { grid-column: 7 }
+      & :nth-child(8 of :not(.emoji-picker-dropdown)) { grid-column: 8 }
 
       :where(div, button) {
         width: 100%;
         box-sizing: border-box !important;
       }
 
-      .character-counter {
+      .emoji-picker-dropdown {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 32px;
+        height: 32px;
+      }
+
+      :is(.character-counter, #important) {
         grid-column-end: -1;
         padding-inline-end: 2px;
+        grid-column: span 2 / -1;
+
+        translate: 0 -38px;
       }
     }
+  }
+
+  .compose-form__highlightable:has(.spoiler-input) .emoji-picker-dropdown {
+    top: 46px;
   }
 
   /* This is actually the language selector */
@@ -2538,17 +2596,24 @@ body {
     margin-bottom: 20px;
   }
 
-  .compose-form .spoiler-input__input {
-    border-radius: 8px;
+  .compose-form .spoiler-input__border {
+    display: none;
   }
+
   .compose-form .spoiler-input {
     transition: height .4s ease, opacity .4s ease, margin-bottom 0.2s ease 0.1s;
 
-    background: white;
     border-radius: 8px;
     border: 1px solid var(--color-grey-7);
     box-sizing: border-box;
-    padding-top: 5px;
+  }
+  .compose-form :is(.autosuggest-input, #important) {
+    border: none;
+  }
+  .compose-form .spoiler-input__input {
+    color: var(--color-offwhite-primary);
+    border-radius: var(--border-radius-button);
+    padding: 12px 11px;
   }
   .compose-form .spoiler-input.spoiler-input--visible {
     margin-bottom: -23px;
@@ -2748,6 +2813,7 @@ body {
 
   :is(#fake, .column-header__back-button) {
     padding: 0 15px;
+    place-items: center;
   }
 
   .column-header__button:hover,
@@ -3186,7 +3252,10 @@ body {
   .account__section-headline,
   .notification__filter-bar {
     border-radius: 8px;
-    border: 1px solid var(--color-grey-4);
+
+    /* backdrop-filter: blur(3px);
+    background: color-mix(in srgb, var(--color-grey-1) 80%, transparent);
+    border-color: var(--color-grey-5); */
   }
   /* notifications header */
   .notification__filter-bar {
@@ -3975,12 +4044,6 @@ body {
     align-items: flex-end;
   }
 
-  /* user profile info in the 1st column */
-  body.layout-multiple-columns .drawer__inner .navigation-bar {
-    background: var(--color-grey-5);
-    border-radius: inherit;
-  }
-
   body.layout-multiple-columns .column-header {
     background: var(--color-grey-3);
     border-radius: 8px;
@@ -4285,7 +4348,11 @@ body.layout-multiple-columns .drawer__inner__mastodon {
 }
 
 .emoji-mart-category-label span {
-  background: linear-gradient(to bottom, white 20%, rgba(255 255 255 / 0.9) 80%, transparent);
+  --c: color-mix(in srgb, var(--dropdown-background-color), var(--dropdown-background-color));
+  background: linear-gradient(
+    to bottom,
+    var(--dropdown-background-color) 80%,
+    transparent);
 }
 
 
@@ -4704,7 +4771,6 @@ span.relationship-tag {
   .account__header__fields dt,
 
   /* Replying to a toot - body only */
-  .reply-indicator,
   .reply-indicator__content,
 
   /* Picture in picture player */
@@ -4727,9 +4793,6 @@ span.relationship-tag {
   /* some fixes where clip won't work: */
   .announcements__item__content {
     overflow-x: hidden;
-  }
-  .reply-indicator {
-    overflow-y: auto;
   }
 
   /* fix hovered emotes in a collapsed notification's 1st line */
