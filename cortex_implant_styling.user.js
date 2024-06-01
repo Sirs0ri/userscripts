@@ -27,7 +27,6 @@
  *      - Profile view is broken
  *    - 4.3.0 fixes
  *      - Icons massive (fixed through custom.css)
- *      - poll: winning option is spaced weirdy by massive checkmark
  *       -> https://corteximplant.com/@marta/112134741728666664
  *      - post actions menu has no highlighting
  *      - like animation is offcenter again
@@ -2364,6 +2363,10 @@ body {
   .status__content .poll__chart.leading {
     box-shadow: var(--neon-box-shadow-small);
     background: var(--color-primary);
+  }
+
+  .status__content .poll__voted {
+    margin-block: -6px;
   }
 
   /* ====================
