@@ -2008,11 +2008,6 @@ pre > code {
     margin: 0 clamp(0px, calc(4vw - 48px), 50px);
   }
 
-  .compose-form {
-    padding: 10px 0;
-    overflow-y: revert !important;
-  }
-
   .compose-panel,
   .compose-form .compose-form__publish .compose-form__publish-button-wrapper,
   .account__header__tabs,
@@ -2418,21 +2413,29 @@ body {
    * Docs: https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
    */
 
+  .compose-form {
+    padding-top: 14px;
+    gap: 25px;
+  }
+
   .reply-indicator {
     max-height: min(40%, 360px);
     box-sizing: border-box;
     position: relative;
+
+    max-height: unset;
+    padding-top: 2px;
+
+    .reply-indicator__main {
+      padding-top: 1px;
+    }
+
+    .display-name__html {
+      line-height: 22px;
+      font-size: 15px;
+    }
   }
 
-  .reply-indicator::after {
-    content: "";
-    width: 100%;
-    background: var(--color-grey-0);
-    position: absolute;
-    top: 100%;
-    height: 150px;
-    z-index: 101;
-  }
 
   .navigation-bar {
     z-index: 101;
@@ -2440,6 +2443,31 @@ body {
 
   .reply-indicator__line::before {
     z-index: 102;
+    height: calc(100% + 17px);
+  }
+
+  .reply-indicator__content {
+    display: block;
+    max-height: unset;
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+
+  .reply-indicator__content::after {
+    content: "";
+    background: var(--color-grey-0);
+    width: 100%;
+    height: 100vh;
+    position: absolute;
+    top: 100%;
+  }
+
+  .reply-indicator__attachments {
+    background: var(--color-grey-0);
+    z-index: 1;
+    position: relative;
   }
 
   .compose-form__highlightable {
@@ -2448,6 +2476,9 @@ body {
     outline: 1px solid var(--color-grey-7);
     outline-offset: -1px;
     z-index: 101;
+
+    overflow: visible;
+    min-height: unset;
   }
 
   /* I'm not *quite* happy with these colors. Waiting for more inspiration */
@@ -2539,17 +2570,25 @@ body {
       grid-template-columns: repeat(var(--cols), 1fr);
       gap: var(--border-radius-button-between);
 
+      & > * {
+        grid-row: 1;
+      }
+
+      :where(div, button) {
+        width: 100%;
+        box-sizing: border-box !important;
+      }
+
       /* dynamic column count, ignoring the char counter in the last child */
+
+      /* this places the emoji picker up top, which doesn't work too well when editing posts */
+      /*
       --cols : 5;
       &:has(:nth-child(6 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
         --cols: 6;
       }
       &:has(:nth-child(7 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
         --cols: 7;
-      }
-
-      & > * {
-        grid-row: 1;
       }
 
       & :nth-child(1 of :not(.emoji-picker-dropdown)) { grid-column: 1 }
@@ -2561,17 +2600,48 @@ body {
       & :nth-child(7 of :not(.emoji-picker-dropdown)) { grid-column: 7 }
       & :nth-child(8 of :not(.emoji-picker-dropdown)) { grid-column: 8 }
 
-      :where(div, button) {
-        width: 100%;
-        box-sizing: border-box !important;
-      }
-
       .emoji-picker-dropdown {
         position: absolute;
         top: 4px;
         right: 4px;
         width: 32px;
         height: 32px;
+      }
+      */
+
+      /* this leaves the emoji picker where it is */
+      --cols : 6;
+      &:has(:nth-child(6 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
+        --cols: 7;
+      }
+      &:has(:nth-child(7 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
+        --cols: 8;
+      }
+
+      & :nth-child(1 of :not(.emoji-picker-dropdown)) { grid-column: 1 }
+      & :nth-child(2 of :not(.emoji-picker-dropdown)) { grid-column: 2 }
+      & :nth-child(3 of :not(.emoji-picker-dropdown)) { grid-column: 3 }
+      & :nth-child(4 of :not(.emoji-picker-dropdown)) { grid-column: 4 }
+      & :nth-child(5 of :not(.emoji-picker-dropdown)) { grid-column: 5 }
+      & :nth-child(6 of :not(.emoji-picker-dropdown)) { grid-column: 6 }
+      & :nth-child(7 of :not(.emoji-picker-dropdown)) { grid-column: 7 }
+      & :nth-child(8 of :not(.emoji-picker-dropdown)) { grid-column: 8 }
+
+      .emoji-picker-dropdown {
+        grid-column: var(--cols);
+
+        align-self: stretch;
+
+        button {
+          background-image: url(https://corteximplant.com/system/custom_emojis/images/000/025/784/original/aa6fb2394bcb9f0a.png);
+          background-position: center bottom;
+          background-size: auto 90%;
+          background-repeat: no-repeat;
+        }
+
+        svg {
+          display: none;
+        }
       }
 
       :is(.character-counter, #important) {
@@ -2598,7 +2668,6 @@ body {
 
   .reply-indicator {
     border-radius: 8px;
-    margin-bottom: 20px;
   }
 
   .compose-form .spoiler-input__border {
