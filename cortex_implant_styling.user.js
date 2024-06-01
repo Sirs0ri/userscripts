@@ -28,7 +28,6 @@
  *    - 4.3.0 fixes
  *      - Icons massive (fixed through custom.css)
  *       -> https://corteximplant.com/@marta/112134741728666664
- *      - post actions menu has no highlighting
  *      - like animation is offcenter again
  *      - alignment in top bars
  *    - Refactor for new CSS features
@@ -2403,6 +2402,13 @@ body {
     backdrop-filter: blur(3px);
     background: color-mix(in srgb, var(--color-grey-3) 80%, transparent);
     border: 1px solid var(--color-grey-7);
+
+    .dropdown-menu__separator {
+      --dropdown-border-color: var(--color-grey-7);
+    }
+    .dropdown-menu__item {
+      --dropdown-border-color: color-mix(in srgb, var(--color-grey-5) 80%, transparent);
+    }
   }
   .search__popout h4 {
     color: var(--color-white);
