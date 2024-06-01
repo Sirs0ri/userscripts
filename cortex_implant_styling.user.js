@@ -4150,8 +4150,13 @@ body {
   */
 
 
-  /* user badges */
+  /* user badges
+   *  1: Moderator
+   *  3: Owner
+   * 34: Supporter
+   */
 
+/*
   .account-role {
     position: relative;
     margin-top: 2px !important;
@@ -4162,25 +4167,25 @@ body {
     --color-role-border: hsl(227deg 16% 76%);
     --color-role-bg-shine: hsl(227deg 16% 54%);
     --color-role-border-shine: hsl(227deg 16% 10%);
+
+    color: color-mix(in srgb, white, var(--color-role-border));
+
+    &[data-account-role-id="1"] {
+      --color-role-border: hsl(149.12deg 34% 60.78%);
+      --color-role-border-shine: hsl(240deg 100% 69%);
+    }
+
+    &[data-account-role-id="3"] {
+      --color-role-border: hsl(330deg 100% 50%);
+      --color-role-border-shine: hsl(254deg 100% 65%);
+    }
+
+    &[data-account-role-id="34"] {
+      --color-role-border: hsl(187deg 98% 48%);
+      --color-role-border-shine: hsl(58deg 100% 47%);
+    }
   }
 
-  /* owner */
-  .user-role-3 {
-    --color-role-border: hsl(330deg 100% 50%);
-    --color-role-border-shine: hsl(254deg 100% 65%);
-  }
-  /* moderator */
-  .user-role-1 {
-    --color-role-border: hsl(149.12deg 34% 60.78%);
-    --color-role-border-shine: hsl(240deg 100% 69%);
-  }
-  /* supporter */
-  .user-role-34 {
-    --color-role-border: hsl(187deg 98% 48%);
-    --color-role-border-shine: hsl(58deg 100% 47%);
-  }
-
-  /* User badges */
   @keyframes shine {
     0%   { background-position: 100% 50%; }
     100% { background-position:   0% 50%; }
@@ -4195,9 +4200,10 @@ body {
     animation: shine 5000ms infinite;
     background-position: -100% 50%;
   }
+*/
 
   /* border */
-  .account-role::before {
+  /*.account-role::before {
     z-index: -2;
     inset: -1px;
     background-image:
@@ -4209,9 +4215,9 @@ body {
         transparent 100%
       ),
       linear-gradient(var(--color-role-border), var(--color-role-border));
-  }
+  } */
   /* background */
-  .account-role::after {
+  /* .account-role::after {
     z-index: -1;
     inset: 0px;
     background-image:
@@ -4223,7 +4229,7 @@ body {
         transparent 100%
       ),
       linear-gradient(var(--color-role-bg), var(--color-role-bg));
-  }
+  } */
 
 
   /* This makes the buttons beneath toots look different */
