@@ -35,8 +35,6 @@
  *    - items under a post might wrap weirdly:
  *      see https://corteximplant.com/@kaiserkiwi/112044242777155596
  *      .detailed-status__meta { flex-wrap: wrap; gap: 0.4em; }
- *    - 4.3.0-alpha fixes
- *      - account links highlights broken
  */
 
 /*
@@ -2193,6 +2191,7 @@ article > .account > .account__wrapper {
 .account__contents {
   max-width: calc(100% - 56px);
   overflow: unset;
+  flex: 1;
 }
 
 .account__relationship {
@@ -3470,6 +3469,7 @@ body {
   }
   .account__header__tabs__name {
     padding: 0 var(--gap);
+    margin: 0;
   }
 
   .account__header__badges {
@@ -3579,7 +3579,7 @@ body {
     margin: 0 !important;
   }
 
-  /* Tabs below the accoutn info */
+  /* Tabs below the account info */
 
   .account__action-bar-links {
     border-radius: inherit;
@@ -3672,6 +3672,8 @@ body {
   .account__header__fields dl {
     border: none;
     border-radius: var(--border-radius-button-between);
+
+    position: relative;
   }
   .account__header__fields dl+dl {
     margin-top: var(--border-radius-button-between);
@@ -3702,8 +3704,6 @@ body {
   .account__header__fields:not(:last-child) dd {
     border-style: solid;
     border-width: 1px;
-    position: relative;
-    /* TODO: This looks weird sometimes. e.g. https://corteximplant.com/@LevelUp@mastodon.art */
     white-space: initial;
     word-break: break-all;
 
@@ -3711,10 +3711,6 @@ body {
       border-color: var(--color-grey-6);
       background: color-mix(in srgb, var(--color-offwhite-primary) 5%, transparent);
     }
-  }
-
-  .account__header__fields dd {
-    position: relative;
   }
 
   .account__header__fields dd a::before {
