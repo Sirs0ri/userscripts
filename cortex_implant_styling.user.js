@@ -28,7 +28,6 @@
  *    - 4.3.0 fixes
  *      - Icons massive (fixed through custom.css)
  *       -> https://corteximplant.com/@marta/112134741728666664
- *      - alignment in top bars
  *    - Refactor for new CSS features
  *      - CSS Nesting
  *      - color-mix() instead of HSL combining
@@ -1058,7 +1057,7 @@ body.layout-single-column.pinned .tabs-bar__wrapper {
 }
 
 /* add a "pause" icon to the column header */
-.column-header > button::after {
+.column-header > button.column-header__title::after {
   content: "";
   font: normal normal normal 14px/1 FontAwesome;
   opacity: 0;
@@ -1069,7 +1068,7 @@ body.layout-single-column.pinned .tabs-bar__wrapper {
   scale: 0.9;
   align-self: center;
 }
-body.layout-single-column.pinned .column-header > button::after {
+body.layout-single-column.pinned .column-header > button.column-header__title::after {
   opacity: 1;
 }
 `)
@@ -2384,6 +2383,10 @@ body {
 
   /* Profile Menu, search */
 
+  .search {
+    margin-bottom: 20px;
+  }
+
   .search__popout,
   .dropdown-menu {
     z-index: 102;
@@ -2733,7 +2736,8 @@ body {
    *    Main Feed
    * =================== */
 
-   .column > .scrollable {
+   .column > .scrollable,
+   .explore__search-results {
      border: none;
    }
 
@@ -2744,7 +2748,7 @@ body {
     --background-filter: none;
   }
 
-  .search__input {
+  :is(.search__input, #important) {
     border-radius: 8px;
     border: 1px solid var(--color-grey-6);
     background: var(--color-grey-5);
@@ -2789,6 +2793,15 @@ body {
   .column-header__wrapper:hover::after,
   h1:where(#Lists, #Follow-requests):hover::after {
     border-color: var(--color-grey-7);
+  }
+
+  .column-header__title {
+    height: 48px;
+    padding-block: 0;
+  }
+
+  .column-header__title svg {
+    margin-inline: 2px 10px;
   }
 
   .column-back-button {
