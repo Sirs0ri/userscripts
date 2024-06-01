@@ -28,7 +28,6 @@
  *    - 4.3.0 fixes
  *      - Icons massive (fixed through custom.css)
  *       -> https://corteximplant.com/@marta/112134741728666664
- *      - like animation is offcenter again
  *      - alignment in top bars
  *    - Refactor for new CSS features
  *      - CSS Nesting
@@ -936,8 +935,8 @@ header.status__info {
  * de-springyfy anims
  * ==================== */
 
-.no-reduce-motion .status__collapse-button>.fa-angle-double-up,
-.no-reduce-motion .status__collapse-button>.icon {
+.no-reduce-motion .status__collapse-button > .fa-angle-double-up,
+.no-reduce-motion .status__collapse-button > .icon {
   transition: transform 200ms ease-in-out, color 200ms;
   animation: none !important;
 }
@@ -951,22 +950,13 @@ header.status__info {
   to   { transform: rotate(0turn); }
 }
 
-.icon.icon-star {
-  transform-origin: 50% 50% !important;
-
-  & > path {
-    /* optically center the star */
-    transform: translateY(-60px);
-  }
-}
-
 .no-reduce-motion .icon-button.star-icon.deactivate>.fa-star,
 .no-reduce-motion .icon-button.star-icon.deactivate>.icon {
   animation: rotateOut 750ms;
 }
 
-.no-reduce-motion .icon-button.star-icon.activate>.fa-star,
-.no-reduce-motion .icon-button.star-icon.activate>.icon {
+.no-reduce-motion .icon-button.star-icon.activate > .fa-star,
+.no-reduce-motion .icon-button.star-icon.activate > .icon {
   animation: rotateIn 750ms;
 }
 
