@@ -4855,7 +4855,7 @@ span.relationship-tag {
     .reply-indicator__header strong,
     .emoji-button,
     .reactions-bar__item__emoji
-  )>img.emojione[title*="heart"]:hover
+  )>img.emojione[title*="heart" i]:hover
   {
     animation: heartbeat 1.5s infinite;
   }
