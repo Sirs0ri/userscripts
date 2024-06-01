@@ -32,9 +32,6 @@
  *      - CSS Nesting
  *      - color-mix() instead of HSL combining
  *    - Make style changes hot-swappable through the stylesheet returned by GM_addStyle
- *    - items under a post might wrap weirdly:
- *      see https://corteximplant.com/@kaiserkiwi/112044242777155596
- *      .detailed-status__meta { flex-wrap: wrap; gap: 0.4em; }
  */
 
 /*
@@ -2086,7 +2083,7 @@ article:empty {
 .status__prepend {
   flex-grow: 0;
   align-self: center;
-  margin-left: 36px;
+  margin: 0;
   max-width: calc(100% - 30px);
 }
 .status__prepend:hover {
@@ -2954,9 +2951,12 @@ body {
 
   /* ===== Posts styling ===== */
 
-  .status {
+  .status__wrapper {
     display: flex;
     flex-direction: column;
+  }
+
+  .status {
     padding: 15px;
   }
 
@@ -2979,6 +2979,17 @@ body {
   .status-private,
   .detailed-status__wrapper-private {
     --color-privacy: var(--color-yellow, white);
+  }
+
+  .detailed-status__meta {
+    flex-wrap: wrap;
+  }
+
+  .detailed-status__meta__line {
+    display: contents;
+  }
+  .detailed-status__meta__line:not(:last-child)::after {
+    content: "·";
   }
 
   .status-unlisted,
@@ -3159,6 +3170,7 @@ body {
     border-radius: 0 0 8px 8px;
     border: none;
     background: none;
+    gap: var(--border-radius-button-between);
   }
 
 
@@ -3175,6 +3187,8 @@ body {
   :is(#fake, .status__action-bar) {
     margin-top: 15px;
     margin-bottom: 0;
+    gap: var(--border-radius-button-between);
+    align-items: stretch;
   }
 
   /* Make sure everything inside a post follows the border radius */
@@ -3210,16 +3224,6 @@ body {
    *    account uses       a      > span
    *    "live feeds" uses  a      > div
    */
-
-/*
-  .notification {
-    padding: 10px 14px;
-
-    .account {
-      padding: 0;
-    }
-  }
-*/
 
   .notification__message {
 
@@ -3429,6 +3433,10 @@ body {
 
       .status {
         backround: none;
+      }
+
+      &::before {
+        border-color: var(--color-notification);
       }
     }
 
@@ -4295,7 +4303,7 @@ body {
     background-image: radial-gradient(currentColor, transparent);
   }
 
-  .status__action-bar > *,
+  .status__action-bar button,
   .detailed-status__action-bar button {
     margin-inline: 0 !important;
     padding: 7px;
