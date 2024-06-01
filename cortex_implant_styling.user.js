@@ -29,7 +29,6 @@
  *      - Icons massive (fixed through custom.css)
  *      - poll: winning option is spaced weirdy by massive checkmark
  *       -> https://corteximplant.com/@marta/112134741728666664
- *      - overflow in posts for cat ears
  *      - post actions menu has no highlighting
  *      - like animation is offcenter again
  *      - alignment in top bars
@@ -42,8 +41,6 @@
  *      .detailed-status__meta { flex-wrap: wrap; gap: 0.4em; }
  *    - 4.3.0-alpha fixes
  *      - account links highlights broken
- *    - Long usernames
- *      - Break the layout in the pip viewer
  */
 
 /*
@@ -812,9 +809,51 @@ p {
 /* Status layout - enable easy insertion of the "replying to..." hint */
 header.status__info {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
+
+  .status__display-name {
+    width: 100%;
+    gap: 15px;
+    overflow: visible;
+
+    .display-name {
+      width: calc(100% - 61px);
+      overflow: visible;
+
+      bdi {
+        width: 100%;
+        display: inline-block;
+        overflow: visible !important;
+
+        .display-name__html {
+          width: 100%;
+          display: inline-block;
+          text-overflow: ellipsis;
+          direction: ltr;
+        }
+      }
+    }
+  }
 }
+
+.picture-in-picture__header__account {
+  width: calc(100% - 32px);
+
+  .account__avatar {
+    flex-shrink: 0;
+  }
+
+  .display-name {
+    width: calc(100% - 46px);
+  }
+}
+
+.reply-indicator .display-name {
+  width: 100%
+}
+
+
 
 .status__info__icons {
   height: fit-content;
@@ -1549,13 +1588,6 @@ markiere medien ohne alt-text */
   overflow: unset;
   min-width: 0;
 }
-:is(.status__display-name, #fake) {
-  max-width: calc(100% - 56px);
-  gap: 15px;
-}
-.display-name__html {
-  text-overflow: ellipsis;
-}
 
 .notification__message > :is(#fake, span) {
   text-wrap: wrap;
@@ -2152,31 +2184,6 @@ aside .status__display-name:hover,
   overflow: unset;
   min-width: 0;
 }
-.status__display-name {
-  max-width: calc(100% - 56px);
-}
-
-.status__display-name,
-.display-name {
-  overflow: visible;
-}
-
-:is(#fake, .display-name__html) {
-  text-overflow: ellipsis;
-  direction: ltr;
-}
-
-/* Firefox does some odd things with text-overflow: ellipsis; when an image at the end of the name would exceed the bounding box, this ::after makes enough room for the image */
-.display-name:not(.inline) .display-name__html:has(img)::after {
-  content: "";
-  width: 2.4em;
-  display: inline-block;
-}
-
-.display-name__account {
-  position: relative;
-}
-
 
 /* ===== some other changes ===== */
 
@@ -4741,9 +4748,10 @@ span.relationship-tag {
   /* Change disable overflow on elements restraining the images while hovering */
 
   /* Toots */
-  :is(.display-name, #fake),
-  .display-name__html,
-  .status__display-name,
+  :is(
+    .display-name,
+    .display-name__html,
+    #important),
 
   /* Poll Option */
   label.poll__option,
