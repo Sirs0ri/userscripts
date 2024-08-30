@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.8.0-b7
+// @version      1.8.0-b8
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -26,12 +26,17 @@
  *      - header has a border-bottom
  *      - Profile view is broken
  *    - 4.3.0 fixes
- *      - Icons massive (fixed through custom.css)
- *       -> https://corteximplant.com/@marta/112134741728666664
+ *      - Icons massive (mostly fixed through custom.css?)
+ *      - mastodon's wrapped .status in .status__wrapper's - does this break anything?
+ *      - reply highlighting is broken
  *    - Refactor for new CSS features
- *      - CSS Nesting
+ *      - CSS Nesting - used carefully, cause it can get expensive
  *      - color-mix() instead of HSL combining
  *    - Make style changes hot-swappable through the stylesheet returned by GM_addStyle
+ *    - Clicking your name in the sidebar focusses the compose box -> user-focus-within
+ *    - Styling
+ *      - Account hover preview
+ *      - add light tint to normal posts
  */
 
 /*
@@ -138,13 +143,6 @@
   const data = JSON.parse(elem.text)
   const user = data.accounts[data.meta.me]?.username
   // const mascot = data.meta.mascot
-
-  const authorizedFetch = async url => {
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${data.meta.access_token}` } }).then(res => res.json())
-    console.log(res)
-    return res
-  }
-  // authorizedFetch("/api/v1/markers?timeline[]=home")
 
   // get account color
   const avatarLink = data.accounts[data.meta.me]?.avatar_static
@@ -727,8 +725,7 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
    */
   --color-grey-6: hsl(227deg 17% 41%);
 
-  /* .compose-form__autosuggest-wrapper               -> border
-   * .compose-form__buttons-wrapper                   -> border
+  /* .compose-form__buttons-wrapper                   -> border
    * .compose-form .spoiler-input                     -> border
    * .column-back-button--slim [role="button"]:hover::after -> border
    * #tabs-bar__portal>button:hover::after             -> border
@@ -780,6 +777,14 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
   40%  { opacity: 0.7 }
   75%  { opacity: 0.4 }
   100% { opacity: 1   }
+}
+
+/* Animation to keep things "on top" briefly after hovering */
+@keyframes keep-up {
+  0%,
+  100% {
+    z-index: 2;
+  }
 }`)
 
   /* General layout improvements */
@@ -845,9 +850,14 @@ header.status__info {
 }
 
 
-
 .status__info__icons {
   height: fit-content;
+}
+
+/* compose box submit button */
+.compose-form__submit button[type="submit"] {
+  line-height: 1;
+  padding: 8px;
 }
 `)
 
@@ -866,7 +876,7 @@ header.status__info {
     GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info)::before {
+  .status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status > .status__info)::before {
     color: #606984;
     font-size: 14px;
     grid-column: 1 / -1;
@@ -877,11 +887,11 @@ header.status__info {
     padding: 1px 8px;
   }
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted):has(.status__info:not(aside + .status__info)) {
+  .status__wrapper-reply:not(.status--in-thread):not(.muted):has(.status__info:not(aside + .status > .status__info)) {
     --extra-top-spacing: 32px;
   }
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span::after {
+  .status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span::after {
     content: " a reply"
   }
 }
@@ -1184,13 +1194,6 @@ article:not(:hover),
   animation: keep-up 400ms;
 }
 
-@keyframes keep-up {
-  0%,
-  100% {
-    z-index: 2;
-  }
-}
-
 .media-gallery .media-gallery__item:not(.media-gallery__item--tall) {
   --height: calc(50cqh - (var(--border-radius-button-between) + var(--extra-gap, 0px)) / 2);
   height: var(--height);
@@ -1377,6 +1380,9 @@ markiere medien ohne alt-text */
     backDrop.classList.add("ignore-clicks")
 
     const handlerIn = (evt) => {
+      const composeElement = document.querySelector(".compose-form__highlightable")
+      if (!composeElement.contains(evt.target)) return
+
       debugFocus && console.log("in", evt)
       /* Ignore clicks on the buttons below the compose area */
       if (evt.target.nodeName === "BUTTON" || evt.target.classList.contains("emoji-button")) return
@@ -1385,7 +1391,7 @@ markiere medien ohne alt-text */
        * This also keeps the input small when the user's first interaction is via the emote picker, but any
        * input afterwards will extend it, so that it's not too bad a compromise.
        */
-      if (evt instanceof FocusEvent && evt.target.classList.contains("autosuggest-textarea__textarea") && !evt.sourceCapabilities) return
+      // if (evt instanceof FocusEvent && evt.target.classList.contains("autosuggest-textarea__textarea") && !evt.sourceCapabilities) return
 
       debugFocus && console.log("in handled", evt)
 
@@ -1478,8 +1484,8 @@ markiere medien ohne alt-text */
     z-index: 2;
   }
 
-  .user-focus-within .compose-form > :not(.compose-form__warning, .reply-indicator) {
-    --width: clamp(100%, calc( ( 100vw - clamp(0px, calc(4vw - 48px), 50px) - 600px ) / 2 - 30px), 450px);
+  .user-focus-within .compose-form > .compose-form__highlightable {
+    --width: clamp(100%, calc( ( 100vw - clamp(0px, calc(4vw - 48px), 50px) - 600px ) / 2 - 50px), 450px);
     width: var(--width);
     margin-left: calc( 285px - var(--width));
   }
@@ -1489,9 +1495,14 @@ markiere medien ohne alt-text */
     position: fixed;
     inset: 0;
     background-color: rgba(0 0 0 / 0);
-    z-index: -1;
+    z-index: 1;
     pointer-events: none;
     transition: background-color 200ms;
+  }
+
+  .navigation-bar,
+  .compose-form__warning {
+    z-index: 1
   }
 
   .user-focus-within .compose-form::before {
@@ -1502,34 +1513,39 @@ markiere medien ohne alt-text */
   :is(#fake, .autosuggest-textarea__textarea) {
     transition: min-height 200ms;
   }
-  .user-focus-within .autosuggest-textarea__textarea {
-    min-height: 200px !important;
-  }
 
   .link-footer {
     margin-top: auto
   }
 
   /* autogrow shenannigans */
-  .autosuggest-textarea label {
+  .autosuggest-textarea {
     display: grid;
     overflow-x: hidden;
 
     textarea {
       grid-area: 1 / 1 / 2 / 2;
-      line-height: inherit;
+      white-space: break-spaces;
+      min-height: 100% !important;
     }
 
     &::after {
       content: attr(data-value);
       grid-area: 1 / 1 / 2 / 2;
-      padding: 10px 32px 0 10px;
+      padding: 12px;
+      min-height: 100px;
       color: transparent;
       font-family: inherit;
       font-size: 14px;
-      white-space: pre-wrap;
+      white-space: break-spaces;
       pointer-events: none;
+      line-height: normal;
     }
+  }
+
+
+  .user-focus-within .autosuggest-textarea::after {
+    min-height: 200px;
   }
 
 `)
@@ -2087,7 +2103,7 @@ article:empty {
 
 /* make sure links to user profiles are consistently underlined on hover */
 aside .status__display-name:hover,
-.status.collapsed .display-name:hover .display-name__html {
+.status__wrapper.collapsed .display-name:hover .display-name__html {
   text-decoration: underline;
 }
 
@@ -2115,7 +2131,7 @@ aside .status__display-name:hover,
 */
 
 /* Better gradient on collapsed toots */
-.status.collapsed .status__content {
+.status__wrapper.collapsed .status__content {
   height: 35px;
   margin-bottom: -15px;
   margin-top: -30px;
@@ -2127,7 +2143,7 @@ aside .status__display-name:hover,
   mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
 }
 
-:is(#fake, .status.collapsed .status__content)::after {
+:is(#fake, .status__wrapper.collapsed .status__content)::after {
   display: none;
 }
 
@@ -2462,6 +2478,7 @@ body {
     height: 100vh;
     position: absolute;
     top: 100%;
+    left: 0;
   }
 
   .reply-indicator__attachments {
@@ -2473,15 +2490,20 @@ body {
   .compose-form__highlightable {
     border-radius: var(--border-radius-button);
     border: none;
-    outline: 1px solid var(--color-grey-7);
+    outline: 1px solid var(--color-grey-5);
     outline-offset: -1px;
     z-index: 101;
 
+    transition: outline-color 200ms;
+
     overflow: visible;
     min-height: unset;
+
+    &:focus-within {
+      outline-color: var(--color-grey-7);
+    }
   }
 
-  /* I'm not *quite* happy with these colors. Waiting for more inspiration */
   .reply-indicator__header {
     overflow: visible;
   }
@@ -2501,26 +2523,12 @@ body {
     border-radius: 8px;
   }
 
-  :is(#fake, .compose-form__autosuggest-wrapper) {
-    border-radius: 8px;
-    border: 1px solid var(--color-grey-7);
-    /* Make sure this is above the autosuggest window at z 99 */
-    z-index: 100;
-    transition: box-shadow 200ms;
-    background: white;
-    padding: 0;
-    padding-block-end: 10px;
-  }
-  :is(#fakeId, .compose-form__autosuggest-wrapper):focus-within {
-    box-shadow: var(--neon-box-shadow-small);
-  }
-  :is(#fakeId, .compose-form__autosuggest-wrapper) .autosuggest-textarea__textarea,
-  :is(#fakeId, .compose-form__autosuggest-wrapper) .compose-form__modifiers {
+  :is(
+    .autosuggest-textarea__textarea,
+    .compose-form__modifiers,
+    #important
+  ) {
     background: none;
-  }
-
-  :is(.autosuggest-textarea__textarea, #important) {
-    padding-right: 40px;
   }
 
   /* make sure this isn't covered by the compose area in advanced mode*/
@@ -2569,6 +2577,7 @@ body {
       display: grid;
       grid-template-columns: repeat(var(--cols), 1fr);
       gap: var(--border-radius-button-between);
+      align-items: stretch;
 
       & > * {
         grid-row: 1;
@@ -2576,45 +2585,16 @@ body {
 
       :where(div, button) {
         width: 100%;
+        height: 100%;
         box-sizing: border-box !important;
       }
 
       /* dynamic column count, ignoring the char counter in the last child */
-
-      /* this places the emoji picker up top, which doesn't work too well when editing posts */
-      /*
-      --cols : 5;
-      &:has(:nth-child(6 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
-        --cols: 6;
-      }
-      &:has(:nth-child(7 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
-        --cols: 7;
-      }
-
-      & :nth-child(1 of :not(.emoji-picker-dropdown)) { grid-column: 1 }
-      & :nth-child(2 of :not(.emoji-picker-dropdown)) { grid-column: 2 }
-      & :nth-child(3 of :not(.emoji-picker-dropdown)) { grid-column: 3 }
-      & :nth-child(4 of :not(.emoji-picker-dropdown)) { grid-column: 4 }
-      & :nth-child(5 of :not(.emoji-picker-dropdown)) { grid-column: 5 }
-      & :nth-child(6 of :not(.emoji-picker-dropdown)) { grid-column: 6 }
-      & :nth-child(7 of :not(.emoji-picker-dropdown)) { grid-column: 7 }
-      & :nth-child(8 of :not(.emoji-picker-dropdown)) { grid-column: 8 }
-
-      .emoji-picker-dropdown {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 32px;
-        height: 32px;
-      }
-      */
-
-      /* this leaves the emoji picker where it is */
       --cols : 6;
-      &:has(:nth-child(6 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
+      &:has(:nth-child(7):not(.character-counter)) {
         --cols: 7;
       }
-      &:has(:nth-child(7 of :not(.emoji-picker-dropdown)):not(.character-counter)) {
+      &:has(:nth-child(8):not(.character-counter)) {
         --cols: 8;
       }
 
@@ -2645,6 +2625,7 @@ body {
       }
 
       :is(.character-counter, #important) {
+        align-self: center;
         grid-column-end: -1;
         padding-inline-end: 2px;
         grid-column: span 2 / -1;
@@ -2694,10 +2675,6 @@ body {
     height: 69px; /* nice */
   }
 
-  .spoiler-input + .compose-form__autosuggest-wrapper {
-    /* pull this up by 7px to compensate for .spoiler-input's 7px of padding + border */
-    margin-top: -7px;
-  }
 
   /* ===== right side menu ===== */
 
@@ -2730,6 +2707,7 @@ body {
     position: relative;
     font-size: 15px;
     padding: 15px;
+    border-radius: 8px;
   }
 
   .getting-started__trends h4 a:hover::before,
@@ -2741,6 +2719,7 @@ body {
       color-mix(in srgb, var(--color-offwhite-primary)  5%, transparent),
       color-mix(in srgb, var(--color-offwhite-primary) 10%, transparent));
     border-radius: 8px;
+    width: 100%;
 
     animation: 200ms flicker-in ease-out;
   }
@@ -3020,13 +2999,16 @@ body {
 
   /* ===== Posts styling ===== */
 
-  .status__wrapper {
+  .status__wrapper:not(.status__wrapper--filtered) {
     display: flex;
     flex-direction: column;
   }
 
   .status {
     padding: 15px;
+  }
+  aside + .status {
+    padding-top: 5px;
   }
 
   .detailed-status__wrapper {
@@ -3326,7 +3308,7 @@ body {
     grid-template-columns: auto minmax(0, 1fr) auto;
     padding: 10px;
 
-    & + .status.collapsed .status__content {
+    & + .status__wrapper.collapsed .status__content {
       margin-top: ;
       padding-top: 30px;
     }
@@ -3440,7 +3422,7 @@ body {
   /* Notification Coloring */
 
   /* Color the icon */
-  .notification__message :is(#fake, .fa, svg.icon) {
+  .notification__message :is(#fake, .fa, svg.status__prepend-icon) {
     color: var(--color-notification);
   }
 
@@ -3531,7 +3513,7 @@ body {
 
   .account__header__bar {
     border-radius: 0 0 8px 8px;
-    border-bottom: 1px solid var(--color-grey-4);
+    border-bottom: none;
 
     padding: 10px;
     display: grid;
@@ -3550,7 +3532,7 @@ body {
   }
 
   .account__header__badges {
-    adding: 0;
+    padding: 0 var(--gap);
   }
 
   .account__header__image {
@@ -3590,7 +3572,6 @@ body {
     margin: 0;
     display: grid;
     gap: calc(2 * var(--gap));
-    margin-block-end: var(--gap);
   }
 
   .account__disclaimer {
@@ -3654,6 +3635,19 @@ body {
   }
   .account-role {
     margin: 0 !important;
+  }
+
+  /* there's a read more button in the "What's in a handle?" info popup, that looks like a link instead.
+  This makes it look at leas soemthign like a "read more" button. */
+  .account__domain-pill__popout p button.link-button::after {
+    content: "«";
+    rotate: 0.25turn;
+    display: inline-block;
+    padding-inline: 0.5em;
+    transition: rotate 200ms;
+  }
+  .account__domain-pill__popout p:last-child button.link-button::after {
+    rotate: 0.75turn;
   }
 
   /* Tabs below the account info */
@@ -3820,6 +3814,8 @@ body {
   .account-timeline__header .account__section-headline:not(:first-child) {
     background: none;
     border: none;
+    margin-top: 0;
+    padding-top: 6px;
   }
 
   .empty-column-indicator {
@@ -3845,6 +3841,10 @@ body {
   .status.status-direct {
     outline: 1px solid hsl(225 15% 35% / 1);
     outline-offset: 0px;
+  }
+
+  aside.notification__message + .status.status-direct {
+    outline: none;
   }
 
 
@@ -4923,6 +4923,21 @@ span.relationship-tag {
     opacity: 1;
     /* increase by 1, to have the hovered emoji overlap all others */
     z-index: 102;
+  }
+
+  :not(
+    .reply-indicator__header strong,
+    .emoji-button,
+    .reactions-bar__item__emoji
+  )>img.emojione:not(:hover) {
+    animation: keep-up-emote 400ms;
+  }
+
+  @keyframes keep-up-emote {
+    0%,
+    100% {
+      z-index: 102;
+    }
   }
 
   @keyframes heartbeat {
