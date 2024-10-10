@@ -4523,7 +4523,9 @@ body {
     padding: 7px;
   }
 
-  .status__action-bar button:not(.status__action-bar > button) {
+  .status__action-bar button:not(.status__action-bar > button),
+  .detailed-status__button button,
+  .detailed-status__action-bar-dropdown button {
     border-radius: inherit;
     width: 100%
   }
