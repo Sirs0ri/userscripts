@@ -41,7 +41,7 @@
  *      - [x] preferences link missing
  *      - [ ] img alt dialog
  *      - [ ] profile view: avatar outline
- *      - [ ] post actions border
+ *      - [x] post actions border
  *      - [ ] hover popup for people has squished avatar -> username overflow
  *        - actually a mastodon bug lol
  *      - [ ] Explore -> people
@@ -4406,6 +4406,8 @@ body {
   .detailed-status__action-bar button {
     margin-inline: 0 !important;
     padding: 7px;
+    border-radius: inherit;
+    width: 100%
   }
 
   :where(.status__action-bar, .detailed-status__action-bar) > :first-child {
@@ -4423,12 +4425,6 @@ body {
     display: none;
   }
 
-  .detailed-status__button button,
-  .detailed-status__action-bar-dropdown > span,
-  .detailed-status__action-bar-dropdown button {
-    width: 100% !important;
-    border-radius: inherit;
-  }
 }
 `)
   }
