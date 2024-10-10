@@ -37,7 +37,7 @@
  *        - [ ] report colors
  *        - [ ] unread bars (-> also DMs)
  *        - [ ] backgrounds
- *      - [ ] hr in sidebar
+ *      - [x] hr in sidebar
  *      - [x] preferences link missing
  *      - [ ] img alt dialog
  *      - [ ] profile view: avatar outline
@@ -768,8 +768,8 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
   --neon-box-shadow:
     /* White glow */
     0 0   7px color-mix(in srgb, var(--color-white) 100%, transparent),
-    0 0  10px color-mix(in srgb, var(--color-white) 100%, transparent),
-    0 0  21px color-mix(in srgb, var(--color-white) 100%, transparent),
+    0 0  10px color-mix(in srgb, var(--color-white)  75%, transparent),
+    0 0  21px color-mix(in srgb, var(--color-white)  40%, transparent),
     /* Colored glow */
     0 0  42px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
     0 0  82px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
@@ -2295,8 +2295,6 @@ article > .account > .account__wrapper {
   }
   body.flavour-glitch .navigation-panel::before {
     content: "";
-    width: 100%;
-    margin: 20px 0;
   }
 }
 `)
@@ -2399,7 +2397,7 @@ body {
     border-top: 1px solid var(--color-grey-9);
     position: relative;
     z-index: -1;
-    margin: 20px 0;
+    margin: 20px 15px;
     height: 0;
   }
 
@@ -2696,6 +2694,10 @@ body {
 
 
   /* ===== right side menu ===== */
+
+  .column-link {
+    border: none
+  }
 
   .column-link--logo {
     padding: 0;
