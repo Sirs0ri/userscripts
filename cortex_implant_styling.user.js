@@ -28,9 +28,9 @@
  *    - 4.3.0 fixes
  *      - [ ] mastodon's wrapped .status in .status__wrapper's - does this break anything?
  *      - [ ] reply highlighting is broken
- *      - [ ] Icons missing
- *        - [ ] trending
- *        - [ ] paused
+ *      - [x] Icons missing
+ *        - [x] trending
+ *        - [x] paused
  *      - [ ] compose box cut off
  *      - [ ] image badges no longer hide
  *      - [ ] notifications, oh lord
@@ -1080,15 +1080,15 @@ body.layout-single-column.pinned .tabs-bar__wrapper {
 
 /* add a "pause" icon to the column header */
 .column-header > button.column-header__title::after {
-  content: "";
-  font: normal normal normal 14px/1 FontAwesome;
+  content: "";
   opacity: 0;
   transition: opacity 300ms;
   margin-inline-start: 5px;
-  color: var(--color-grey-7);
-  display: inline-block;
-  scale: 0.9;
-  align-self: center;
+
+  width: 24px;
+  aspect-ratio: 1;
+  background-color: var(--color-grey-7);
+  clip-path: path("M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M19 19H5V5H19V19M13 16V8H15V16H13M9 16V8H11V16H9");
 }
 body.layout-single-column.pinned .column-header > button.column-header__title::after {
   opacity: 1;
@@ -2780,13 +2780,16 @@ body {
     padding-inline-start: calc(5px + 1.28571429em);
   }
   .getting-started__trends h4 span::before {
-    content: "";
-    font-family: FontAwesome;
+    content: "";
     margin-right: 5px;
-    width: 1.28571429em;
-    text-align: center;
-    display: inline-block;
+    vertical-align: middle;
     margin-inline-start: calc(-5px - 1.28571429em);
+
+    display: inline-block;
+    width: 24px;
+    aspect-ratio: 1;
+    background: currentColor;
+    clip-path: path("m 3.4 18 l -1.4 -1.4 l 7.4 -7.45 l 4 4 l 5.2 -5.15 H 16 v -2 h 6 v 6 h -2 v -2.6 L 13.4 16 L 9.4 12 L 3.4 18 Z");
   }
 
   .getting-started__trends .trends__item {
