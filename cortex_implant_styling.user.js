@@ -38,7 +38,7 @@
  *        - [ ] unread bars (-> also DMs)
  *        - [ ] backgrounds
  *      - [ ] hr in sidebar
- *      - [ ] preferences link missing
+ *      - [x] preferences link missing
  *      - [ ] img alt dialog
  *      - [ ] profile view: avatar outline
  *      - [ ] post actions border
@@ -378,8 +378,10 @@
       innerHTML: " · ",
       ariaHidden: true,
     })
+
+    const settingsLinkEl = document.querySelector(".column-link[href='/settings/preferences']")
     const preferencesLink = createElem("a", {
-      textContent: document.querySelector(".column-link[href='/settings/preferences']").title,
+      textContent: settingsLinkEl.title || settingsLinkEl.textContent,
       role: "button",
       onclick: openSettings,
     })
