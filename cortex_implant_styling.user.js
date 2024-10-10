@@ -33,10 +33,8 @@
  *        - [x] paused
  *      - [ ] compose box cut off
  *      - [x] image badges no longer hide
- *      - [ ] notifications, oh lord
- *        - [ ] report colors
- *        - [ ] unread bars (-> also DMs)
- *        - [ ] backgrounds
+ *      - [x] notifications, oh lord
+ *      - [x] DMs - unread bars, post background, buttons
  *      - [x] hr in sidebar
  *      - [x] preferences link missing
  *      - [ ] img alt dialog
@@ -483,7 +481,7 @@
         This userscript has a settings UI now! You're seeing this because you're
         running the new version of the script for the first time. <br>
 
-        If you want to access this UI in the future, you'll be able to find it 
+        If you want to access this UI in the future, you'll be able to find it
         in the page's footer, next to the links to this instance's about page.`,
     }))
 
@@ -2456,93 +2454,93 @@ body {
    * Docs: https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
    */
 
-  .compose-form {
-    padding-top: 14px;
-    gap: 25px;
-  }
-
-  .reply-indicator {
-    max-height: min(40%, 360px);
-    box-sizing: border-box;
-    position: relative;
-
-    max-height: unset;
-    padding-top: 2px;
-
-    .reply-indicator__main {
-      padding-top: 1px;
-    }
-
-    .display-name__html {
-      line-height: 22px;
-      font-size: 15px;
-    }
-  }
-
-
   .navigation-bar {
     z-index: 101;
   }
 
-  .reply-indicator__line::before {
-    z-index: 102;
-    height: calc(100% + 17px);
-  }
+  .compose-form {
+    padding-top: 14px;
+    gap: 25px;
 
-  .reply-indicator__content {
-    display: block;
-    max-height: unset;
 
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
-  }
+    .reply-indicator {
+      max-height: min(40%, 360px);
+      box-sizing: border-box;
+      position: relative;
 
-  .reply-indicator__content::after {
-    content: "";
-    background: var(--color-grey-0);
-    width: 100%;
-    height: 100vh;
-    position: absolute;
-    top: 100%;
-    left: 0;
-  }
+      max-height: unset;
+      padding-top: 2px;
 
-  .reply-indicator__attachments {
-    background: var(--color-grey-0);
-    z-index: 1;
-    position: relative;
-  }
+      .reply-indicator__main {
+        padding-top: 1px;
+      }
 
-  .compose-form__highlightable {
-    border-radius: var(--border-radius-button);
-    border: none;
-    outline: 1px solid var(--color-grey-5);
-    outline-offset: -1px;
-    z-index: 101;
-
-    transition: outline-color 200ms;
-
-    overflow: visible;
-    min-height: unset;
-
-    &:focus-within {
-      outline-color: var(--color-grey-7);
+      .display-name__html {
+        line-height: 22px;
+        font-size: 15px;
+      }
     }
-  }
 
-  .reply-indicator__header {
-    overflow: visible;
-  }
+    .reply-indicator__line::before {
+      z-index: 102;
+      height: calc(100% + 17px);
+    }
 
-  .reply-indicator__display-name {
-    display: grid;
-    align-items: center;
-    grid-template-columns: auto 1fr;
-    overflow: visible;
+    .reply-indicator__content {
+      display: block;
+      max-height: unset;
 
-    & :is(.display-name.inline, #fake) {
-      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 4;
+    }
+
+    .reply-indicator__content::after {
+      content: "";
+      background: var(--color-grey-0);
+      width: 100%;
+      height: 100vh;
+      position: absolute;
+      top: 100%;
+      left: 0;
+    }
+
+    .reply-indicator__attachments {
+      background: var(--color-grey-0);
+      z-index: 1;
+      position: relative;
+    }
+
+    .compose-form__highlightable {
+      border-radius: var(--border-radius-button);
+      border: none;
+      outline: 1px solid var(--color-grey-5);
+      outline-offset: -1px;
+      z-index: 101;
+
+      transition: outline-color 200ms;
+
+      overflow: visible;
+      min-height: unset;
+
+      &:focus-within {
+        outline-color: var(--color-grey-7);
+      }
+    }
+
+    .reply-indicator__header {
+      overflow: visible;
+    }
+
+    .reply-indicator__display-name {
+      display: grid;
+      align-items: center;
+      grid-template-columns: auto 1fr;
+      overflow: visible;
+
+      & :is(.display-name.inline, #fake) {
+        overflow: hidden;
+      }
     }
   }
 
@@ -3049,19 +3047,19 @@ body {
     position: relative;
   }
 
-  .status-unlisted,
+  .status__wrapper-unlisted,
   .detailed-status__wrapper-unlisted {
     --color-privacy: var(--color-green, white);
   }
-  .status-public,
+  .status__wrapper-public,
   .detailed-status__wrapper-public {
     --color-privacy: var(--color-grey-8, white);
   }
-  .status-direct,
+  .status__wrapper-direct,
   .detailed-status__wrapper-direct {
     --color-privacy: var(--color-red, white);
   }
-  .status-private,
+  .status__wrapper-private,
   .detailed-status__wrapper-private {
     --color-privacy: var(--color-yellow, white);
   }
@@ -3084,11 +3082,29 @@ body {
     box-shadow: 0px 4px 10px -8px var(--color-privacy);
   }
 
-  .status:not(.status-public)::after,
-  .detailed-status__wrapper:not(.detailed-status__wrapper-public)::after {
+  .detailed-status__wrapper,
+  .status__wrapper {
+    --color-bg: var(--color-privacy);
+  }
+
+  .notification-group,
+  .notification-ungrouped {
+    --color-bg: var(--color-notification);
+  }
+
+  .conversation {
+    --color-bg: var(--color-hl-primary);;
+  }
+
+  :is(.status,
+      .conversation,
+      .detailed-status__wrapper,
+      .notification-group,
+      .notification-ungrouped
+  )::after{
     content: "";
     pointer-events: none;
-    background: var(--color-privacy);
+    background: var(--color-bg);
     position: absolute;
     inset: 0;
     border-radius: inherit;
@@ -3166,6 +3182,13 @@ body {
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid color-mix(in srgb, transparent 85%, white);
     /* backdrop-filter: blur(10px) saturate(180%); */
+  }
+
+  :is(article[tabindex="-1"]:has(.load-more.load-gap), #important) {
+    margin: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
   }
 
   /* Search Results */
@@ -3263,6 +3286,8 @@ body {
   .status,
   /* follow notifications */
   .notification .account,
+  .notification-group,
+  .notification-ungrouped,
   /* and the "load more" button */
   .load-gap {
     border-bottom: none;
@@ -3277,7 +3302,7 @@ body {
   }
 
   /* Make sure everything inside a post follows the border radius */
-  article > div[tabindex="-1"],
+  article div[tabindex="-1"],
   .focusable,
   .columns-area--mobile article > div:not(.search-results__section),
   .columns-area--mobile article > div > .notification.unread,
@@ -3439,7 +3464,9 @@ body {
 
 
   /* Mentions use .status__wrapper directly, all other notifications are wrapped in a .notification div */
-  article:has(.unread)::before {
+  article:has(.unread)::before,
+  article:has(.notification-group--unread)::before,
+  article:has(.notification-ungrouped--unread)::before {
     content: "";
     position: absolute;
     top: 5px;
@@ -3453,7 +3480,92 @@ body {
     animation: flicker-in 200ms ease-out 200ms both;
   }
 
+  :where(
+      article:has(.unread),
+      article:has(.notification-group--unread),
+      article:has(.notification-ungrouped--unread)
+  ) > div[tabindex="-1"] {
+    background: var(--color-grey-2);
+  }
+
   /* Notification Coloring */
+
+  /* new: 4.3.0+ */
+
+  /* color the icon */
+  .notification-group__icon svg,
+  .notification-ungrouped__header__icon svg {
+    color: var(--color-notification);
+  }
+
+  /* default */
+  .notification-group,
+  .notification-ungrouped {
+    --color-notification: var(--color-grey-8);
+  }
+
+  .notification-group--favourite {
+    --color-notification: var(--color-gold);
+  }
+
+  .notification-group--admin-report {
+    --color-notification: var(--color-orange);
+  }
+
+  .notification-group--follow,
+  .notification-group--reblog {
+    --color-notification: var(--color-purple);
+  }
+
+  /* mentions and replies have the same markup, just different SVG paths .-. */
+  .notification-ungrouped--mention {}
+
+  .notification-ungrouped--direct {
+    --color-bg: var(--color-red);
+  }
+
+  /* header layout for replies/mentions/DMs */
+  :is(.notification-ungrouped__header, #important) {
+    padding-inline-start: 0;
+    color: var(--color-grey-8);
+  }
+  .notification-ungrouped__header__icon {
+    width: 40px;
+  }
+  .notification-ungrouped__header__icon .icon,
+  .notification-group__icon .icon {
+    width: 24px;
+    aspect-ratio: 1;
+    height: auto;
+  }
+
+  :is(.notification-group, .notification-ungrouped, #important) .status__wrapper {
+    background: none;
+  }
+
+  :is(.notification-group, .notification-ungrouped, #important) .status {
+    outline: none;
+    box-shadow: none;
+  }
+
+  :is(.notification-group, .notification-ungrouped, #important) .status::after {
+    display: none;
+  }
+
+  :is(.notification-group, .notification-ungrouped, #important) .notification-group__main__status {
+    border: none;
+    padding-inline: 0;
+  }
+
+  .notification-group--unread::before,
+  .notification-ungrouped--unread::before,
+  .conversation.unread::before {
+    border-radius: inherit;
+    border-color: var(--color-notification);
+  }
+
+
+  /* old: pre-4.3.0 */
 
   /* Color the icon */
   .notification__message :is(#fake, .fa, svg.status__prepend-icon) {
@@ -4357,7 +4469,6 @@ body {
   :is(button, .status__action-bar-dropdown, detailed-status__action-bar-dropdown) {
     height: 100% !important;
     min-width: 40px !important;
-    border-radius: 8px;
     z-index: 1;
   }
   .detailed-status__button button,
@@ -4410,6 +4521,9 @@ body {
   .detailed-status__action-bar button {
     margin-inline: 0 !important;
     padding: 7px;
+  }
+
+  .status__action-bar button:not(.status__action-bar > button) {
     border-radius: inherit;
     width: 100%
   }
