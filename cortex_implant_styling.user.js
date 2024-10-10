@@ -40,7 +40,8 @@
  *      - [x] hr in sidebar
  *      - [x] preferences link missing
  *      - [ ] img alt dialog
- *      - [ ] profile view: avatar outline
+ *      - [x] profile view: avatar outline
+ *        - Mastodon now actually has a single CSS variable to configure something --avatar-border-radius!
  *      - [x] post actions border
  *      - [ ] hover popup for people has squished avatar -> username overflow
  *        - actually a mastodon bug lol
@@ -645,6 +646,9 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
 
   GM_addStyle(`
 :root {
+  /* mastodon config */
+  --avatar-border-radius: 100vmax;
+
   /* border radii */
   --border-radius-button: 10px;
   --border-radius-button-between: 3px;
