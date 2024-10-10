@@ -32,7 +32,7 @@
  *        - [x] trending
  *        - [x] paused
  *      - [ ] compose box cut off
- *      - [ ] image badges no longer hide
+ *      - [x] image badges no longer hide
  *      - [ ] notifications, oh lord
  *        - [ ] report colors
  *        - [ ] unread bars (-> also DMs)
@@ -1186,6 +1186,8 @@ body.layout-single-column.pinned .column-header > button.column-header__title::a
 .media-gallery :where(.spoiler-button, .media-gallery__item__badges) {
   transition: opacity 200ms, transform 200ms;
 }
+.media-gallery:hover .media-gallery__item__badges:not(:hover),
+.media-gallery:hover .media-gallery__actions:not(:hover),
 .media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover),
 .media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover) ~ div .media-gallery__item__badges:not(:hover) {
   --opacity: 0.2;
@@ -1194,6 +1196,7 @@ body.layout-single-column.pinned .column-header > button.column-header__title::a
 
 .media-gallery .media-gallery__item__badges {
   z-index: 2;
+  width: max-content;
 }
 
 .media-gallery .media-gallery__item {
@@ -1205,6 +1208,10 @@ body.layout-single-column.pinned .column-header > button.column-header__title::a
 
 article:hover,
 .media-gallery__item:hover {
+  z-index: 3;
+}
+
+.media-gallery__actions {
   z-index: 3;
 }
 
@@ -1284,8 +1291,7 @@ options in the "app settings" (left sidebar):
 }
 
 .media-gallery__item {
-  outline: 8px solid var(--color-grey-5);
-  outline-offset: -8px;
+  outline: none;
 }
 
 .media-gallery__item canvas {
@@ -4568,6 +4574,7 @@ span.relationship-tag {
 .sensitive-marker,
 /* "hide media" button */
 .icon-button.overlayed,
+.media-gallery__actions__pill,
 /* "click to show" for galleries */
 .spoiler-button__overlay__label,
 /* play/open actions on YT videos */
