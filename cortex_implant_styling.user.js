@@ -26,14 +26,31 @@
  *      - header has a border-bottom
  *      - Profile view is broken
  *    - 4.3.0 fixes
- *      - Icons massive (mostly fixed through custom.css?)
- *      - mastodon's wrapped .status in .status__wrapper's - does this break anything?
- *      - reply highlighting is broken
+ *      - [ ] mastodon's wrapped .status in .status__wrapper's - does this break anything?
+ *      - [ ] reply highlighting is broken
+ *      - [ ] Icons missing
+ *        - [ ] trending
+ *        - [ ] paused
+ *      - [ ] compose box cut off
+ *      - [ ] image badges no longer hide
+ *      - [ ] notifications, oh lord
+ *        - [ ] report colors
+ *        - [ ] unread bars (-> also DMs)
+ *        - [ ] backgrounds
+ *      - [ ] hr in sidebar
+ *      - [ ] preferences link missing
+ *      - [ ] img alt dialog
+ *      - [ ] profile view: avatar outline
+ *      - [ ] post actions border
+ *      - [ ] hover popup for people has squished avatar -> username overflow
+ *        - actually a mastodon bug lol
+ *      - [ ] Explore -> people
+ *      - [ ] ???
  *    - Refactor for new CSS features
  *      - CSS Nesting - used carefully, cause it can get expensive
  *      - color-mix() instead of HSL combining
  *    - Make style changes hot-swappable through the stylesheet returned by GM_addStyle
- *    - Clicking your name in the sidebar focusses the compose box -> user-focus-within
+ *    - Clicking your name in the sidebar focuses the compose box -> user-focus-within
  *    - Styling
  *      - Account hover preview
  *      - add light tint to normal posts
