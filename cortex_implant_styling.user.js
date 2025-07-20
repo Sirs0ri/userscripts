@@ -45,6 +45,9 @@
  *        - actually a mastodon bug lol
  *      - [x] Explore -> anything but posts
  *      - [ ] ???
+ *    - Light theme
+ *      - [ ] .column-header__collapsible looks off (-> "expand" home timeline header)
+ *      - [ ] Account Roles
  *    - Refactor for new CSS features
  *      - CSS Nesting - used carefully, cause it can get expensive
  *      - color-mix() instead of HSL combining
@@ -854,6 +857,39 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
 
   --noise-url: url(${noiseSvg});
 }
+
+body.skin-mastodon-light {
+  --color-grey-9: hsl(223deg 17% 14%);
+  --color-grey-8: hsl(224deg 17% 19%);
+  --color-grey-7: hsl(227deg 17% 23%);
+  --color-grey-6: hsl(227deg 17% 56%);
+  --color-grey-5: hsl(227deg 17% 66%);
+  --color-grey-4: hsl(227deg 17% 71%);
+  --color-grey-3: hsl(227deg 17% 86%);
+  --color-grey-2: hsl(227deg 17% 91%);
+  --color-grey-1: hsl(227deg 17% 96%);
+  --color-grey-0: white;
+
+  --color-offwhite-primary: hsl(224deg 60% 61%);
+
+  --input-background-color: var(--color-grey-2);
+  .search__popout h4 {
+    color: var(--color-grey-7);
+  }
+
+  .account-role {
+    /* TODO! */
+  }
+
+  .getting-started__trends h4 a span {
+    color: inherit;
+  }
+
+  :is(.search__input, #important) {
+    background: var(--color-grey-4);
+  }
+}
+
 
 @keyframes flicker-in {
   0%   { opacity: 0   }
