@@ -27,7 +27,7 @@
  *      - Profile view is broken
  *    - 4.3.0 fixes
  *      - [ ] mastodon's wrapped .status in .status__wrapper's - does this break anything?
- *      - [ ] reply highlighting is broken
+ *      - [x] reply highlighting is broken
  *      - [x] Icons missing
  *        - [x] trending
  *        - [x] paused
@@ -37,13 +37,13 @@
  *      - [x] DMs - unread bars, post background, buttons
  *      - [x] hr in sidebar
  *      - [x] preferences link missing
- *      - [ ] img alt dialog
+ *      - [x] img alt dialog
  *      - [x] profile view: avatar outline
  *        - Mastodon now actually has a single CSS variable to configure something --avatar-border-radius!
  *      - [x] post actions border
- *      - [ ] hover popup for people has squished avatar -> username overflow
+ *      - [x] hover popup for people has squished avatar -> username overflow
  *        - actually a mastodon bug lol
- *      - [ ] Explore -> people
+ *      - [ ] Explore -> anything but posts
  *      - [ ] ???
  *    - Refactor for new CSS features
  *      - CSS Nesting - used carefully, cause it can get expensive
@@ -823,6 +823,10 @@ p {
   margin-inline-start: 3ch;
 }
 
+.content-warning {
+  z-index: 1
+}
+
 /* Status layout - enable easy insertion of the "replying to..." hint */
 header.status__info {
   display: grid;
@@ -854,6 +858,17 @@ header.status__info {
   }
 }
 
+/* Hover card for accounts */
+.hover-card-controller {
+  a .account__avatar {
+    flex-shrink: 0;
+  }
+
+  .display-name {
+    max-width: calc(100% - 58px);
+  }
+}
+
 .picture-in-picture__header__account {
   width: calc(100% - 32px);
 
@@ -879,6 +894,15 @@ header.status__info {
 .compose-form__submit button[type="submit"] {
   line-height: 1;
   padding: 8px;
+}
+
+/* not sure how this ended up where it did */
+.empty-column-indicator__arrow {
+  inset: unset;
+  top: 2%;
+  right: 2%;
+  transform: rotate(12deg);
+  transform-origin: top right;
 }
 `)
 
@@ -1175,6 +1199,10 @@ body.layout-single-column.pinned .column-header > button.column-header__title::a
     document.addEventListener("mouseover", mouseoverHandler)
 
     GM_addStyle(`
+.columns-area__panels__main {
+  contain: inline-size layout style;
+}
+
 .media-gallery {
   /* overlap emotes */
   z-index: 101;
@@ -1370,7 +1398,7 @@ markiere medien ohne alt-text */
 
 .audio-player__canvas:not([title]),
 .audio-player__canvas[title=""],
-.media-gallery__gifv video:not([title]),
+.media-gallery__gifv video:not([title]):not([aria-label]),
 .media-gallery__gifv video[title=""],
 .media-gallery__item-thumbnail img:not([alt]),
 .media-gallery__item-thumbnail img[alt=""],
@@ -1933,6 +1961,7 @@ markiere medien ohne alt-text */
 .status-card  {
   border-radius: var(--border-radius-button);
   overflow: revert;
+  border-color: var(--color-grey-5);
 }
 .status-card__image {
   border-radius: inherit;
@@ -2080,6 +2109,7 @@ article:empty {
 
 /* Make clickable area of posts larger */
 
+/*
 .status:not(.collapsed) .status__content--with-action {
   padding-top: 58px;
   margin-top: -48px;
@@ -2089,6 +2119,8 @@ article:empty {
   margin-top: -110px;
   padding-top: 110px;
 }
+*/
+
 .status__content--with-action:nth-last-child(3) {
   /* Followed by a media gallery */
   margin-bottom: -16px;
@@ -2238,6 +2270,10 @@ article > .account > .account__wrapper {
   padding: 10px;
   height: auto !important;
   width: auto !important;
+}
+
+.timeline-hint--with-descendants {
+  border: none;
 }
 `)
   }
@@ -2655,6 +2691,7 @@ body {
         padding-inline-end: 2px;
         grid-column: span 2 / -1;
 
+        pointer-events: none;
         translate: 0 -38px;
       }
     }
@@ -2822,6 +2859,7 @@ body {
   .tabs-bar__wrapper {
     background: none;
     --background-filter: none;
+    backdrop-filter: none;
   }
 
   :is(.search__input, #important) {
@@ -2831,9 +2869,6 @@ body {
     box-sizing: border-box;
     height: 48px;
     padding-block: 0 !important;
-  }
-  .search__icon .icon-times-circle {
-    top: 13px;
   }
 
   .column-header {
@@ -3493,6 +3528,10 @@ body {
   /* new: 4.3.0+ */
 
   /* color the icon */
+  .notification-group__icon {
+    height: 28px;
+  }
+
   .notification-group__icon svg,
   .notification-ungrouped__header__icon svg {
     color: var(--color-notification);
@@ -3552,9 +3591,14 @@ body {
     display: none;
   }
 
+  :is(.notification-group, .notification-ungrouped, #important) .notification-group__main__header {
+    time {
+      white-space: nowrap;
+    }
+  }
   :is(.notification-group, .notification-ungrouped, #important) .notification-group__main__status {
     border: none;
-    padding-inline: 0;
+    padding-inline: 0 8px;
   }
 
   .notification-group--unread::before,
@@ -3562,6 +3606,15 @@ body {
   .conversation.unread::before {
     border-radius: inherit;
     border-color: var(--color-notification);
+  }
+
+  .compose-form__actions .button,
+  .notification-group__actions .button {
+    font-weight: normal
+  }
+
+  .notification-group__avatar-group {
+    overflow-y: clip;
   }
 
 
@@ -3744,7 +3797,6 @@ body {
 
 
         color: var(--color-grey-7);
-        white-space: nowrap;
         text-decoration: navajowhite;
         text-align: center;
 
@@ -5017,7 +5069,7 @@ span.relationship-tag {
   .account__header__fields dt,
 
   /* Replying to a toot - body only */
-  .reply-indicator__content,
+  .reply-indicator__content:not(.notification-group__embedded-status__content),
 
   /* Picture in picture player */
   .picture-in-picture__header__account,
@@ -5027,13 +5079,23 @@ span.relationship-tag {
   /* admin interface */
   .batch-table__row__content--with-image
 
-  /* FIXME: overflof-clip-margin has kinda bad support
+  /* FIXME: overflow-clip-margin has kinda bad support
    * this needs a fallback for safari
    * https://caniuse.com/?search=overflow-clip
    */
   {
+    /* overflow: unset; */
     overflow: clip;
     overflow-clip-margin: 5em;
+  }
+
+  .notification-group__main {
+    /* TODO: Collapsed notifications are currently broken */
+    overflow: unset;
+
+    .notification-group__embedded-status {
+      overflow: hidden;
+    }
   }
 
   /* some fixes where clip won't work: */
