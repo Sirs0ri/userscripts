@@ -43,7 +43,7 @@
  *      - [x] post actions border
  *      - [x] hover popup for people has squished avatar -> username overflow
  *        - actually a mastodon bug lol
- *      - [ ] Explore -> anything but posts
+ *      - [x] Explore -> anything but posts
  *      - [ ] ???
  *    - Refactor for new CSS features
  *      - CSS Nesting - used carefully, cause it can get expensive
@@ -3297,10 +3297,15 @@ body {
   .columns-area--mobile .scrollable>div>div[tabindex="-1"],
   /* search results */
   .item-list>article[data-id],
+  /* pinned posts */
+  .featured-carousel__slide>div[tabindex="-1"],
 
   /* not technically posts, but these explore / search result items should have the same styles */
   .explore__search-results .empty-column-indicator,
   .explore__links .dismissable-banner,
+  .explore__links .story,
+  .explore__links .trends__item,
+  .explore-suggestions-card,
   .search-results__section > div,
   .regeneration-indicator,
   .getting-started__wrapper
@@ -3418,6 +3423,8 @@ body {
 
   /* remove bottom border on all kinds of posts */
   .status,
+  /* the "pinned posts" container */
+  .featured-carousel,
   /* follow notifications */
   .notification .account,
   .notification-group,
