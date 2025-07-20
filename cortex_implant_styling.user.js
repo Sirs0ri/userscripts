@@ -1,20 +1,22 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.7.1
+// @version      1.8.0
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/main/cortex_implant_styling.user.js
 // @downloadURL  https://raw.githubusercontent.com/Sirs0ri/userscripts/main/cortex_implant_styling.user.js
 // @supportURL   https://github.com/Sirs0ri/userscripts/issues
 // @match        https://corteximplant.com/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=corteximplant.com
+// @match        https://cyber.ms/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=obeythesystem.com
 // @grant        GM_addStyle
 // @grant        GM_getResourceURL
 //
 // @resource     ci_header_mask.avif     https://raw.githubusercontent.com/Sirs0ri/userscripts/main/assets/ci_header_mask.avif
 // @resource     ci_logo_min.svg         https://raw.githubusercontent.com/Sirs0ri/userscripts/main/assets/ci_logo_min.svg
 // @resource     m_boost_sprites.svg     https://raw.githubusercontent.com/Sirs0ri/userscripts/main/assets/m_boost_sprites.svg
+// @resource     noise_bw.svg            https://raw.githubusercontent.com/Sirs0ri/userscripts/main/assets/noise_bw.svg
 // ==/UserScript==
 
 /*
@@ -24,14 +26,40 @@
  *      - header has a border-bottom
  *      - Profile view is broken
  *    - 4.3.0 fixes
- *      - Icons massive (fixed through custom.css)
- *      - "fav" animation eiert?
+ *      - [ ] mastodon's wrapped .status in .status__wrapper's - does this break anything?
+ *      - [x] reply highlighting is broken
+ *      - [x] Icons missing
+ *        - [x] trending
+ *        - [x] paused
+ *      - [ ] compose box cut off
+ *      - [x] image badges no longer hide
+ *      - [x] notifications, oh lord
+ *      - [x] DMs - unread bars, post background, buttons
+ *      - [x] hr in sidebar
+ *      - [x] preferences link missing
+ *      - [x] img alt dialog
+ *      - [x] profile view: avatar outline
+ *        - Mastodon now actually has a single CSS variable to configure something --avatar-border-radius!
+ *      - [x] post actions border
+ *      - [x] hover popup for people has squished avatar -> username overflow
+ *        - actually a mastodon bug lol
+ *      - [ ] Explore -> anything but posts
+ *      - [ ] ???
+ *    - Refactor for new CSS features
+ *      - CSS Nesting - used carefully, cause it can get expensive
+ *      - color-mix() instead of HSL combining
+ *    - Make style changes hot-swappable through the stylesheet returned by GM_addStyle
+ *    - Clicking your name in the sidebar focuses the compose box -> user-focus-within
+ *    - Styling
+ *      - Account hover preview
+ *      - add light tint to normal posts
  */
 
 /*
  * == KNOWN ISSUES ==
- *    - Firefox doesn't support :has() on <121, unless you manually turn it on via the layout.css.has-selector.enabled flag.
- *      Starting with 121 (Released 2023-12-19) that flag will be on by default!
+ *    - Firefox didn't support :has() before v121, unless you manually turned it on via
+ *      the layout.css.has-selector.enabled flag. Starting with 121 (Released 2023-12-19)
+ *      that flag will be on by default!
  *      The general restyling shouldn't be affected either way.
  *      With that flag active, everything should work.
  *      Affected parts of this stylesheet have a notice at the start.
@@ -45,8 +73,21 @@
  *      Alternatively, you can turn off the glow effect entirely via the options found in the page footer.
  */
 
-(function () {
+;(function () {
   "use strict"
+
+  // #region raw images
+
+  // alpha mask of the people and the logo from the header image
+  const footerImgMask = GM_getResourceURL("ci_header_mask.avif")
+  // The CORTEX IMPLANT Logo
+  const logoSvg = GM_getResourceURL("ci_logo_min.svg")
+  // The animateable "boost" svg
+  const boostSvg = GM_getResourceURL("m_boost_sprites.svg")
+  // The animateable "boost" svg
+  const noiseSvg = GM_getResourceURL("noise_bw.svg")
+
+  // #endregion
 
   // ====================
   //      Helpers
@@ -58,10 +99,16 @@
   let _currentInnerWidth = window.innerWidth
   const _desktopMinWidth = 1175
 
-  const onResize = evt => {
-    if (_currentInnerWidth < _desktopMinWidth && innerWidth >= _desktopMinWidth) {
+  const onResize = () => {
+    if (
+      _currentInnerWidth < _desktopMinWidth &&
+      innerWidth >= _desktopMinWidth
+    ) {
       dispatchEvent(desktopViewVisible)
-    } else if (innerWidth < _desktopMinWidth && _currentInnerWidth >= _desktopMinWidth) {
+    } else if (
+      innerWidth < _desktopMinWidth &&
+      _currentInnerWidth >= _desktopMinWidth
+    ) {
       dispatchEvent(desktopViewHiddenEvent)
     }
     _currentInnerWidth = innerWidth
@@ -70,11 +117,50 @@
   addEventListener("resize", onResize)
 
   /** Register a handler to the "load" event, and when the vew switches from mobile to desktop */
-  function registerLoadHandlerDesktop (handler) {
-    addEventListener("load", handler, { once: true })
-    addEventListener("desktopViewVisible", evt => {
+  function registerLoadHandlerDesktop(handler) {
+    addEventListener(
+      "load",
+      (evt) => {
+        const ui = document.querySelector(".ui")
+
+        if (ui) {
+          handler(evt)
+          return
+        }
+
+        // Mastodon UI isn't loaded in yet, set up a MutationObserver to catch the mounting event
+        const appContainer = document.getElementById("mastodon")
+
+        if (!appContainer) {
+          return
+        }
+
+        const cb = (mutationList, observer) => {
+          const ui = document.querySelector(".ui")
+
+          if (ui) {
+            // console.log("ui found through mutation observer")
+            handler(evt)
+            observer.disconnect()
+            return
+          }
+
+          console.warn("load event failed to execute with valid Mastodon UI")
+        }
+
+        const observer = new MutationObserver(cb)
+
+        observer.observe(appContainer, { childList: true })
+      },
+      { once: true }
+    )
+
+    addEventListener("desktopViewVisible", (evt) => {
       // Run the handler on the next frame, to give the DOM a chance to update
-      setTimeout(() => handler(evt), 0)
+      setTimeout(() => {
+        // console.log("desktopViewVisible event")
+        handler(evt)
+      }, 0)
     })
   }
 
@@ -82,12 +168,12 @@
   const elem = document.getElementById("initial-state")
   const data = JSON.parse(elem.text)
   const user = data.accounts[data.meta.me]?.username
-  const isAdvancedView = document.body.classList.contains("layout-multiple-columns")
+  // const mascot = data.meta.mascot
 
   // get account color
   const avatarLink = data.accounts[data.meta.me]?.avatar_static
 
-  function createElem (tagName, options = {}) {
+  function createElem(tagName, options = {}) {
     const elem = document.createElement(tagName)
 
     for (const [key, val] of Object.entries(options)) {
@@ -124,55 +210,57 @@
     {
       id: "hideCheckmarks",
       textLabel: "hide checkmarks",
-      textDescription: "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons on Mastodon <4.3.0",
+      textDescription:
+        "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons on Mastodon <4.3.0",
       defaultvalue: true,
     },
     {
       id: "disableBouncyAnimations",
       textLabel: "disable bouncy animations",
-      textDescription: "Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it",
+      textDescription:
+        "Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it",
       defaultvalue: true,
     },
     {
       id: "highlightReplies",
       textLabel: "highlight replies",
-      textDescription: "Add an indicator to replies in the main timeline, similar to the one for boosts",
+      textDescription:
+        "Add an indicator to replies in the main timeline, similar to the one for boosts",
       defaultvalue: true,
     },
     {
       id: "enableGlowOnMedia",
       textLabel: "enable glow on media",
-      textDescription: "Enable a glow effect around media content embedded in posts",
+      textDescription:
+        "Enable a glow effect around media content embedded in posts",
       defaultvalue: true,
     },
-    // {
-    //   id: "showImagesUncropped",
-    //   textLabel: "show images uncropped",
-    //   textDescription: "Enable full-sized images in posts, instead of cropping images to 16/9. If you're experiencing glitches while scrolling through your feed, turn this off!",
-    //   defaultvalue: false,
-    // },
     {
       id: "hoverImages",
       textLabel: "enlarge images on hover",
-      textDescription: "Enlarge images in posts to full size on hover, instead of cropping images to 16/9.",
+      textDescription:
+        "Enlarge images in posts to full size on hover, instead of cropping images to 16/9.",
       defaultvalue: true,
     },
     {
       id: "highlightMediaWithoutAlt",
       textLabel: "highlight media without alt text",
-      textDescription: "Highlight media without an alt text by adding a visible red bar underneath",
+      textDescription:
+        "Highlight media without an alt text by adding a visible red bar underneath",
       defaultvalue: true,
     },
     {
       id: "popoutComposeBox",
       textLabel: "growing compose box",
-      textDescription: "Make the compose box larger when focussed. This will have no effect in the Advanced View.",
+      textDescription:
+        "Make the compose box larger when focussed. This will have no effect in the Advanced View.",
       defaultvalue: false,
     },
     {
       id: "freezeTopPosition",
       textLabel: "Keep scrollposition in feeds",
-      textDescription: "When loading new posts on timelines, keep the previously first post in view, instead of staying scrolled all the way to the top. [Simple View only]",
+      textDescription:
+        "When loading new posts on timelines, keep the previously first post in view, instead of staying scrolled all the way to the top. [Simple View only]",
       defaultvalue: false,
     },
     {
@@ -184,7 +272,8 @@
     {
       id: "showOldPunks",
       textLabel: "[Advanced view] Bring back the old Cyberpunks",
-      textDescription: "Show the two cyberpunks chilling at the bottom of the compose area. When disabled, John Cyberdon will watch over your toots.",
+      textDescription:
+        "Show the two cyberpunks chilling at the bottom of the compose area. When disabled, John Cyberdon will watch over your toots.",
       defaultvalue: false,
     },
     /* data only, as long as there's no textLabel a setting will not have a GUI */
@@ -201,10 +290,12 @@
   // These preferences will be persisted in localStorage. When upgrading from a version that
   // still has preferences defined as booleans make sure to note them down before upgrading!
 
-  function loadSettings () {
+  function loadSettings() {
     const loaded = localStorage.getItem(`userscript-sirs0ri-settings-${user}`)
 
-    const settings = Object.fromEntries(allOptions.map(o => [o.id, o.defaultvalue]))
+    const settings = Object.fromEntries(
+      allOptions.map((o) => [o.id, o.defaultvalue])
+    )
 
     if (loaded == null) {
       settings._firstRun = true
@@ -218,7 +309,7 @@
     return settings
   }
 
-  function storeSettings (vals) {
+  function storeSettings(vals) {
     const str = JSON.stringify(vals)
 
     localStorage.setItem(`userscript-sirs0ri-settings-${user}`, str)
@@ -226,13 +317,13 @@
 
   let settingsWhenPopupOpened
 
-  function openSettings (evt) {
+  function openSettings(evt) {
     if (evt) evt.preventDefault()
     settingsWhenPopupOpened = { ...settings }
     document.body.classList.add("userscript-modal--active")
   }
 
-  function closeSettings (evt) {
+  function closeSettings(evt) {
     evt.preventDefault()
     document.body.classList.remove("userscript-modal--active")
   }
@@ -246,8 +337,9 @@
     openSettings()
   }
 
-  function onSettingChange (evt) {
-    if (allOptions.map(o => o.id).includes(evt.target.id)) settings[evt.target.id] = evt.target.checked
+  function onSettingChange(evt) {
+    if (allOptions.map((o) => o.id).includes(evt.target.id))
+      settings[evt.target.id] = evt.target.checked
 
     let needsReload = false
     for (const option of allOptions) {
@@ -260,25 +352,71 @@
 
     storeSettings(settings)
 
-    if (needsReload) document.querySelector(".userscript-modal-root").classList.add("needs-reload")
-    else document.querySelector(".userscript-modal-root").classList.remove("needs-reload")
+    if (needsReload)
+      document
+        .querySelector(".userscript-modal-root")
+        .classList.add("needs-reload")
+    else
+      document
+        .querySelector(".userscript-modal-root")
+        .classList.remove("needs-reload")
   }
 
-  const _insertFooter = (evt) => {
-    const footer = document.querySelector(".link-footer")
+  const _insertFooter = async (evt) => {
+    let footer = document.querySelector(".link-footer")
 
     if (!footer) {
-      console.warn("footer not found")
-      return
+      const isAdvancedUi = document.body.classList.contains(
+        "layout-multiple-columns"
+      )
+      if (!isAdvancedUi) {
+        console.warn(
+          "not using advanced UI, the footer *should* be here by now!"
+        )
+        return
+      }
+
+      footer = await new Promise((resolve, reject) => {
+        let resolved = false
+        setTimeout(() => {
+          if (resolved) return
+          console.warn("timeout while searching footer")
+          resolve(undefined)
+        }, 1000)
+
+        const columnsArea = document.querySelector(".columns-area")
+
+        const cb = (mutationList, observer) => {
+          const footer = document.querySelector(".link-footer")
+
+          if (footer) {
+            observer.disconnect()
+            resolved = true
+            resolve(footer)
+          }
+        }
+
+        const observer = new MutationObserver(cb)
+
+        observer.observe(columnsArea, { childList: true, subtree: true })
+      })
+
+      if (!footer) return
     }
 
-    const insert = createElem("p", { innerHTML: "<strong>Sirs0ri's userscript</strong>: " })
+    const insert = createElem("p", {
+      innerHTML: "<strong>Sirs0ri's userscript</strong>: ",
+    })
     const separator = createElem("span", {
       innerHTML: " · ",
       ariaHidden: true,
     })
+
+    const settingsLinkEl = document.querySelector(
+      ".column-link[href='/settings/preferences']"
+    )
     const preferencesLink = createElem("a", {
-      textContent: document.querySelector(".column-link[href='/settings/preferences']").title,
+      textContent: settingsLinkEl.title || settingsLinkEl.textContent,
       role: "button",
       onclick: openSettings,
     })
@@ -288,11 +426,14 @@
       target: "_blank",
     })
     const codeLink = createElem("a", {
-      textContent: document.querySelector(".link-footer [href*='github.com']").textContent,
-      href: "https://github.com/Sirs0ri/userscripts/blob/dev/cortex_implant_styling.js",
+      textContent: document.querySelector(".link-footer [href*='github.com']")
+        .textContent,
+      href: GM_info.script.downloadURL + "#bypass=true",
       target: "_blank",
     })
-    const versionSpan = createElem("span", { innerText: "v" + GM_info.script.version })
+    const versionSpan = createElem("span", {
+      innerText: "v" + GM_info.script.version,
+    })
 
     insert.appendChild(preferencesLink)
     insert.appendChild(separator.cloneNode(true))
@@ -306,19 +447,27 @@
   }
 
   const _insertSettingsModal = (evt) => {
-    const modalWrapper = createElem("div", { class: "modal-root userscript-modal-root" })
-    const modalModal = createElem("div", { class: "userscript-settings__modal" })
+    const modalWrapper = createElem("div", {
+      class: "modal-root userscript-modal-root",
+    })
+    const modalModal = createElem("div", {
+      class: "userscript-settings__modal",
+    })
 
     const _makeSettingsItem = (id, labelText, description) => {
       const wrapper = createElem("div", { class: "userscript-settings__item" })
 
-      wrapper.appendChild(createElem("input", {
-        id,
-        type: "checkbox",
-        checked: settings[id],
-        onclick: onSettingChange,
-      }))
-      wrapper.appendChild(createElem("label", { for: id, textContent: labelText }))
+      wrapper.appendChild(
+        createElem("input", {
+          id,
+          type: "checkbox",
+          checked: settings[id],
+          onclick: onSettingChange,
+        })
+      )
+      wrapper.appendChild(
+        createElem("label", { for: id, textContent: labelText })
+      )
       wrapper.appendChild(createElem("p", { textContent: description }))
 
       return wrapper
@@ -326,44 +475,53 @@
 
     const nav = createElem("nav")
 
-    nav.appendChild(createElem("a", {
-      role: "button",
-      tabindex: "0",
-      class: "glitch local-settings__navigation__item active",
-      title: "General",
-      "aria-label": "General",
-      innerHTML: `
+    nav.appendChild(
+      createElem("a", {
+        role: "button",
+        tabindex: "0",
+        class: "glitch local-settings__navigation__item active",
+        title: "General",
+        "aria-label": "General",
+        innerHTML: `
         <i role="img" class="fa fa-cogs fa-fw"></i>
         <span>General</span>`,
-    }))
+      })
+    )
 
     // const buttonsWrapper = createElem("div", {class: "footer"})
     const buttonsWrapper = createElem("footer")
 
-    buttonsWrapper.appendChild(createElem("p", {
-      class: "reload-needed-hint",
-      innerText: "Some of the settings you changed need the page to be reloaded to apply.",
-    }))
-    buttonsWrapper.appendChild(createElem("button", {
-      tabindex: "0",
-      title: "Reload",
-      "aria-label": "Reload",
-      class: "button reload-needed-hint",
-      innerHTML: `
+    buttonsWrapper.appendChild(
+      createElem("p", {
+        class: "reload-needed-hint",
+        innerText:
+          "Some of the settings you changed need the page to be reloaded to apply.",
+      })
+    )
+    buttonsWrapper.appendChild(
+      createElem("button", {
+        tabindex: "0",
+        title: "Reload",
+        "aria-label": "Reload",
+        class: "button reload-needed-hint",
+        innerHTML: `
         <i role="img" class="fa fa-refresh fa-fw"></i>
         <span>reload</span>`,
-      onclick: () => location.reload(),
-    }))
-    buttonsWrapper.appendChild(createElem("button", {
-      tabindex: "0",
-      title: "Close",
-      "aria-label": "Close",
-      class: "button",
-      innerHTML: `
+        onclick: () => location.reload(),
+      })
+    )
+    buttonsWrapper.appendChild(
+      createElem("button", {
+        tabindex: "0",
+        title: "Close",
+        "aria-label": "Close",
+        class: "button",
+        innerHTML: `
         <i role="img" class="fa fa-times fa-fw"></i>
         <span>Close</span>`,
-      onclick: closeSettings,
-    }))
+        onclick: closeSettings,
+      })
+    )
 
     nav.appendChild(buttonsWrapper)
 
@@ -373,29 +531,42 @@
       class: "userscript-settings__content",
     })
 
-    settingsWrapper.appendChild(createElem("p", {
-      class: "first-run-notice",
-      innerHTML: `Hi there choom! <br>
-        This userscript has a settings UI now! You're seeing this because you're running the new version of the script for
-        the first time. <br>
+    settingsWrapper.appendChild(
+      createElem("p", {
+        class: "first-run-notice",
+        innerHTML: `Hi there choom! <br>
+        This userscript has a settings UI now! You're seeing this because you're
+        running the new version of the script for the first time. <br>
 
-        If you want to access this UI in the future, you'll be able to find it in the page's footer, next to the links to
-        this instance's about page.`,
-    }))
+        If you want to access this UI in the future, you'll be able to find it
+        in the page's footer, next to the links to this instance's about page.`,
+      })
+    )
 
     settingsWrapper.appendChild(createElem("h1", { innerText: "General" }))
 
     for (const option of allOptions) {
       if (option.textLabel) {
-        settingsWrapper.appendChild(_makeSettingsItem(option.id, option.textLabel, option.textDescription))
+        settingsWrapper.appendChild(
+          _makeSettingsItem(option.id, option.textLabel, option.textDescription)
+        )
       }
     }
 
     modalModal.appendChild(settingsWrapper)
 
-    modalWrapper.appendChild(createElem("div", { class: "modal-root__overlay", role: "presentation", onclick: closeSettings }))
+    modalWrapper.appendChild(
+      createElem("div", {
+        class: "modal-root__overlay",
+        role: "presentation",
+        onclick: closeSettings,
+      })
+    )
 
-    const modalContainer = createElem("div", { class: "modal-root__container", role: "dialog" })
+    const modalContainer = createElem("div", {
+      class: "modal-root__container",
+      role: "dialog",
+    })
     modalWrapper.appendChild(modalContainer)
     modalContainer.appendChild(modalModal)
 
@@ -418,7 +589,6 @@
 
 body.userscript-modal--active {
   overflow-y: hidden !important;
-  margin-right: 12px;
 }
 
 body.userscript-modal--active .userscript-modal-root {
@@ -528,56 +698,48 @@ body.userscript-modal--firstrun .userscript-settings__content .first-run-notice 
     _insertSettingsModal(evt)
   }
 
-  if (isAdvancedView) {
-    registerLoadHandlerDesktop((evt) => setTimeout(() => insertSettings(evt), 200))
-  } else {
-    registerLoadHandlerDesktop(insertSettings)
-  }
+  registerLoadHandlerDesktop(insertSettings)
 
   // #endregion
 
-  // Use TamperMonkey's helper to inject CSS
-  // see https://codepen.io/mattgrosswork/pen/VwprebG
+  /* variables & animations */
 
-  /* general setup */
   GM_addStyle(`
-p {
-  line-height: 1.5;
-}
+:root {
+  /* mastodon config */
+  --avatar-border-radius: 100vmax;
 
-body {
   /* border radii */
   --border-radius-button: 10px;
   --border-radius-button-between: 3px;
 
   /* COLORS */
-  --hsl-white: 0deg 0% 100%;
-  --color-white: hsl(var(--hsl-white));
+  --color-white: white;
 
-  --neon-glow-hsl: 219deg 100% 50%;
+  --color-neon-glow: hsl(219deg 100% 50%);
 
   /* hl is a color to be used as highlight ontop of another color */
   --color-primary: hsl(239.65deg 100% 66.47%);
   --color-hl-primary: hsl(240deg 100% 83%);
 
   /* used in the neon bars in the menu */
-  --hsl-offwhite-blue: 224deg 60% 81%;
   --color-offwhite-primary: hsl(224deg 60% 81%);
 
-  --color-green: #388e3c; /* Unlisted posts */
-  --color-blue: #1976d2; /* formerly public posts */
-  --color-red: #d32f2f; /* Direct posts */
-  --color-yellow: hsl(48 71% 54%); /* Private posts - original: ffa000*/
+  /* Unlisted posts */
+  --color-green: #388e3c;
+  /* formerly public posts */
+  --color-blue: #1976d2;
+  /* Direct posts */
+  --color-red: #d32f2f;
+  /* Private posts - original: ffa000*/
+  --color-yellow: hsl(48 71% 54%);
 
   /* favs */
-  --hsl-gold: 41 100% 45%;
-  --color-gold: hsl(var(--hsl-gold));
+  --color-gold: hsl(41 100% 45%);
   /* boosts */
-  --hsl-purple: 240 100% 77%;
-  --color-purple: hsl(var(--hsl-purple));
+  --color-purple: hsl(240 100% 77%);
   /* reports */
-  --hsl-orange: 22 100% 45%;
-  --color-orange: hsl(var(--hsl-orange));
+  --color-orange: hsl(22 100% 45%);
 
   /* page background  */
   --color-grey-0: hsl(224deg 17% 9%);
@@ -588,9 +750,9 @@ body {
   --color-grey-1: hsl(223deg 17% 14%);
 
   /* .search__input                                   -> background
-   * .column-back-button--slim [role="button"]:after  -> border
-   * #tabs-bar__portal>button:after                   -> border
-   * .column-header__wrapper:after                    -> border
+   * .column-back-button--slim [role="button"]::after -> border
+   * #tabs-bar__portal>button::after                  -> border
+   * .column-header__wrapper::after                   -> border
    * posts                                            -> background
    * search results                                   -> background
    * explore links                                    -> background
@@ -604,12 +766,11 @@ body {
    * #tabs-bar__portal>button                         -> background 0.8
    * .column-header__wrapper                          -> background 0.8
    * selected post                                    -> background
-   * .about:before                                    -> background
+   * .about::before                                   -> background
    * scrollbars                                       -> ???
    * body.layout-multiple-columns .column-header      -> background
    */
-  --hsl-grey-3: 227deg 17% 23%;
-  --color-grey-3: hsl(var(--hsl-grey-3));
+  --color-grey-3: hsl(227deg 17% 23%);
 
   /* .dismissable-banner                              -> border
    * posts                                            -> border
@@ -634,11 +795,11 @@ body {
    */
   --color-grey-5: hsl(227deg 17% 31%);
 
-  /* .column-header__button:hover:before              -> background
-   * .column-header__back-button:hover:before         -> background
-   * .account__section-headline :is(button, a):hover span:before  -> background
-   * .notification__filter-bar button:hover span:before  -> background
-   * .notification__filter-bar button:hover i:after   -> background
+  /* .column-header__button:hover::before             -> background
+   * .column-header__back-button:hover::before        -> background
+   * .account__section-headline :is(button, a):hover span::before  -> background
+   * .notification__filter-bar button:hover span::before  -> background
+   * .notification__filter-bar button:hover i::after  -> background
    * .account-card                                    -> border
    * ::-webkit-scrollbar-thumb:hover                  -> border
    * ::-webkit-scrollbar-thumb:active                 -> background
@@ -647,22 +808,20 @@ body {
    */
   --color-grey-6: hsl(227deg 17% 41%);
 
-  /* .compose-form__autosuggest-wrapper               -> border
-   * .compose-form__buttons-wrapper                   -> border
+  /* .compose-form__buttons-wrapper                   -> border
    * .compose-form .spoiler-input                     -> border
-   * .column-back-button--slim [role="button"]:hover:after -> border
-   * #tabs-bar__portal>button:hover:after             -> border
-   * .column-header__wrapper:hover:after              -> border
+   * .column-back-button--slim [role="button"]:hover::after -> border
+   * #tabs-bar__portal>button:hover::after             -> border
+   * .column-header__wrapper:hover::after              -> border
    * selected post                                    -> border
-   * .about:before                                    -> border
+   * .about::before                                   -> border
    * ::-webkit-scrollbar-thumb:active                 -> border
    */
   --color-grey-7: hsl(227deg 17% 51%);
 
   /* Notifications                                    -> border
    */
-  --hsl-grey-8: 227deg 17% 71%;
-  --color-grey-8: hsl(var(--hsl-grey-8));
+  --color-grey-8: hsl(227deg 17% 71%);
 
   /* .compose-form__buttons-wrapper                   -> background
    */
@@ -672,26 +831,28 @@ body {
 
   --neon-box-shadow:
     /* White glow */
-    0 0 7px hsla(var(--hsl-white) / 1),
-    0 0 10px hsla(var(--hsl-white) / 1),
-    0 0 21px hsla(var(--hsl-white) / 1),
+    0 0   7px color-mix(in srgb, var(--color-white) 100%, transparent),
+    0 0  10px color-mix(in srgb, var(--color-white)  75%, transparent),
+    0 0  21px color-mix(in srgb, var(--color-white)  40%, transparent),
     /* Colored glow */
-    0 0 42px hsla(var(--neon-glow-hsl) / 1),
-    0 0 82px hsla(var(--neon-glow-hsl) / 1),
-    0 0 92px hsla(var(--neon-glow-hsl) / 1),
-    0 0 102px hsla(var(--neon-glow-hsl) / 1),
-    0 0 151px hsla(var(--neon-glow-hsl) / 1);
+    0 0  42px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
+    0 0  82px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
+    0 0  92px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
+    0 0 102px color-mix(in srgb, var(--color-neon-glow) 100%, transparent),
+    0 0 151px color-mix(in srgb, var(--color-neon-glow) 100%, transparent);
   --neon-box-shadow-small:
     /* White glow */
-    0 0 6px -2px hsla(var(--hsl-white) / 0.4),
-    0 0 10px hsla(var(--hsl-white) / 0.2),
-    0 0 15px hsla(var(--hsl-white) / 0.1),
+    0 0 6px -2px color-mix(in srgb, var(--color-white) 40%, transparent),
+    0 0 10px color-mix(in srgb, var(--color-white) 20%, transparent),
+    0 0 15px color-mix(in srgb, var(--color-white) 10%, transparent),
     /* Colored glow */
-    0 0 10px hsla(var(--neon-glow-hsl) / 0.07),
-    0 0 25px hsla(var(--neon-glow-hsl) / 0.05),
-    0 0 47px hsla(var(--neon-glow-hsl) / 0.12),
+    0 0 10px color-mix(in srgb, var(--color-neon-glow)   7%, transparent),
+    0 0 25px color-mix(in srgb, var(--color-neon-glow)   5%, transparent),
+    0 0 47px color-mix(in srgb, var(--color-neon-glow)  12%, transparent),
     /* White inside glow */
-    inset 0 0 5px hsla(var(--hsl-white) / 0.3);
+    inset 0 0 5px color-mix(in srgb, var(--color-white) 30%, transparent);
+
+  --noise-url: url(${noiseSvg});
 }
 
 @keyframes flicker-in {
@@ -700,55 +861,197 @@ body {
   75%  { opacity: 0.4 }
   100% { opacity: 1   }
 }
+
+/* Animation to keep things "on top" briefly after hovering */
+@keyframes keep-up {
+  0%,
+  100% {
+    z-index: 2;
+  }
+}`)
+
+  /* General layout improvements */
+  GM_addStyle(`
+:root {
+  scrollbar-gutter: stable;
+  margin-right: 0 !important;
+}
+
+p {
+  line-height: 1.5;
+}
+
+.e-content ol, .e-content ul, .reply-indicator__content ol, .reply-indicator__content ul, .status__content__text ol, .status__content__text ul{
+  margin-inline-start: 3ch;
+}
+
+.content-warning {
+  z-index: 1
+}
+
+/* Status layout - enable easy insertion of the "replying to..." hint */
+header.status__info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+
+  .status__display-name {
+    width: 100%;
+    gap: 15px;
+    overflow: visible;
+
+    .display-name {
+      width: calc(100% - 61px);
+      overflow: visible;
+
+      bdi {
+        width: 100%;
+        display: inline-block;
+        overflow: visible !important;
+
+        .display-name__html {
+          width: 100%;
+          display: inline-block;
+          text-overflow: ellipsis;
+          direction: ltr;
+        }
+      }
+    }
+  }
+}
+
+/* Hover card for accounts */
+.hover-card-controller {
+  a .account__avatar {
+    flex-shrink: 0;
+  }
+
+  .display-name {
+    max-width: calc(100% - 58px);
+  }
+}
+
+.picture-in-picture__header__account {
+  width: calc(100% - 32px);
+
+  .account__avatar {
+    flex-shrink: 0;
+  }
+
+  .display-name {
+    width: calc(100% - 46px);
+  }
+}
+
+.reply-indicator .display-name {
+  width: 100%
+}
+
+
+.status__info__icons {
+  height: fit-content;
+}
+
+/* compose box submit button */
+.compose-form__submit button[type="submit"] {
+  line-height: 1;
+  padding: 8px;
+}
+
+/* not sure how this ended up where it did */
+.empty-column-indicator__arrow {
+  inset: unset;
+  top: 2%;
+  right: 2%;
+  transform: rotate(12deg);
+  transform-origin: top right;
+}
 `)
 
-  settings.hideCheckmarks && GM_addStyle(`
+  if (settings.hideCheckmarks) {
+    GM_addStyle(`
 /* disable checkmark on buttons */
-.detailed-status__button .icon-button.active:after,
-.status__action-bar-button.active:after {
+.detailed-status__button .icon-button.active::after,
+.status__action-bar-button.active::after {
   content: "";
   display: none
 }
 `)
+  }
 
-  settings.highlightReplies && GM_addStyle(`
+  if (settings.highlightReplies) {
+    GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) {
-    --status-extra-top-padding: calc(1.5em + 10px);
-  }
-
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info) {
-    padding-top: var(--status-extra-top-padding, 0px);
-    position: relative;
-  }
-
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
+  .status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status > .status__info)::before {
     color: #606984;
     font-size: 14px;
-    position: absolute;
-    top: 0px;
-  }
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status__info):before {
+    grid-column: 1 / -1;
+    place-self: start;
     content: "\\21B6  Replying to a conversation";
     border: 1px solid;
     border-radius: 100vmax;
     padding: 1px 8px;
   }
 
-  .status.status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span:after {
+  .status__wrapper-reply:not(.status--in-thread):not(.muted):has(.status__info:not(aside + .status > .status__info)) {
+    --extra-top-spacing: 32px;
+  }
+
+  .status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span::after {
     content: " a reply"
   }
 }
 `)
+  }
 
-  settings.disableBouncyAnimations && GM_addStyle(`
+  if (settings.disableBouncyAnimations) {
+    const clickHandler = (evt) => {
+      let target = evt.target
+
+      if (evt.target.ownerSVGElement) {
+        const allButtons = document.querySelectorAll(
+          "button.icon-button.bookmark-icon"
+        )
+
+        target = [...allButtons].find((b) => b.contains(evt.target))
+      }
+
+      if (target == null) return
+
+      const closestBookmarkButton = target.closest(
+        "button.icon-button.bookmark-icon"
+      )
+
+      if (closestBookmarkButton == null) return
+
+      closestBookmarkButton.parentElement.classList.add("clicked")
+
+      const cb = (mutationList, observer) => {
+        if (closestBookmarkButton.classList.contains("active")) {
+          closestBookmarkButton.classList.add("activate")
+          closestBookmarkButton.classList.remove("deactivate")
+        } else {
+          closestBookmarkButton.classList.add("deactivate")
+          closestBookmarkButton.classList.remove("activate")
+        }
+
+        observer.disconnect()
+      }
+
+      const observer = new MutationObserver(cb)
+      observer.observe(closestBookmarkButton, { childList: true })
+    }
+
+    document.addEventListener("click", clickHandler, true)
+
+    GM_addStyle(`
 /* ====================
  * de-springyfy anims
  * ==================== */
 
-.no-reduce-motion .status__collapse-button>.fa-angle-double-up,
-.no-reduce-motion .status__collapse-button>.icon {
+.no-reduce-motion .status__collapse-button > .fa-angle-double-up,
+.no-reduce-motion .status__collapse-button > .icon {
   transition: transform 200ms ease-in-out, color 200ms;
   animation: none !important;
 }
@@ -767,13 +1070,82 @@ body {
   animation: rotateOut 750ms;
 }
 
-.no-reduce-motion .icon-button.star-icon.activate>.fa-star,
-.no-reduce-motion .icon-button.star-icon.activate>.icon {
+.no-reduce-motion .icon-button.star-icon.activate > .fa-star,
+.no-reduce-motion .icon-button.star-icon.activate > .icon {
   animation: rotateIn 750ms;
 }
-`)
 
-  settings.showImagesUncropped && GM_addStyle(`
+/* When activating the button, the icon does a flip and changes color. The flip is split
+   into two halves, so that it only does a 180° rotation, but doesn't end up upside down.
+   The color change during the flip animation is slightly delayed so that it mostly happens
+   during the 2nd part of the flip. Both animations together run for 2x --anim-halftime.
+
+   When deactivating the bookmark button, the icon only changes color (fading to grey).
+   The animation runs for 1.5x --anim-halftime.
+
+   The mask-image makes it so that the icon looks like the background is filled in the moment
+   the icon passes the halfway point in the animation, instead of at the beginnign of the
+   animation. A --_m property of "white" disables the mask by filling it completely in white.
+
+   The .clicked class is applied to the button' parent as soon as the button's been clicked.
+   The .activate class is applied just after Mastodon handles the click, when the inline SVGs
+   have already been switched.
+   */
+
+.no-reduce-motion .icon-button.bookmark-icon {
+  --anim-halftime: 250ms;
+  transition: color calc(1.5 * var(--anim-halftime));
+}
+.no-reduce-motion .icon-button.bookmark-icon.active {
+  transition: color calc(1.5 * var(--anim-halftime)) calc(0.5 * var(--anim-halftime));
+}
+
+.no-reduce-motion .icon-button.bookmark-icon svg {
+  --_m: white;
+  mask-image:
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0 0V-960H960V0H0ZM280-242 480-328 680-242V-760H280V-242ZM280-760H680 280Z"></path></svg>'),
+    linear-gradient(var(--_m), var(--_m));
+  mask-position: center;
+}
+
+.no-reduce-motion .status__action-bar .icon-button.bookmark-icon svg {
+  mask-size: 20px 20px;
+}
+
+/* the value of --_m will be overwritten by the animation with "white" */
+.no-reduce-motion .clicked > .icon-button.bookmark-icon.active svg {
+  --_m: transparent;
+}
+
+.no-reduce-motion .clicked > .icon-button.bookmark-icon.activate svg {
+  animation: flip-over-1 var(--anim-halftime) ease-in,
+             flip-over-2 var(--anim-halftime) var(--anim-halftime) ease-out forwards;
+}
+
+@keyframes flip-over-1 {
+  0%   {
+    transform: perspective(3em) rotateX(0deg);
+  }
+  100%  {
+    transform: perspective(3em) rotateX(-90deg);
+  }
+}
+
+@keyframes flip-over-2 {
+  0%   {
+    transform: perspective(3em) rotateX(-270deg);
+    --_m: white;
+  }
+  100% {
+    transform: perspective(3em) rotateX(-360deg);
+    --_m: white;
+  }
+}
+`)
+  }
+
+  if (settings.showImagesUncropped) {
+    GM_addStyle(`
 /* Force all images to be in their original aspect ratio, not 16/9 */
 
 .media-gallery, video {
@@ -784,8 +1156,10 @@ body {
   aspect-ratio: 16 / 9;
 }
 `)
+  }
 
-  settings.freezeTopPosition && GM_addStyle(`
+  if (settings.freezeTopPosition) {
+    GM_addStyle(`
 body.layout-single-column.at-top .column[aria-label] {
   margin-top: 1px;
 }
@@ -799,27 +1173,26 @@ body.layout-single-column.pinned .tabs-bar__wrapper {
 }
 
 /* add a "pause" icon to the column header */
-.column-header > button::after {
-  content: "";
-  font: normal normal normal 14px/1 FontAwesome;
+.column-header > button.column-header__title::after {
+  content: "";
   opacity: 0;
   transition: opacity 300ms;
   margin-inline-start: 5px;
-  color: var(--color-grey-7);
-  display: inline-block;
-  scale: 0.9;
-  align-self: center;
+
+  width: 24px;
+  aspect-ratio: 1;
+  background-color: var(--color-grey-7);
+  clip-path: path("M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M19 19H5V5H19V19M13 16V8H15V16H13M9 16V8H11V16H9");
 }
-body.layout-single-column.pinned .column-header > button::after {
+body.layout-single-column.pinned .column-header > button.column-header__title::after {
   opacity: 1;
 }
 `)
 
-  if (settings.freezeTopPosition) {
     let atTop = true
     let debounce = null
 
-    const scrollHandler = evt => {
+    const scrollHandler = (evt) => {
       const previousAtTop = atTop
 
       let pinned = false
@@ -849,7 +1222,9 @@ body.layout-single-column.pinned .column-header > button::after {
 
     const topChangeHandler = () => {
       if (atTop) {
-        const el = document.querySelector("body.layout-single-column .column[aria-label]")
+        const el = document.querySelector(
+          "body.layout-single-column .column[aria-label]"
+        )
         if (el == null) return
 
         document.body.classList.add("at-top")
@@ -859,7 +1234,8 @@ body.layout-single-column.pinned .column-header > button::after {
       }
     }
 
-    settings.freezeTopPosition && window.addEventListener("scroll", scrollHandler)
+    settings.freezeTopPosition &&
+      window.addEventListener("scroll", scrollHandler)
 
     settings.freezeTopPosition && topChangeHandler()
   }
@@ -868,39 +1244,43 @@ body.layout-single-column.pinned .column-header > button::after {
   //   - [x] Images overlap Emotes
   //   - [ ] Make sure images are always fully visible, like a position sticky?
 
-  /* Firefox animates the max-height from the image's original height to 100cqh for some reason, every time the image is added to the DOM
+  /* Firefox animates the max-height from the image's original height to 100cqh for some reason,
+   * every time the image is added to the DOM
    * This worakround only applies the transition on hover, meaning the images won't animate on load. */
-  const mouseoverHandler = e => {
+  const mouseoverHandler = (e) => {
     if (!["IMG", "CANVAS", "VIDEO"].includes(e.target.nodeName)) return
 
     let target
 
-    if (e.target.parentElement.classList.contains("media-gallery__item-thumbnail") ||
-        e.target.classList.contains("media-gallery__item-gifv-thumbnail")) {
+    if (
+      e.target.parentElement.classList.contains(
+        "media-gallery__item-thumbnail"
+      ) ||
+      e.target.classList.contains("media-gallery__item-gifv-thumbnail")
+    ) {
       target = e.target
-    } else if (e.target.nextElementSibling?.classList.contains("media-gallery__item-thumbnail")) {
+    } else if (
+      e.target.nextElementSibling?.classList.contains(
+        "media-gallery__item-thumbnail"
+      )
+    ) {
       target = e.target.nextElementSibling.querySelector("img")
     }
 
     if (!target) return
 
-    target.style.transition = "background 200ms, max-height 200ms, min-height 200ms"
-
-    // Remove the data-hovered attribute from any previously hovered article
-    document.querySelectorAll("article[data-hovered]").forEach(el => {
-      delete el.dataset.hovered
-    })
-
-    // Apply the data-hovered attribute to the parent article of this media item's post
-    const article = e.target.closest("article[data-id]")
-    if (article) {
-      article.dataset.hovered = true
-    }
+    target.style.transition =
+      "background 200ms, max-height 200ms, min-height 200ms"
   }
 
-  settings.hoverImages && document.addEventListener("mouseover", mouseoverHandler)
+  if (settings.hoverImages) {
+    document.addEventListener("mouseover", mouseoverHandler)
 
-  settings.hoverImages && GM_addStyle(`
+    GM_addStyle(`
+.columns-area__panels__main {
+  contain: inline-size layout style;
+}
+
 .media-gallery {
   /* overlap emotes */
   z-index: 101;
@@ -914,14 +1294,17 @@ body.layout-single-column.pinned .column-header > button::after {
 .media-gallery :where(.spoiler-button, .media-gallery__item__badges) {
   transition: opacity 200ms, transform 200ms;
 }
+.media-gallery:hover .media-gallery__item__badges:not(:hover),
+.media-gallery:hover .media-gallery__actions:not(:hover),
 .media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover),
 .media-gallery:hover .spoiler-button.spoiler-button--minified:not(:hover) ~ div .media-gallery__item__badges:not(:hover) {
-  opacity: 0.5;
+  --opacity: 0.2;
   transform: scale(0.9)
 }
 
 .media-gallery .media-gallery__item__badges {
   z-index: 2;
+  width: max-content;
 }
 
 .media-gallery .media-gallery__item {
@@ -930,8 +1313,19 @@ body.layout-single-column.pinned .column-header > button::after {
 
   overflow: visible;
 }
-.media-gallery .media-gallery__item:hover {
+
+article:hover,
+.media-gallery__item:hover {
   z-index: 3;
+}
+
+.media-gallery__actions {
+  z-index: 3;
+}
+
+article:not(:hover),
+.media-gallery__item:not(:hover) {
+  animation: keep-up 400ms;
 }
 
 .media-gallery .media-gallery__item:not(.media-gallery__item--tall) {
@@ -979,13 +1373,11 @@ article {
   position: relative;
 }
 
-article:has(.media-gallery__item:hover),
-article[data-hovered] {
-  z-index: 2;
-}
 `)
+  }
 
-  settings.enableGlowOnMedia && GM_addStyle(`
+  if (settings.enableGlowOnMedia) {
+    GM_addStyle(`
 /* ====================
  *    Glow on Media
  * ==================== */
@@ -1004,6 +1396,10 @@ options in the "app settings" (left sidebar):
 @keyframes fadeIn {
   0%   { opacity: 0; }
   100% { opacity: 1; }
+}
+
+.media-gallery__item {
+  outline: none;
 }
 
 .media-gallery__item canvas {
@@ -1037,7 +1433,7 @@ options in the "app settings" (left sidebar):
   animation: 200ms ease-out 0s 1 fadeIn;
 }
 
-.media-gallery__item>*:not(canvas, .media-gallery__item__badges):after {
+.media-gallery__item>*:not(canvas, .media-gallery__item__badges)::after {
   content: "";
   outline: 3px solid rgba(128 128 128 / 0.1);
   outline-offset: -2px;
@@ -1059,7 +1455,7 @@ options in the "app settings" (left sidebar):
 canvas.status-card__image-preview--hidden {
   display: revert;
 }
-.status-card__image:after {
+.status-card__image::after {
   content: "";
   outline: 3px solid rgba(128 128 128 / 0.1);
   outline-offset: -2px;
@@ -1071,14 +1467,16 @@ canvas.status-card__image-preview--hidden {
   pointer-events: none;
 }
 `)
+  }
 
-  settings.highlightMediaWithoutAlt && GM_addStyle(`
+  if (settings.highlightMediaWithoutAlt) {
+    GM_addStyle(`
 /* inspired von chaos.social:
 markiere medien ohne alt-text */
 
 .audio-player__canvas:not([title]),
 .audio-player__canvas[title=""],
-.media-gallery__gifv video:not([title]),
+.media-gallery__gifv video:not([title]):not([aria-label]),
 .media-gallery__gifv video[title=""],
 .media-gallery__item-thumbnail img:not([alt]),
 .media-gallery__item-thumbnail img[alt=""],
@@ -1093,16 +1491,25 @@ markiere medien ohne alt-text */
   border-bottom: none;
 }
 `)
+  }
 
   const debugFocus = false
 
   const onLoadHandler = () => {
-    let composePanel = document.querySelector(".columns-area__panels__pane--compositional")
+    let composePanel = document.querySelector(
+      ".columns-area__panels__pane--compositional"
+    )
     const composeForm = document.querySelector(".compose-form")
     let backDrop = document.querySelector(".compose-form")
 
+    const textarea = document.querySelector(
+      ".compose-form textarea.autosuggest-textarea__textarea"
+    )
+
     if (!composePanel || !composeForm || !backDrop) {
-      console.warn("an element is missing, the popout compose box can't be initialized.")
+      console.warn(
+        "an element is missing, the popout compose box can't be initialized."
+      )
       console.log(composePanel)
       console.log(composeForm)
       console.log(backDrop)
@@ -1112,24 +1519,39 @@ markiere medien ohne alt-text */
     backDrop.classList.add("ignore-clicks")
 
     const handlerIn = (evt) => {
+      const composeElement = document.querySelector(
+        ".compose-form__highlightable"
+      )
+      if (!composeElement.contains(evt.target)) return
+
       debugFocus && console.log("in", evt)
       /* Ignore clicks on the buttons below the compose area */
-      if (evt.target.nodeName === "BUTTON" || evt.target.classList.contains("emoji-button")) return
+      if (
+        evt.target.nodeName === "BUTTON" ||
+        evt.target.classList.contains("emoji-button")
+      )
+        return
 
       /* Ignore FocusEvents where the focus was moved automatically, e.g. when restoring focus to the page.
        * This also keeps the input small when the user's first interaction is via the emote picker, but any
        * input afterwards will extend it, so that it's not too bad a compromise.
        */
-      if (evt instanceof FocusEvent && evt.target.classList.contains("autosuggest-textarea__textarea") && !evt.sourceCapabilities) return
+      // if (evt instanceof FocusEvent && evt.target.classList.contains("autosuggest-textarea__textarea") && !evt.sourceCapabilities) return
 
       debugFocus && console.log("in handled", evt)
 
-      composePanel = document.querySelector(".columns-area__panels__pane--compositional")
+      composePanel = document.querySelector(
+        ".columns-area__panels__pane--compositional"
+      )
       composePanel.classList.add("user-focus-within")
       setTimeout(() => {
         backDrop = document.querySelector(".compose-form")
         backDrop.classList.remove("ignore-clicks")
       }, 100)
+
+      if (evt instanceof InputEvent) {
+        textarea.parentElement.dataset.value = textarea.value
+      }
     }
     const handlerOut = (evt) => {
       debugFocus && console.log("out", evt)
@@ -1139,7 +1561,11 @@ markiere medien ohne alt-text */
       /* Ignore clicks that move focus within the compose area, e.g. to the buttons below */
       if (composeForm.contains(evt.relatedTarget)) return
       /* ignore events that remove focus from buttons that now have the .active class, i.e. after opening one of the menus */
-      if (evt.target.nodeName === "BUTTON" && evt.target.classList.contains("active")) return
+      if (
+        evt.target.nodeName === "BUTTON" &&
+        evt.target.classList.contains("active")
+      )
+        return
       /* ignore events that remove focus from the emoji-button, e.g. when opening the emoji picker */
       if (evt.target.classList.contains("emoji-button")) return
 
@@ -1150,14 +1576,17 @@ markiere medien ohne alt-text */
 
       composePanel.classList.remove("user-focus-within")
       backDrop.classList.add("ignore-clicks")
+
+      textarea.style.height = null
+      textarea.parentElement.dataset.value = textarea.value
     }
     const handlerBackdropClick = (evt) => {
       debugFocus && console.log("bg-click", evt)
       if (composeForm.contains(document.activeElement)) return
 
-      // This should only be handled if the user clicked on the backdrop, ie. the compose-form's :before element.
+      // This should only be handled if the user clicked on the backdrop, ie. the compose-form's ::before element.
       // Since pseudoelements can't be targeted directly, this handler has to be registered on the parent, and
-      // the class "ignore-clicks" is used to mimic the :before's pointer-events: none;
+      // the class "ignore-clicks" is used to mimic the ::before's pointer-events: none;
       if (evt.target !== backDrop) return
       if (evt.target.classList.contains("ignore-clicks")) return
 
@@ -1177,10 +1606,11 @@ markiere medien ohne alt-text */
   }
 
   // register initial event hander
-  settings.popoutComposeBox && registerLoadHandlerDesktop(onLoadHandler)
+  if (settings.popoutComposeBox) {
+    registerLoadHandlerDesktop(onLoadHandler)
 
-  // load relevant styles
-  settings.popoutComposeBox && GM_addStyle(`
+    // load relevant styles
+    GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
   .navigation-bar {
@@ -1193,49 +1623,89 @@ markiere medien ohne alt-text */
 
   .compose-form {
     position: relative;
+  }
+
+  .compose-form > :not(.compose-form__warning, .reply-indicator) {
     width: 100%;
+    margin-left: 0;
     transition: width 200ms, margin-left 200ms;
   }
 
   .user-focus-within .compose-form {
-    --width: clamp(100%, calc( ( 100vw - clamp(0px, calc(4vw - 48px), 50px) - 600px ) / 2 - 30px), 450px);
-    width: var(--width);
-    margin-left: calc( 285px - var(--width));
     z-index: 2;
   }
 
-  .compose-form:before {
+  .user-focus-within .compose-form > .compose-form__highlightable {
+    --width: clamp(100%, calc( ( 100vw - clamp(0px, calc(4vw - 48px), 50px) - 600px ) / 2 - 50px), 450px);
+    width: var(--width);
+    margin-left: calc( 285px - var(--width));
+  }
+
+  .compose-form::before {
     content: "";
     position: fixed;
     inset: 0;
     background-color: rgba(0 0 0 / 0);
-    z-index: -1;
+    z-index: 1;
     pointer-events: none;
     transition: background-color 200ms;
   }
 
-  .user-focus-within .compose-form:before {
+  .navigation-bar,
+  .compose-form__warning {
+    z-index: 1
+  }
+
+  .user-focus-within .compose-form::before {
     background-color: rgba(0 0 0 / 0.25);
     pointer-events: all;
   }
 
   :is(#fake, .autosuggest-textarea__textarea) {
     transition: min-height 200ms;
-    padding: 3px 40px 0px 15px;
-  }
-  .user-focus-within .autosuggest-textarea__textarea {
-    min-height: 200px !important;
   }
 
   .link-footer {
     margin-top: auto
   }
-}
+
+  /* autogrow shenannigans */
+  .autosuggest-textarea {
+    display: grid;
+    overflow-x: hidden;
+
+    textarea {
+      grid-area: 1 / 1 / 2 / 2;
+      white-space: break-spaces;
+      min-height: 100% !important;
+    }
+
+    &::after {
+      content: attr(data-value);
+      grid-area: 1 / 1 / 2 / 2;
+      padding: 12px;
+      min-height: 100px;
+      color: transparent;
+      font-family: inherit;
+      font-size: 14px;
+      white-space: break-spaces;
+      pointer-events: none;
+      line-height: normal;
+    }
+  }
+
+
+  .user-focus-within .autosuggest-textarea::after {
+    min-height: 200px;
+  }
+
 `)
+  }
 
   const doCatThings = avatarLink && user && settings.imACat
 
-  doCatThings && GM_addStyle(`
+  if (doCatThings) {
+    GM_addStyle(`
 
 @keyframes earwiggleleft {
   0%  { transform: rotate(35deg) skew(28deg) }
@@ -1267,16 +1737,7 @@ markiere medien ohne alt-text */
   overflow: unset;
   min-width: 0;
 }
-:is(.status__display-name, #fake) {
-  max-width: calc(100% - 56px);
-}
-.display-name__html {
-  text-overflow: ellipsis;
-}
 
-.notification__message {
-  padding-inline-end: 10px;
-}
 .notification__message > :is(#fake, span) {
   text-wrap: wrap;
 }
@@ -1286,7 +1747,7 @@ markiere medien ohne alt-text */
 
 @supports selector(:has(a, b)) {
   .status__avatar:has( > [data-avatar-of="@${user}"]) {
-    transform: translateY(2.5%) scale(0.9);
+    transform: translateY(3%);
   }
 }
 
@@ -1305,8 +1766,8 @@ markiere medien ohne alt-text */
   position: relative;
 }
 
-[data-avatar-of="@${user}"]:before,
-[data-avatar-of="@${user}"]:after {
+[data-avatar-of="@${user}"]::before,
+[data-avatar-of="@${user}"]::after {
   content: "";
   box-sizing: border-box;
   display: inline-block;
@@ -1321,34 +1782,33 @@ markiere medien ohne alt-text */
   /* scale: 0; */
 }
 
-[data-avatar-of="@${user}"]:before,
-[data-avatar-of="@${user}"]:after {
+[data-avatar-of="@${user}"]::before,
+[data-avatar-of="@${user}"]::after {
   scale: 1;
 }
 
-[data-avatar-of="@${user}"]:before {
+[data-avatar-of="@${user}"]::before {
   border-radius: 0 75% 75%;
   transform: rotate(32deg) skew(28deg);
   top: 0;
   left: 0;
 }
-[data-avatar-of="@${user}"]:hover:before {
+[data-avatar-of="@${user}"]:hover::before {
   animation: earwiggleleft 1s;
   animation-iteration-count: 1;
 }
 
-[data-avatar-of="@${user}"]:after {
+[data-avatar-of="@${user}"]::after {
   border-radius: 75% 0 75% 75%;
   transform: rotate(-32deg) skew(-28deg);
   top: 0;
   right: 0;
 }
-[data-avatar-of="@${user}"]:hover:after {
+[data-avatar-of="@${user}"]:hover::after {
   animation: earwiggleright 1s ;
 }
 `)
 
-  if (doCatThings) {
     // most of this code is from https://github.com/zygisS22/color-palette-extraction/blob/master/index.js#L17, adjusted for my needs:
     // - lower fidelity: less quantizising for fewer colors,
     const calculateLuminance = (p) => 0.2126 * p.r + 0.7152 * p.g + 0.0722 * p.b
@@ -1358,7 +1818,10 @@ markiere medien ohne alt-text */
      * the fixed values and further explanation about this topic
      * can be found here -> https://en.wikipedia.org/wiki/Luma_(video)
      */
-    const orderByLuminance = (rgbValues) => rgbValues.sort((p1, p2) => calculateLuminance(p2) - calculateLuminance(p1))
+    const orderByLuminance = (rgbValues) =>
+      rgbValues.sort(
+        (p1, p2) => calculateLuminance(p2) - calculateLuminance(p1)
+      )
 
     const buildRgb = (imageData) => {
       const targetLength = imageData.length / 4
@@ -1386,9 +1849,9 @@ markiere medien ohne alt-text */
        * Max is initialized to the minimum value posible
        * from there we procced to fin the maximum value for that color channel
        */
-      const rs = rgbValues.map(p => p.r)
-      const gs = rgbValues.map(p => p.g)
-      const bs = rgbValues.map(p => p.b)
+      const rs = rgbValues.map((p) => p.r)
+      const gs = rgbValues.map((p) => p.g)
+      const bs = rgbValues.map((p) => p.b)
 
       const rRange = Math.max(...rs) - Math.min(...rs)
       const gRange = Math.max(...gs) - Math.min(...gs)
@@ -1422,10 +1885,11 @@ markiere medien ohne alt-text */
 
       // Base case
       if (depth === MAX_DEPTH || rgbValues.length === 0) {
-        const color = rgbValues.reduce(
-          quantizationReducer,
-          { r: 0, g: 0, b: 0 },
-        )
+        const color = rgbValues.reduce(quantizationReducer, {
+          r: 0,
+          g: 0,
+          b: 0,
+        })
 
         color.r = Math.round(color.r / rgbValues.length)
         color.g = Math.round(color.g / rgbValues.length)
@@ -1455,10 +1919,7 @@ markiere medien ohne alt-text */
       const firstHalf = quantization(rgbValues, depth)
       const secndHalf = quantization(rgbValues2, depth)
 
-      return [
-        ...firstHalf,
-        ...secndHalf,
-      ]
+      return [...firstHalf, ...secndHalf]
     }
 
     const getColors = (link) => {
@@ -1500,7 +1961,9 @@ markiere medien ohne alt-text */
         const quantColors = orderByLuminance(quantization(rgbArray, 0))
 
         document.body.classList.add("meow")
-        const style = `body {\n${quantColors.map((p, i) => `--color-${i}: rgb(${p.r}, ${p.g}, ${p.b});`).join("\n")}\n}`
+        const style = `body {\n${quantColors
+          .map((p, i) => `--color-${i}: rgb(${p.r}, ${p.g}, ${p.b});`)
+          .join("\n")}\n}`
         GM_addStyle(style)
 
         // Store colors for the next page load
@@ -1516,18 +1979,8 @@ markiere medien ohne alt-text */
     setTimeout(() => getColors(avatarLink), 750)
   }
 
-  // #region raw images
-
-  // alpha mask of the people and the logo from the header image
-  const footerImgMask = GM_getResourceURL("ci_header_mask.avif")
-  // The CORTEX IMPLANT Logo
-  const logoSvg = GM_getResourceURL("ci_logo_min.svg")
-  // The animateable "boost" svg
-  const boostSvg = GM_getResourceURL("m_boost_sprites.svg")
-
-  // #endregion
-
-  settings.enableTheme && GM_addStyle(`
+  if (settings.enableTheme) {
+    GM_addStyle(`
 
 /* ====================
  * Misc general changes
@@ -1607,6 +2060,7 @@ markiere medien ohne alt-text */
 .status-card  {
   border-radius: var(--border-radius-button);
   overflow: revert;
+  border-color: var(--color-grey-5);
 }
 .status-card__image {
   border-radius: inherit;
@@ -1704,8 +2158,7 @@ a.status-link:not(.unhandled-link),
 code {
   background: rgba(255 255 255 / 0.1);
   border-radius: 4px;
-  padding: 1px 5px;
-  margin-inline: -2px;
+  padding: 1px 4px;
   color: inherit;
 }
 .hashtag-bar {
@@ -1726,11 +2179,6 @@ pre > code {
     margin: 0 clamp(0px, calc(4vw - 48px), 50px);
   }
 
-  .compose-form {
-    padding: 10px 0;
-    overflow-y: revert !important;
-  }
-
   .compose-panel,
   .compose-form .compose-form__publish .compose-form__publish-button-wrapper,
   .account__header__tabs,
@@ -1749,7 +2197,6 @@ article:empty {
 
 .status__avatar {
   box-shadow: none;
-  margin-inline-end: 15px;
 }
 
 .notification__line, .status__line {
@@ -1761,6 +2208,7 @@ article:empty {
 
 /* Make clickable area of posts larger */
 
+/*
 .status:not(.collapsed) .status__content--with-action {
   padding-top: 58px;
   margin-top: -48px;
@@ -1770,6 +2218,8 @@ article:empty {
   margin-top: -110px;
   padding-top: 110px;
 }
+*/
+
 .status__content--with-action:nth-last-child(3) {
   /* Followed by a media gallery */
   margin-bottom: -16px;
@@ -1782,7 +2232,6 @@ article:empty {
   position: relative;
 }
 .status__info__icons {
-  height: 100%;
   display: grid;
   grid-auto-flow: column;
   justify-items: center;
@@ -1803,7 +2252,7 @@ article:empty {
 .status__prepend {
   flex-grow: 0;
   align-self: center;
-  margin-left: 36px;
+  margin: 0;
   max-width: calc(100% - 30px);
 }
 .status__prepend:hover {
@@ -1812,7 +2261,7 @@ article:empty {
 
 /* make sure links to user profiles are consistently underlined on hover */
 aside .status__display-name:hover,
-.status.collapsed .display-name:hover .display-name__html {
+.status__wrapper.collapsed .display-name:hover .display-name__html {
   text-decoration: underline;
 }
 
@@ -1834,13 +2283,13 @@ aside .status__display-name:hover,
   background-size: cover;
   animation: 4.5s infinite normal statusPrependIcon steps(10);
 }
-.status__prepend .fa-retweet.status__prepend-icon:before {
+.status__prepend .fa-retweet.status__prepend-icon::before {
   display: none;
 }
 */
 
 /* Better gradient on collapsed toots */
-.status.collapsed .status__content {
+.status__wrapper.collapsed .status__content {
   height: 35px;
   margin-bottom: -15px;
   margin-top: -30px;
@@ -1852,7 +2301,7 @@ aside .status__display-name:hover,
   mask-image: linear-gradient(to bottom, black 40px, transparent 81%);
 }
 
-:is(#fake, .status.collapsed .status__content):after {
+:is(#fake, .status__wrapper.collapsed .status__content)::after {
   display: none;
 }
 
@@ -1867,11 +2316,16 @@ aside .status__display-name:hover,
 
 /* improve long usernames by adding an ellipsis (that doesn't break the zoom-on-hover!) */
 
+.account--minimal.account .account__display-name {
+  align-items: stretch;
+}
+
 .detailed-status__display-name,
 .account .account__display-name {
   display: flex;
   min-width: 0;
   overflow: visible;
+  gap: 15px;
 }
 .detailed-status__display-name .display-name {
   min-width: 0;
@@ -1881,31 +2335,6 @@ aside .status__display-name:hover,
   overflow: unset;
   min-width: 0;
 }
-.status__display-name {
-  max-width: calc(100% - 56px);
-}
-
-.status__display-name,
-.display-name {
-  overflow: visible;
-}
-
-:is(#fake, .display-name__html) {
-  text-overflow: ellipsis;
-  direction: ltr;
-}
-
-/* Firefox does some odd things with text-overflow: ellipsis; when an image at the end of the name would exceed the bounding box, this :after makes enough room for the image */
-.display-name:not(.inline) .display-name__html:has(img):after {
-  content: "";
-  width: 2.4em;
-  display: inline-block;
-}
-
-.display-name__account {
-  position: relative;
-}
-
 
 /* ===== some other changes ===== */
 
@@ -1928,6 +2357,7 @@ article > .account > .account__wrapper {
 .account__contents {
   max-width: calc(100% - 56px);
   overflow: unset;
+  flex: 1;
 }
 
 .account__relationship {
@@ -1940,14 +2370,19 @@ article > .account > .account__wrapper {
   height: auto !important;
   width: auto !important;
 }
+
+.timeline-hint--with-descendants {
+  border: none;
+}
 `)
+  }
 
   /* Add our logo */
   GM_addStyle(`
 
 @media screen and (min-width: 1175px) {
 
-  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner:before {
+  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::before {
     content: "";
     object-fit: contain;
     background: url(${logoSvg});
@@ -1968,7 +2403,7 @@ article > .account > .account__wrapper {
     100% { background-position: 600% 50%; }
   }
 
-  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner:after {
+  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::after {
     content: "";
     -webkit-mask-image: url(${logoSvg});
     display: block;
@@ -2001,16 +2436,15 @@ article > .account > .account__wrapper {
     margin-top: 0;
     height: calc(100% - 68px);
   }
-  body.flavour-glitch .navigation-panel:before {
+  body.flavour-glitch .navigation-panel::before {
     content: "";
-    width: 100%;
-    margin: 20px 0;
   }
 }
 `)
 
   /* neon-ify the page and other style adjustments */
-  settings.enableTheme && GM_addStyle(`
+  if (settings.enableTheme) {
+    GM_addStyle(`
 
 body {
   background: var(--color-grey-0)
@@ -2086,6 +2520,10 @@ body {
     background: var(--color-primary);
   }
 
+  .status__content .poll__voted {
+    margin-block: -6px;
+  }
+
   /* ====================
    *    Side/nav menu
    * =================== */
@@ -2096,13 +2534,13 @@ body {
   }
 
   /* Glowy horizontal lines */
-  .navigation-panel:before,
+  .navigation-panel::before,
   :is(#fake, .compose-panel, .navigation-panel) hr {
     box-shadow: var(--neon-box-shadow);
     border-top: 1px solid var(--color-grey-9);
     position: relative;
     z-index: -1;
-    margin: 20px 0;
+    margin: 20px 15px;
     height: 0;
   }
 
@@ -2112,14 +2550,25 @@ body {
 
   /* Profile Menu, search */
 
+  .search {
+    margin-bottom: 20px;
+  }
+
   .search__popout,
   .dropdown-menu {
-    z-index: 101;
+    z-index: 102;
     border-radius: 8px;
     margin-top: var(--border-radius-button-between);
     backdrop-filter: blur(3px);
-    background: hsla(var(--hsl-grey-3) / 0.8);
+    background: color-mix(in srgb, var(--color-grey-3) 80%, transparent);
     border: 1px solid var(--color-grey-7);
+
+    .dropdown-menu__separator {
+      --dropdown-border-color: var(--color-grey-7);
+    }
+    .dropdown-menu__item {
+      --dropdown-border-color: color-mix(in srgb, var(--color-grey-5) 80%, transparent);
+    }
   }
   .search__popout h4 {
     color: var(--color-white);
@@ -2140,43 +2589,106 @@ body {
    * Docs: https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
    */
 
-  /* I'm not *quite* happy with these colors. Waiting for more inspiration */
+  .navigation-bar {
+    z-index: 101;
+  }
+
+  .compose-form {
+    padding-top: 14px;
+    gap: 25px;
+
+
+    .reply-indicator {
+      max-height: min(40%, 360px);
+      box-sizing: border-box;
+      position: relative;
+
+      max-height: unset;
+      padding-top: 2px;
+
+      .reply-indicator__main {
+        padding-top: 1px;
+      }
+
+      .display-name__html {
+        line-height: 22px;
+        font-size: 15px;
+      }
+    }
+
+    .reply-indicator__line::before {
+      z-index: 102;
+      height: calc(100% + 17px);
+    }
+
+    .reply-indicator__content {
+      display: block;
+      max-height: unset;
+
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 4;
+    }
+
+    .reply-indicator__content::after {
+      content: "";
+      background: var(--color-grey-0);
+      width: 100%;
+      height: 100vh;
+      position: absolute;
+      top: 100%;
+      left: 0;
+    }
+
+    .reply-indicator__attachments {
+      background: var(--color-grey-0);
+      z-index: 1;
+      position: relative;
+    }
+
+    .compose-form__highlightable {
+      border-radius: var(--border-radius-button);
+      border: none;
+      outline: 1px solid var(--color-grey-5);
+      outline-offset: -1px;
+      z-index: 101;
+
+      transition: outline-color 200ms;
+
+      overflow: visible;
+      min-height: unset;
+
+      &:focus-within {
+        outline-color: var(--color-grey-7);
+      }
+    }
+
+    .reply-indicator__header {
+      overflow: visible;
+    }
+
+    .reply-indicator__display-name {
+      display: grid;
+      align-items: center;
+      grid-template-columns: auto 1fr;
+      overflow: visible;
+
+      & :is(.display-name.inline, #fake) {
+        overflow: hidden;
+      }
+    }
+  }
 
   :is(#fake, .compose-form__warning) {
     border-radius: 8px;
   }
 
-  :is(#fake, .compose-form__autosuggest-wrapper) {
-    border-radius: 8px;
-    border: 1px solid var(--color-grey-7);
-    /* Make sure this is above the autosuggest window at z 99 */
-    z-index: 100;
-    transition: box-shadow 200ms;
-    background: white;
-    padding: 10px 0;
-  }
-  :is(#fakeId, .compose-form__autosuggest-wrapper):focus-within {
-    box-shadow: var(--neon-box-shadow-small);
-  }
-  :is(#fakeId, .compose-form__autosuggest-wrapper) .autosuggest-textarea__textarea,
-  :is(#fakeId, .compose-form__autosuggest-wrapper) .compose-form__modifiers {
+  :is(
+    .autosuggest-textarea__textarea,
+    .compose-form__modifiers,
+    #important
+  ) {
     background: none;
-  }
-
-  .compose-form .emoji-picker-dropdown {
-    top: 6px;
-    right: 2px;
-    bottom: 0;
-    z-index: 101;
-  }
-  .compose-form .emoji-picker-dropdown .emoji-button {
-    position: sticky;
-    top: 0;
-  }
-
-  .reply-indicator__cancel {
-    z-index: 1;
-    position: relative;
   }
 
   /* make sure this isn't covered by the compose area in advanced mode*/
@@ -2207,6 +2719,87 @@ body {
     border-radius: 8px;
   }
 
+
+  /* 4.3.x fixes */
+  .compose-form__footer {
+
+    .compose-form__dropdowns::after {
+      /* block the space of 4 digits for the character counter that's moved up here*/
+      content: "0000";
+      font-family: "mastodon-font-sans-serif",sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: transparent;
+    }
+
+    .compose-form__buttons {
+
+      display: grid;
+      grid-template-columns: repeat(var(--cols), 1fr);
+      gap: var(--border-radius-button-between);
+      align-items: stretch;
+
+      & > * {
+        grid-row: 1;
+      }
+
+      :where(div, button) {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box !important;
+      }
+
+      /* dynamic column count, ignoring the char counter in the last child */
+      --cols : 6;
+      &:has(:nth-child(7):not(.character-counter)) {
+        --cols: 7;
+      }
+      &:has(:nth-child(8):not(.character-counter)) {
+        --cols: 8;
+      }
+
+      & :nth-child(1 of :not(.emoji-picker-dropdown)) { grid-column: 1 }
+      & :nth-child(2 of :not(.emoji-picker-dropdown)) { grid-column: 2 }
+      & :nth-child(3 of :not(.emoji-picker-dropdown)) { grid-column: 3 }
+      & :nth-child(4 of :not(.emoji-picker-dropdown)) { grid-column: 4 }
+      & :nth-child(5 of :not(.emoji-picker-dropdown)) { grid-column: 5 }
+      & :nth-child(6 of :not(.emoji-picker-dropdown)) { grid-column: 6 }
+      & :nth-child(7 of :not(.emoji-picker-dropdown)) { grid-column: 7 }
+      & :nth-child(8 of :not(.emoji-picker-dropdown)) { grid-column: 8 }
+
+      .emoji-picker-dropdown {
+        grid-column: var(--cols);
+
+        align-self: stretch;
+
+        button {
+          background-image: url(https://corteximplant.com/system/custom_emojis/images/000/025/784/original/aa6fb2394bcb9f0a.png);
+          background-position: center bottom;
+          background-size: auto 90%;
+          background-repeat: no-repeat;
+        }
+
+        svg {
+          display: none;
+        }
+      }
+
+      :is(.character-counter, #important) {
+        align-self: center;
+        grid-column-end: -1;
+        padding-inline-end: 2px;
+        grid-column: span 2 / -1;
+
+        pointer-events: none;
+        translate: 0 -38px;
+      }
+    }
+  }
+
+  .compose-form__highlightable:has(.spoiler-input) .emoji-picker-dropdown {
+    top: 46px;
+  }
+
   /* This is actually the language selector */
   .privacy-dropdown.active .privacy-dropdown__value {
     border-radius: 8px 8px 0 0;
@@ -2217,32 +2810,38 @@ body {
 
   .reply-indicator {
     border-radius: 8px;
-    margin-bottom: 20px;
   }
 
-  .compose-form .spoiler-input__input {
-    border-radius: 8px;
+  .compose-form .spoiler-input__border {
+    display: none;
   }
+
   .compose-form .spoiler-input {
     transition: height .4s ease, opacity .4s ease, margin-bottom 0.2s ease 0.1s;
 
-    background: white;
     border-radius: 8px;
     border: 1px solid var(--color-grey-7);
     box-sizing: border-box;
-    padding-top: 5px;
+  }
+  .compose-form :is(.autosuggest-input, #important) {
+    border: none;
+  }
+  .compose-form .spoiler-input__input {
+    color: var(--color-offwhite-primary);
+    border-radius: var(--border-radius-button);
+    padding: 12px 11px;
   }
   .compose-form .spoiler-input.spoiler-input--visible {
-    margin-bottom: -13px;
+    margin-bottom: -23px;
     height: 69px; /* nice */
   }
 
-  .spoiler-input + .compose-form__autosuggest-wrapper {
-    /* pull this up by 7px to compensate for .spoiler-input's 7px of padding + border */
-    margin-top: -7px;
-  }
 
   /* ===== right side menu ===== */
+
+  .column-link {
+    border: none
+  }
 
   .column-link--logo {
     padding: 0;
@@ -2252,7 +2851,7 @@ body {
     display: none;
   }
 
-  .column-link--logo:before {
+  .column-link--logo::before {
     content: "";
     object-fit: contain;
     background: url(${logoSvg});
@@ -2273,20 +2872,24 @@ body {
     position: relative;
     font-size: 15px;
     padding: 15px;
+    border-radius: 8px;
   }
 
-  .getting-started__trends h4 a:hover:before,
-  .column-link--transparent:hover:before {
+  .getting-started__trends h4 a:hover::before,
+  .column-link--transparent:hover::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, hsl(var(--hsl-offwhite-blue) / 0.05), hsl(var(--hsl-offwhite-blue) / 0.1));
+    background: linear-gradient(to right,
+      color-mix(in srgb, var(--color-offwhite-primary)  5%, transparent),
+      color-mix(in srgb, var(--color-offwhite-primary) 10%, transparent));
     border-radius: 8px;
+    width: 100%;
 
     animation: 200ms flicker-in ease-out;
   }
-  .getting-started__trends h4 a:hover:after,
-  .column-link--transparent:hover span:after {
+  .getting-started__trends h4 a:hover::after,
+  .column-link--transparent:hover span::after {
     content: "";
     position: absolute;
     top: 8px;
@@ -2324,14 +2927,17 @@ body {
     text-transform: none;
     padding-inline-start: calc(5px + 1.28571429em);
   }
-  .getting-started__trends h4 span:before {
-    content: "";
-    font-family: FontAwesome;
+  .getting-started__trends h4 span::before {
+    content: "";
     margin-right: 5px;
-    width: 1.28571429em;
-    text-align: center;
-    display: inline-block;
+    vertical-align: middle;
     margin-inline-start: calc(-5px - 1.28571429em);
+
+    display: inline-block;
+    width: 24px;
+    aspect-ratio: 1;
+    background: currentColor;
+    clip-path: path("m 3.4 18 l -1.4 -1.4 l 7.4 -7.45 l 4 4 l 5.2 -5.15 H 16 v -2 h 6 v 6 h -2 v -2.6 L 13.4 16 L 9.4 12 L 3.4 18 Z");
   }
 
   .getting-started__trends .trends__item {
@@ -2342,13 +2948,20 @@ body {
    *    Main Feed
    * =================== */
 
+   .column > .scrollable,
+   .explore__search-results {
+     border: none;
+   }
+
   /* ===== Header of feeds (e.g. the main feed) styling ===== */
 
   .tabs-bar__wrapper {
     background: none;
+    --background-filter: none;
+    backdrop-filter: none;
   }
 
-  .search__input {
+  :is(.search__input, #important) {
     border-radius: 8px;
     border: 1px solid var(--color-grey-6);
     background: var(--color-grey-5);
@@ -2356,17 +2969,14 @@ body {
     height: 48px;
     padding-block: 0 !important;
   }
-  .search__icon .icon-times-circle {
-    top: 13px;
-  }
 
   .column-header {
-    border-bottom: none;
+    border: none;
   }
 
-  #tabs-bar__portal>button:after,
-  .column-header__wrapper:after,
-  h1:where(#Lists, #Follow-requests):after
+  #tabs-bar__portal>button::after,
+  .column-header__wrapper::after,
+  h1:where(#Lists, #Follow-requests)::after
   {
     content: "";
     position: absolute;
@@ -2381,7 +2991,7 @@ body {
   .column-header__wrapper {
     border-radius: 8px;
     backdrop-filter: blur(3px);
-    background: hsla(var(--hsl-grey-3) / 0.8);
+    background: color-mix(in srgb, var(--color-grey-3) 80%, transparent);
     transition: box-shadow 200ms;
   }
   #tabs-bar__portal>button:hover,
@@ -2389,10 +2999,19 @@ body {
   h1:where(#Lists, #Follow-requests):hover {
     box-shadow: var(--neon-box-shadow-small);
   }
-  #tabs-bar__portal>button:hover:after,
-  .column-header__wrapper:hover:after,
-  h1:where(#Lists, #Follow-requests):hover:after {
+  #tabs-bar__portal>button:hover::after,
+  .column-header__wrapper:hover::after,
+  h1:where(#Lists, #Follow-requests):hover::after {
     border-color: var(--color-grey-7);
+  }
+
+  .column-header__title {
+    height: 48px;
+    padding-block: 0;
+  }
+
+  .column-header__title svg {
+    margin-inline: 2px 10px;
   }
 
   .column-back-button {
@@ -2423,6 +3042,7 @@ body {
 
   :is(#fake, .column-header__back-button) {
     padding: 0 15px;
+    place-items: center;
   }
 
   .column-header__button:hover,
@@ -2431,9 +3051,9 @@ body {
     color: var(--color-white);
   }
 
-  .column-header__button:before,
-  .column-header__back-button:before,
-  .column-back-button:before {
+  .column-header__button::before,
+  .column-header__back-button::before,
+  .column-back-button::before {
     content: "";
     position: absolute;
     inset: 4px;
@@ -2443,9 +3063,9 @@ body {
     z-index: -1;
   }
 
-  .column-header__button:hover:before,
-  .column-header__back-button:hover:before,
-  .column-back-button:hover:before {
+  .column-header__button:hover::before,
+  .column-header__back-button:hover::before,
+  .column-back-button:hover::before {
     background: var(--color-grey-6);
   }
 
@@ -2455,6 +3075,7 @@ body {
 
   .column-header__collapsible {
     background: var(--color-grey-5);
+    border-bottom: none;
   }
   .column-header__collapsible,
   .announcements {
@@ -2544,26 +3165,48 @@ body {
 
   /* ===== Posts styling ===== */
 
-  .status {
+  .status__wrapper:not(.status__wrapper--filtered) {
     display: flex;
     flex-direction: column;
   }
 
-  .status-unlisted,
-  .detailed-status-unlisted {
+  .status {
+    padding: 15px;
+  }
+  aside + .status {
+    padding-top: 5px;
+  }
+
+  .detailed-status__wrapper {
+    position: relative;
+  }
+
+  .status__wrapper-unlisted,
+  .detailed-status__wrapper-unlisted {
     --color-privacy: var(--color-green, white);
   }
-  .status-public,
-  .detailed-status-public {
+  .status__wrapper-public,
+  .detailed-status__wrapper-public {
     --color-privacy: var(--color-grey-8, white);
   }
-  .status-direct,
-  .detailed-status-direct {
+  .status__wrapper-direct,
+  .detailed-status__wrapper-direct {
     --color-privacy: var(--color-red, white);
   }
-  .status-private,
-  .detailed-status-private {
+  .status__wrapper-private,
+  .detailed-status__wrapper-private {
     --color-privacy: var(--color-yellow, white);
+  }
+
+  .detailed-status__meta {
+    flex-wrap: wrap;
+  }
+
+  .detailed-status__meta__line {
+    display: contents;
+  }
+  .detailed-status__meta__line:not(:last-child)::after {
+    content: "·";
   }
 
   .status-unlisted,
@@ -2573,24 +3216,46 @@ body {
     box-shadow: 0px 4px 10px -8px var(--color-privacy);
   }
 
-  .detailed-status:not(.detailed-status-public) {
-    position: relative;
+  .detailed-status__wrapper,
+  .status__wrapper {
+    --color-bg: var(--color-privacy);
   }
 
-  .status:not(.status-public):not(.unread):before,
-  .detailed-status:not(.detailed-status-public):not(.unread):before {
+  .notification-group,
+  .notification-ungrouped {
+    --color-bg: var(--color-notification);
+  }
+
+  .conversation {
+    --color-bg: var(--color-hl-primary);;
+  }
+
+  :is(.status,
+      .conversation,
+      .detailed-status__wrapper,
+      .notification-group,
+      .notification-ungrouped
+  )::after{
     content: "";
     pointer-events: none;
-    background: var(--color-privacy);
+    background: var(--color-bg);
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    -webkit-mask-image: radial-gradient(at 39px 39px, rgba(0 0 0 / 0.05) 5%, transparent 70%);
-    -webkit-mask-size: 250px 250px;
-    -webkit-mask-repeat: no-repeat;
-    mask-image: radial-gradient(at 39px 39px, rgba(0 0 0 / 0.05) 5%, transparent 70%);
-    mask-size: 250px 250px;
-    mask-repeat: no-repeat;
+
+    -webkit-mask-image:
+      radial-gradient(at 39px calc(39px + var(--extra-top-spacing, 0px)), rgba(0, 0, 0, 0.2) 5%, rgba(0 0 0 / 0.06) 20%, transparent 70%),
+      var(--noise-url);
+    -webkit-mask-size: 600px 600px, 200px;
+    -webkit-mask-composite: intersect;
+    -webkit-mask-repeat: no-repeat, repeat;
+
+    mask-image:
+      radial-gradient(at 39px calc(39px + var(--extra-top-spacing, 0px)), rgba(0, 0, 0, 0.2) 5%, rgba(0 0 0 / 0.06) 20%,  transparent 70%),
+      var(--noise-url);
+    mask-size: 600px 600px, 200px;
+    mask-composite: intersect;
+    mask-repeat: no-repeat, repeat;
   }
 
   /* pre-4.3.0 */
@@ -2653,6 +3318,13 @@ body {
     /* backdrop-filter: blur(10px) saturate(180%); */
   }
 
+  :is(article[tabindex="-1"]:has(.load-more.load-gap), #important) {
+    margin: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+
   /* Search Results */
   .explore__search-results {
     background: none;
@@ -2707,7 +3379,7 @@ body {
     border: none;
   }
 
-
+  /* ==== detailed status ==== */
 
   /* give the selected post in single-post-view a lighter background */
   .columns-area--mobile .scrollable>div[tabindex="-1"]:has(.detailed-status) {
@@ -2715,18 +3387,41 @@ body {
     border-color: var(--color-grey-7);
     background: var(--color-grey-3);
   }
-  .detailed-status {
-    border-top: none
+
+  .detailed-status__wrapper {
+    padding: 15px;
+    gap: 15px;
+    display: flex;
+    flex-direction: column;
   }
-  .detailed-status .status__content {
-    font-size: 15px;
-    line-height: 20px;
+
+  :is(.detailed-status, #important) {
+    position: relative;
+    border-top: none;
+    padding: 0;
+    background: none;
+
+    .status__content {
+      font-size: 15px;
+      line-height: 20px;
+    }
   }
+
+  :is(.detailed-status__action-bar, #important) {
+    padding: 0;
+    border-radius: 0 0 8px 8px;
+    border: none;
+    background: none;
+    gap: var(--border-radius-button-between);
+  }
+
 
   /* remove bottom border on all kinds of posts */
   .status,
   /* follow notifications */
   .notification .account,
+  .notification-group,
+  .notification-ungrouped,
   /* and the "load more" button */
   .load-gap {
     border-bottom: none;
@@ -2736,37 +3431,18 @@ body {
   :is(#fake, .status__action-bar) {
     margin-top: 15px;
     margin-bottom: 0;
-  }
-
-  .status__action-bar,
-  .detailed-status__action-bar {
-    height: 40px;
     gap: var(--border-radius-button-between);
-  }
-
-  :where(.status__action-bar, .detailed-status__action-bar)
-  :is(button, .status__action-bar-dropdown, detailed-status__action-bar-dropdown) {
-    height: 100% !important;
-    min-width: 40px !important;
-    border-radius: 8px;
-    z-index: 1;
-  }
-  .detailed-status__button button,
-  .status__action-bar-button {
-    transition: color 200ms
-  }
-  .detailed-status__action-bar-dropdown span {
-    height: 100%;
+    align-items: stretch;
   }
 
   /* Make sure everything inside a post follows the border radius */
-  article > div[tabindex="-1"],
+  article div[tabindex="-1"],
   .focusable,
   .columns-area--mobile article > div:not(.search-results__section),
   .columns-area--mobile article > div > .notification.unread,
-  .columns-area--mobile article > div > .notification.unread:before,
+  .columns-area--mobile article > div > .notification.unread::before,
   .columns-area--mobile article > div > .status__wrapper.unread,
-  .columns-area--mobile article > div > .status__wrapper.unread:before {
+  .columns-area--mobile article > div > .status__wrapper.unread::before {
     border-radius: inherit;
   }
 
@@ -2781,18 +3457,8 @@ body {
     border-radius: inherit;
   }
 
-  .detailed-status {
-    background: none;
-  }
-  .detailed-status__action-bar {
-    border-radius: 0 0 8px 8px;
-    border: none;
-    background: none;
-    padding: 15px;
-    padding-top: 0;
-  }
+  /* ===== Notifications / explore / Account's post/replies/media tabs ===== */
 
-  /* Notifications / explore / Account's post/replies/media tabs  */
   /* .notification__filter-bar
    *    notifications use  button > i    and
    *                       button > span
@@ -2803,6 +3469,48 @@ body {
    *    "live feeds" uses  a      > div
    */
 
+  .notification__message {
+
+    :is(&, #important) {
+      margin-top: 0;
+    }
+
+    padding-top: 0;
+    min-height: 24px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
+    gap: 10px;
+
+    & > span {
+      max-width: calc(100% - 10px);
+    }
+
+    & > .notification__favourite-icon-wrapper {
+      position: initial;
+    }
+
+    .icon {
+      display: block;
+    }
+  }
+
+  /* "x liked your toot" post in 4.3 */
+  .status__wrapper > .notification__message {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 10px;
+
+    & + .status__wrapper.collapsed .status__content {
+      margin-top: ;
+      padding-top: 30px;
+    }
+    .status__collapse-button {
+      margin: 0;
+      display: block;
+    }
+  }
+
   .account__section-headline {
     padding-inline: 10px;
   }
@@ -2810,7 +3518,10 @@ body {
   .account__section-headline,
   .notification__filter-bar {
     border-radius: 8px;
-    border: 1px solid var(--color-grey-4);
+
+    /* backdrop-filter: blur(3px);
+    background: color-mix(in srgb, var(--color-grey-1) 80%, transparent);
+    border-color: var(--color-grey-5); */
   }
   /* notifications header */
   .notification__filter-bar {
@@ -2823,6 +3534,11 @@ body {
     padding-top: 20px;
   }
 
+  /*
+   * .account__section-headline a          account sections, also explore tabs
+   * .account__section-headline button     search results
+   * .notification__filter-bar button      notification filters
+   */
   .account__section-headline :is(button, a),
   .notification__filter-bar button {
     border-radius: inherit;
@@ -2844,14 +3560,14 @@ body {
     color: var(--color-white);
   }
 
-  .account__section-headline a,
+  .account__section-headline :is(button, a),
   .notification__filter-bar button {
     isolation: isolate;
     position: relative;
   }
 
   /* hover background */
-  .account__section-headline a::after,
+  .account__section-headline :is(button, a)::after,
   .notification__filter-bar button::after {
     content: "";
     position: absolute;
@@ -2861,7 +3577,7 @@ body {
     transition: background 200ms;
     z-index: -1;
   }
-  .account__section-headline a:hover::after,
+  .account__section-headline :is(button, a):hover::after,
   .notification__filter-bar button:hover::after {
     background-color: var(--color-grey-6);
   }
@@ -2869,6 +3585,7 @@ body {
   :is(
     #fake,
     .account__section-headline a,
+    .account__section-headline button,
     .notification__filter-bar button
   )::before {
     inset-block-end: 4px;
@@ -2876,16 +3593,18 @@ body {
     inset-inline: 0;
     margin-inline: auto;
     width: 80%;
+    transform: none;
   }
 
 
   /* Mentions use .status__wrapper directly, all other notifications are wrapped in a .notification div */
-  .status.unread:after,
-  .notification.unread:after {
+  article:has(.unread)::before,
+  article:has(.notification-group--unread)::before,
+  article:has(.notification-ungrouped--unread)::before {
     content: "";
     position: absolute;
-    top: 4px;
-    bottom: 4px;
+    top: 5px;
+    bottom: 5px;
     left: 1px;
     width: 2px;
     background: white;
@@ -2895,74 +3614,182 @@ body {
     animation: flicker-in 200ms ease-out 200ms both;
   }
 
+  :where(
+      article:has(.unread),
+      article:has(.notification-group--unread),
+      article:has(.notification-ungrouped--unread)
+  ) > div[tabindex="-1"] {
+    background: var(--color-grey-2);
+  }
+
   /* Notification Coloring */
 
-  /* Color the icon */
-  .notification__message :is(#fake, .fa) {
-    color: hsl(var(--hsl-notification))
+  /* new: 4.3.0+ */
+
+  /* color the icon */
+  .notification-group__icon {
+    height: 28px;
   }
 
-  .notification__filter-bar + .scrollable .status,
-  [data-column="notifications"] .status {
-    --hsl-notification: var(--hsl-grey-8);
+  .notification-group__icon svg,
+  .notification-ungrouped__header__icon svg {
+    color: var(--color-notification);
   }
 
-  .notification__filter-bar + .scrollable .status[data-favourited-by],
-  [data-column="notifications"] .status[data-favourited-by] {
-    --hsl-notification: var(--hsl-gold);
+  /* default */
+  .notification-group,
+  .notification-ungrouped {
+    --color-notification: var(--color-grey-8);
   }
 
-  .notification__filter-bar + .scrollable .status[data-boosted-by],
-  .notification-follow,
-  .notification-admin-sign-up,
-  [data-column="notifications"] .status[data-boosted-by] {
-    --hsl-notification: var(--hsl-purple);
+  .notification-group--favourite {
+    --color-notification: var(--color-gold);
   }
 
-  .notification-admin-report {
-    --hsl-notification: var(--hsl-orange);
+  .notification-group--admin-report {
+    --color-notification: var(--color-orange);
   }
 
-  /* repurpose the before element adding a border */
-  .notification.unread:before, .status.unread:before {
-    border-inline-start-color: hsl(var(--hsl-notification, 0 0% 0% / 0));
+  .notification-group--follow,
+  .notification-group--reblog {
+    --color-notification: var(--color-purple);
+  }
+
+  /* mentions and replies have the same markup, just different SVG paths .-. */
+  .notification-ungrouped--mention {}
+
+  .notification-ungrouped--direct {
+    --color-bg: var(--color-red);
+  }
+
+  /* header layout for replies/mentions/DMs */
+  :is(.notification-ungrouped__header, #important) {
+    padding-inline-start: 0;
+    color: var(--color-grey-8);
+  }
+  .notification-ungrouped__header__icon {
+    width: 40px;
+  }
+  .notification-ungrouped__header__icon .icon,
+  .notification-group__icon .icon {
+    width: 24px;
+    aspect-ratio: 1;
+    height: auto;
+  }
+
+  :is(.notification-group, .notification-ungrouped, #important) .status__wrapper {
+    background: none;
+  }
+
+  :is(.notification-group, .notification-ungrouped, #important) .status {
+    outline: none;
+    box-shadow: none;
+  }
+
+  :is(.notification-group, .notification-ungrouped, #important) .status::after {
+    display: none;
+  }
+
+  :is(.notification-group, .notification-ungrouped, #important) .notification-group__main__header {
+    time {
+      white-space: nowrap;
+    }
+  }
+  :is(.notification-group, .notification-ungrouped, #important) .notification-group__main__status {
+    border: none;
+    padding-inline: 0 8px;
+  }
+
+  .notification-group--unread::before,
+  .notification-ungrouped--unread::before,
+  .conversation.unread::before {
     border-radius: inherit;
-    left: -1px;
+    border-color: var(--color-notification);
   }
 
-  :is(.notification-admin-sign-up,
-      .notification-follow,
-      .notification-admin-report)
-  .notification__message {
-    margin-left: 15px;
+  .compose-form__actions .button,
+  .notification-group__actions .button {
+    font-weight: normal
   }
 
-  :is(.notification-admin-sign-up,
-      .notification-follow
-  ) .account__wrapper {
-    margin-block: 1em 0.5em;
+  .notification-group__avatar-group {
+    overflow-y: clip;
   }
 
-  :is(.notification-admin-sign-up,
-      .notification-follow
-  ) .account__avatar-wrapper {
-    margin-left: 5px;
+
+  /* old: pre-4.3.0 */
+
+  /* Color the icon */
+  .notification__message :is(#fake, .fa, svg.status__prepend-icon) {
+    color: var(--color-notification);
   }
 
-  /* add a transparent tint to the existing background-color.
-   * Using a gradient between 2 identical colors because that goes through
-   * background-image which stacks ontop of the background-color! */
-  .status,
-  .notification {
-    background-image: linear-gradient(
-      hsl(var(--hsl-notification, transparent) / 0.05),
-      hsl(var(--hsl-notification, transparent) / 0.05));
-  }
+  .notification__filter-bar + .scrollable {
 
-  .notification-follow, .notification-follow-request {
-    border-bottom: none;
-  }
+    /* article > div[tabindex="-1"] > ... */
 
+    /* report       -> has .notification__message and .notification__report */
+    .notification,
+    /* reply        -> has .status
+       like, boost  -> has aside.notification__message and .status
+    */
+    .status__wrapper {
+      --color-notification: var(--color-grey-8);
+
+      background-image: linear-gradient(
+        color-mix(in srgb, var(--color-notification) 5%, transparent),
+        color-mix(in srgb, var(--color-notification) 5%, transparent));
+
+      /* report */
+      &.notification-admin-report {
+        --color-notification: var(--color-orange);
+
+        .notification__report {
+          gap: 15px;
+          padding: 10px 15px;
+          border: 0;
+        }
+      }
+
+      /* follow */
+      &.notification-follow,
+      /* boost */
+      &[data-boosted-by] {
+        --color-notification: var(--color-purple);
+      }
+
+      /* like */
+      &[data-favourited-by] {
+        --color-notification: var(--color-gold);
+      }
+
+      /* reply */
+      &.status__wrapper-reply { }
+
+      /* dm */
+      &.status__wrapper-direct { }
+
+      /* polls and edits of boosted posts have a [data-undefined-by] if I'd want to style them */
+
+      .notification__message,
+      .account {
+        padding: 10px 15px;
+      }
+
+      .notification__message {
+        padding-bottom: 0;
+      }
+
+      .status {
+        backround: none;
+      }
+
+      &::before {
+        border-color: var(--color-notification);
+      }
+    }
+
+  }
 
   /* ===== Profile ===== */
 
@@ -2984,10 +3811,11 @@ body {
 
   .account__header__bar {
     border-radius: 0 0 8px 8px;
-    border-bottom: 1px solid var(--color-grey-4);
+    border-bottom: none;
 
     padding: 10px;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     --gap: 10px;
     gap: var(--gap);
   }
@@ -2998,10 +3826,11 @@ body {
   }
   .account__header__tabs__name {
     padding: 0 var(--gap);
+    margin: 0;
   }
 
   .account__header__badges {
-    adding: 0;
+    padding: 0 var(--gap);
   }
 
   .account__header__image {
@@ -3041,11 +3870,49 @@ body {
     margin: 0;
     display: grid;
     gap: calc(2 * var(--gap));
-    margin-block-end: var(--gap);
   }
 
   .account__disclaimer {
-    margin: 10px 5px;
+    /* this is the "Information below may reflect the user's profile incompletely." hint.
+    Make sure the "view full profile" link looks like a button. */
+    margin: 10px 0;
+    gap: 10px;
+    position: relative;
+
+    & > div {
+      display: contents;
+
+      & > span {
+        text-wrap: balance;
+      }
+
+      & > a {
+        padding: 7px 18px;
+        min-width: calc(calc(100% - 2 * var(--border-radius-button-between)) / 3);
+        box-sizing: border-box;
+
+        border: 1px solid var(--color-grey-5);
+        border-radius: var(--border-radius-button);
+
+
+        color: var(--color-grey-7);
+        text-decoration: navajowhite;
+        text-align: center;
+
+        transition:
+          background-color 200ms,
+          border-color 200ms,
+          color 200ms,
+          box-shadow 200ms;
+
+        &:hover {
+          border-color: var(--color-grey-7) !important;
+          background: var(--color-grey-2);
+          color: var(--color-grey-9);
+          box-shadow: var(--neon-box-shadow-small);
+        }
+      }
+    }
   }
 
   .account__action-bar {
@@ -3067,7 +3934,20 @@ body {
     margin: 0 !important;
   }
 
-  /* Tabs below the accoutn info */
+  /* there's a read more button in the "What's in a handle?" info popup, that looks like a link instead.
+  This makes it look at leas soemthign like a "read more" button. */
+  .account__domain-pill__popout p button.link-button::after {
+    content: "«";
+    rotate: 0.25turn;
+    display: inline-block;
+    padding-inline: 0.5em;
+    transition: rotate 200ms;
+  }
+  .account__domain-pill__popout p:last-child button.link-button::after {
+    rotate: 0.75turn;
+  }
+
+  /* Tabs below the account info */
 
   .account__action-bar-links {
     border-radius: inherit;
@@ -3108,18 +3988,18 @@ body {
     position: relative;
   }
 
-  .account__action-bar__tab.active:before {
+  .account__action-bar__tab.active::before {
     content: "";
     position: absolute;
     inset: 0;
     border-bottom: 4px solid var(--color-primary);
   }
 
-  .account__action-bar__tab.active:first-child:before {
+  .account__action-bar__tab.active:first-child::before {
     border-bottom-left-radius: inherit;
   }
 
-  .account__action-bar__tab.active:last-child:before {
+  .account__action-bar__tab.active:last-child::before {
     border-bottom-right-radius: inherit;
   }
 
@@ -3130,15 +4010,38 @@ body {
 
   /* ===== Account links ===== */
 
+  .account__header__account-note {
+    border-color: var(--color-grey-6);
+    border-radius: var(--border-radius-button);
+  }
+
   .account__header__bio .account__header__fields {
     border-radius: var(--border-radius-button);
     margin: 10px;
     border: none;
   }
 
+  .account__header__bio .account__header__fields:last-child {
+
+    dl {
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    dl:not(.verified) {
+      border-color: var(--color-grey-6);
+    }
+
+    dl + dl {
+      margin-top: var(--border-radius-button-between);
+    }
+  }
+
   .account__header__fields dl {
     border: none;
     border-radius: var(--border-radius-button-between);
+
+    position: relative;
   }
   .account__header__fields dl+dl {
     margin-top: var(--border-radius-button-between);
@@ -3148,8 +4051,8 @@ body {
     border-top-right-radius: inherit;
   }
   .account__header__fields dl:last-of-type {
-    border-bottom-left-radius: inherit;
-    border-bottom-right-radius: inherit;
+    border-bottom-left-radius: inherit !important;
+    border-bottom-right-radius: inherit !important;
   }
 
   .account__header__fields dt,
@@ -3159,7 +4062,6 @@ body {
   }
 
   .account__header__fields dt {
-    /* border: 1px solid var(--color-grey-6); */
     background: var(--color-grey-1);
     border-top-left-radius: inherit;
     border-bottom-left-radius: inherit;
@@ -3167,25 +4069,27 @@ body {
     margin-right: var(--border-radius-button-between);
   }
 
-  .account__header__fields dd {
-    border: 1px solid var(--color-grey-6);
-    background: hsl(var(--hsl-offwhite-blue) / 0.05);
-    position: relative;
-    /* TODO: This looks weird sometimes. e.g. https://corteximplant.com/@LevelUp@mastodon.art */
+  .account__header__fields:not(:last-child) dd {
+    border-style: solid;
+    border-width: 1px;
     white-space: initial;
     word-break: break-all;
+
+    &:not(.verified) {
+      border-color: var(--color-grey-6);
+      background: color-mix(in srgb, var(--color-offwhite-primary) 5%, transparent);
+    }
   }
 
-  .account__header__fields dd a:before {
+  .account__header__fields dd a::before {
     content: "";
     position: absolute;
     inset: 0;
-    z-index: -1;
     opacity: 0;
     background-image: radial-gradient(currentColor, transparent);
     transition: opacity 200ms;
   }
-  .account__header__fields dd a:hover:before {
+  .account__header__fields dd a:hover::before {
     opacity: 0.1;
   }
 
@@ -3193,6 +4097,10 @@ body {
     border-radius: var(--border-radius-button-between);
     border-top-right-radius: inherit;
     border-bottom-right-radius: inherit;
+
+    word-break: break-word;
+    text-align: start;
+    text-wrap: balance;
   }
 
   /* Make sure the "joined at..." date aligns with the text above it */
@@ -3203,6 +4111,8 @@ body {
   .account-timeline__header .account__section-headline:not(:first-child) {
     background: none;
     border: none;
+    margin-top: 0;
+    padding-top: 6px;
   }
 
   .empty-column-indicator {
@@ -3223,10 +4133,15 @@ body {
   .follow_requests-unlocked_explanation {
     background: none;
     margin-top: -20px;
+    border-bottom: none;
   }
   .status.status-direct {
     outline: 1px solid hsl(225 15% 35% / 1);
     outline-offset: 0px;
+  }
+
+  aside.notification__message + .status.status-direct {
+    outline: none;
   }
 
 
@@ -3255,7 +4170,7 @@ body {
     margin-right: -10px;
     border-radius: 8px;
     backdrop-filter: blur(3px);
-    background: hsla(var(--hsl-grey-3) / 0.8);
+    background: color-mix(in srgb, var(--color-grey-3) 80%, transparent);
     transition: box-shadow 200ms;
     position: sticky;
     top: 10px;
@@ -3290,7 +4205,7 @@ body {
     padding: 20px 0px;
   }
 
-  body:not(.layout-multiple-columns) .scrollable.about:before {
+  body:not(.layout-multiple-columns) .scrollable.about::before {
     content: "";
     display: block;
     position: relative;
@@ -3364,49 +4279,65 @@ body {
    *     Scrollbars
    * ==================== */
 
-  html {
-    scrollbar-color: var(--color-grey-3) rgba(0,0,0,.1);
+  /* everything but Safari */
+  @supports (scrollbar-color: auto) {
+
+    html {
+      scrollbar-color: var(--color-grey-3) transparent;
+    }
+
+    .layout-multiple-columns .scrollable {
+      scrollbar-width: thin;
+      padding-inline-end: 5px;
+    }
+
   }
 
-  ::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-  }
+  /* everything but Firefox */
+  @supports selector(::-webkit-scrollbar) {
 
-  ::-webkit-scrollbar-thumb {
-    margin: 0 2px;
-    width: 8px;
-    background: var(--color-grey-2);
-    border: 1px solid var(--color-grey-4);
-    border-radius: 50px;
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+      background: red;
+    }
 
-    transition: background-color 200ms;
-  }
+    ::-webkit-scrollbar-thumb {
+      margin: 0 2px;
+      width: 8px;
+      background: var(--color-grey-2);
+      border: 1px solid var(--color-grey-4);
+      border-radius: 50px;
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-grey-4);
-    border-color: var(--color-grey-6);
-  }
+      transition: background-color 200ms;
+    }
 
-  ::-webkit-scrollbar-thumb:active {
-    background: var(--color-grey-6);
-    border-color: var(--color-grey-7);
-  }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-grey-4);
+      border-color: var(--color-grey-6);
+    }
 
-  ::-webkit-scrollbar-track {
-    border: 0 #fff;
-    border-radius: 8px;
-    background: rgba(0,0,0,.1);
-  }
+    ::-webkit-scrollbar-thumb:active {
+      background: var(--color-grey-6);
+      border-color: var(--color-grey-7);
+    }
 
-  ::-webkit-scrollbar-track:active,
-  ::-webkit-scrollbar-track:hover {
-    background: var(--color-grey-2);
-    background: rgba(0,0,0,.2);
-  }
+    ::-webkit-scrollbar-track {
+      border: 0 #fff;
+      border-radius: 8px;
+      background: rgba(0,0,0,.1);
+    }
 
-  ::-webkit-scrollbar-corner {
-    background: transparent:
+    ::-webkit-scrollbar-track:active,
+    ::-webkit-scrollbar-track:hover {
+      background: var(--color-grey-2);
+      background: rgba(0,0,0,.2);
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: transparent:
+    }
+
   }
 
   /* ====================
@@ -3502,12 +4433,6 @@ body {
     align-items: flex-end;
   }
 
-  /* user profile info in the 1st column */
-  body.layout-multiple-columns .drawer__inner .navigation-bar {
-    background: var(--color-grey-5);
-    border-radius: inherit;
-  }
-
   body.layout-multiple-columns .column-header {
     background: var(--color-grey-3);
     border-radius: 8px;
@@ -3525,6 +4450,25 @@ body {
 
   /* ===== "getting started" page / last column ===== */
 
+  .getting-started__wrapper {
+
+    & > div {
+      border-radius: inherit;
+    }
+
+    .column-link {
+      border: none;
+      border-radius: inherit;
+      background-color: transparent;
+      transition: background-color 200ms;
+
+      &:hover {
+        background-color: var(--color-grey-4);
+      }
+    }
+  }
+
+  /*
   div[data-column="getting-started"] .getting-started__wrapper {
     background: none;
   }
@@ -3549,16 +4493,18 @@ body {
     color: white;
   }
 
-  div[data-column="getting-started"] .column-link:hover span:before {
+  div[data-column="getting-started"] .column-link:hover span::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, hsl(var(--hsl-offwhite-blue) / 0.05), hsl(var(--hsl-offwhite-blue) / 0.1));
+    background: linear-gradient(to right,
+      color-mix(in srgb, var(--color-offwhite-primary)  5%, transparent),
+      color-mix(in srgb, var(--color-offwhite-primary) 10%, transparent));
     border-radius: 8px;
 
     animation:  200ms flicker-in ease-out;
   }
-  div[data-column="getting-started"] .column-link:hover span:after {
+  div[data-column="getting-started"] .column-link:hover span::after {
     content: "";
     position: absolute;
     top: 8px;
@@ -3575,39 +4521,45 @@ body {
     margin-top: auto;
     border-radius: inherit;
   }
+  */
 
 
-  /* user badges */
+  /* user badges
+   *  1: Moderator
+   *  3: Owner
+   * 34: Supporter
+   */
 
+/*
   .account-role {
     position: relative;
     margin-top: 2px !important;
     /* Start a new stacking context */
     z-index: 1;
 
-    --bg-hsl: 225deg 10% 30%;
-    --border-hsl: 227deg 16% 76%;
-    --bg-shine-hsl: 227deg 16% 54%;
-    --border-shine-hsl: 227deg 16% 10%;
+    --color-role-bg: hsl(225deg 10% 30%);
+    --color-role-border: hsl(227deg 16% 76%);
+    --color-role-bg-shine: hsl(227deg 16% 54%);
+    --color-role-border-shine: hsl(227deg 16% 10%);
+
+    color: color-mix(in srgb, white, var(--color-role-border));
+
+    &[data-account-role-id="1"] {
+      --color-role-border: hsl(149.12deg 34% 60.78%);
+      --color-role-border-shine: hsl(240deg 100% 69%);
+    }
+
+    &[data-account-role-id="3"] {
+      --color-role-border: hsl(330deg 100% 50%);
+      --color-role-border-shine: hsl(254deg 100% 65%);
+    }
+
+    &[data-account-role-id="34"] {
+      --color-role-border: hsl(187deg 98% 48%);
+      --color-role-border-shine: hsl(58deg 100% 47%);
+    }
   }
 
-  /* owner */
-  .user-role-3 {
-    --border-hsl: 330deg 100% 50%;
-    --border-shine-hsl: 254deg 100% 65%;
-  }
-  /* moderator */
-  .user-role-1 {
-    --border-hsl: 149.12deg 34% 60.78%;
-    --border-shine-hsl: 240deg 100% 69%;
-  }
-  /* supporter */
-  .user-role-34 {
-    --border-shine-hsl: 58deg 100% 47%;
-    --border-hsl: 187deg 98% 48%;
-  }
-
-  /* User badges */
   @keyframes shine {
     0%   { background-position: 100% 50%; }
     100% { background-position:   0% 50%; }
@@ -3622,26 +4574,61 @@ body {
     animation: shine 5000ms infinite;
     background-position: -100% 50%;
   }
+*/
 
   /* border */
-  .account-role::before {
+  /*.account-role::before {
     z-index: -2;
     inset: -1px;
     background-image:
-      linear-gradient(60deg, transparent 0%, transparent 40%, hsla(var(--border-shine-hsl) / 0.4) 50%, transparent 60%, transparent 100%),
-      linear-gradient(hsl(var(--border-hsl)), hsl(var(--border-hsl)));
-  }
+      linear-gradient(60deg,
+        transparent 0%,
+        transparent 40%,
+        color-mix(in srgb, var(--color-role-border-shine) 40%, transparent) 50%,
+        transparent 60%,
+        transparent 100%
+      ),
+      linear-gradient(var(--color-role-border), var(--color-role-border));
+  } */
   /* background */
-  .account-role::after {
+  /* .account-role::after {
     z-index: -1;
     inset: 0px;
     background-image:
-      linear-gradient(60deg, transparent 0%, transparent 45%, hsla(var(--bg-shine-hsl) / 0.2) 55%, transparent 65%, transparent 100%),
-      linear-gradient(hsl(var(--bg-hsl)), hsl(var(--bg-hsl)));
-  }
+      linear-gradient(60deg,
+        transparent 0%,
+        transparent 45%,
+        color-mix(in srgb, var(--color-role-bg-shine) 20%, transparent) 55%,
+        transparent 65%,
+        transparent 100%
+      ),
+      linear-gradient(var(--color-role-bg), var(--color-role-bg));
+  } */
 
 
   /* This makes the buttons beneath toots look different */
+
+  .status__action-bar,
+  .detailed-status__action-bar {
+    /* height: 40px; */
+    gap: var(--border-radius-button-between);
+    position: relative;
+    align-items: stretch;
+  }
+
+  :where(.status__action-bar, .detailed-status__action-bar)
+  :is(button, .status__action-bar-dropdown, detailed-status__action-bar-dropdown) {
+    height: 100% !important;
+    min-width: 40px !important;
+    z-index: 1;
+  }
+  .detailed-status__button button,
+  .status__action-bar-button {
+    transition: color 200ms
+  }
+  .detailed-status__action-bar-dropdown span {
+    height: 100%;
+  }
 
   .status__action-bar :where(button, a),
   .detailed-status__button,
@@ -3654,7 +4641,7 @@ body {
 
   .status__action-bar a {
     flex: 1 1 22px;
-    height: 40px;
+    /* height: 40px; */
     box-sizing: border-box;
     padding-inline: 10px;
     display: flex;
@@ -3662,12 +4649,10 @@ body {
     justify-content: flex-end;
   }
 
-  :where(.status__action-bar, .detailed-status__action-bar) :where(button, a):before {
+  :where(.status__action-bar, .detailed-status__action-bar) :where(button, a)::before {
     content: "";
     position: absolute;
     inset: 0;
-    left: unset;
-    width: 100%;
     background-color: var(--color-grey-7);
     opacity: 0.1;
     border-radius: inherit;
@@ -3678,13 +4663,22 @@ body {
     background-color: var(--color-grey-1);
   }
 
-  :where(.status__action-bar, .detailed-status__action-bar) button.active:before {
+  :where(.status__action-bar, .detailed-status__action-bar) button.active::before {
     opacity: 0.2;
     background-image: radial-gradient(currentColor, transparent);
   }
 
-  .status__action-bar > * {
+  .status__action-bar button,
+  .detailed-status__action-bar button {
     margin-inline: 0 !important;
+    padding: 7px;
+  }
+
+  .status__action-bar button:not(.status__action-bar > button),
+  .detailed-status__button button,
+  .detailed-status__action-bar-dropdown button {
+    border-radius: inherit;
+    width: 100%
   }
 
   :where(.status__action-bar, .detailed-status__action-bar) > :first-child {
@@ -3698,27 +4692,16 @@ body {
     border-end-end-radius: var(--border-radius-button);
   }
 
-  :is(.status:not(.collapsed) .status__content--with-action, #fake) {
-    padding-top: calc(58px + var(--status-extra-top-padding, 0px));
-    margin-top: calc(-48px - var(--status-extra-top-padding, 0px));
-    margin-bottom: 0;
-    overflow: visible;
-  }
-
   .status__action-bar-spacer {
     display: none;
   }
 
-  .detailed-status__button button,
-  .detailed-status__action-bar-dropdown > span,
-  .detailed-status__action-bar-dropdown button {
-    width: 100% !important;
-    border-radius: inherit;
-  }
 }
 `)
+  }
 
-  settings.showOldPunks && GM_addStyle(`
+  if (settings.showOldPunks) {
+    GM_addStyle(`
 
 body.layout-multiple-columns .drawer__inner__mastodon {
   content: url(https://corteximplant.com/system/site_uploads/files/000/000/006/@1x/68f324b193475041.png);
@@ -3731,8 +4714,8 @@ body.layout-multiple-columns .drawer__inner__mastodon {
   -webkit-mask-position: bottom;
   -webkit-mask-repeat: no-repeat;
 }
-
 `)
+  }
 
   /* emoji picker improvements */
   GM_addStyle(`
@@ -3760,12 +4743,16 @@ body.layout-multiple-columns .drawer__inner__mastodon {
 }
 
 .emoji-mart-category-label span {
-  background: linear-gradient(to bottom, white 20%, rgba(255 255 255 / 0.9) 80%, transparent);
+  --c: color-mix(in srgb, var(--dropdown-background-color), var(--dropdown-background-color));
+  background: linear-gradient(
+    to bottom,
+    var(--dropdown-background-color) 80%,
+    transparent);
 }
 
 
 /* make sure the grey hover outline is *behind* the emoji */
-.emoji-mart-category .emoji-mart-emoji:hover:before {
+.emoji-mart-category .emoji-mart-emoji:hover::before {
   z-index: -1;
 }
 
@@ -3781,7 +4768,7 @@ button.emoji-mart-emoji:hover span, button.emoji-mart-emoji:hover img {
 .emoji-button>img {
   height: 0;
 }
-.emoji-button:after {
+.emoji-button::after {
   content: "";
   background: url(https://corteximplant.com/system/custom_emojis/images/000/025/784/original/aa6fb2394bcb9f0a.png);
   filter: grayscale(100%);
@@ -3794,7 +4781,7 @@ button.emoji-mart-emoji:hover span, button.emoji-mart-emoji:hover img {
 
   transition: filter 200ms, opacity 200ms;
 }
-.emoji-button:hover:after {
+.emoji-button:hover::after {
   filter: none;
   opacity: 1;
 }
@@ -3837,66 +4824,91 @@ span.relationship-tag {
 }
 
 /* Add "alt" indicator on audio, videos */
-.audio-player:has(canvas.audio-player__canvas[aria-label]) .video-player__buttons.right:before,
-.video-player video[aria-label] ~ .video-player__controls .video-player__buttons.right:before{
+.audio-player:has(canvas.audio-player__canvas[aria-label]) .video-player__buttons.right::before,
+.video-player video[aria-label] ~ .video-player__controls .video-player__buttons.right::before{
   content: "alt";
   color: hsla(0 0% 100% / .7);
   padding: 0 5px;
   pointer-events: none;
 }
 .media-gallery__gifv__label {
-  padding: 0 5px;
   line-height: 27.1429px;
-  font-size: 1em;
-  background: rgba(0 0 0 / 0.6);
-  color: hsla(0 0% 100% / .7);
-  font-weight: normal;
-  border-radius: 8px;
+  padding: 0 5px;
 }
 
 .media-gallery__alt__label,
 .media-gallery__gifv__label,
-.sensitive-marker {
-  background: rgba(0 0 0 / 0.6);
-  color: hsla(0 0% 100% / .7);
+.sensitive-marker,
+/* "hide media" button */
+.icon-button.overlayed,
+.media-gallery__actions__pill,
+/* "click to show" for galleries */
+.spoiler-button__overlay__label,
+/* play/open actions on YT videos */
+.status-card__actions > div
+{
   border-radius: 8px;
-}
 
+  color: hsla(0 0% 100% / .7);
+  font-size: 0.8em;
+  font-weight: normal;
+  line-height: 1.5;
+
+  background: rgba(0 0 0 / 0.5);
+
+  -webkit-backdrop-filter: grayscale(1) invert(1) brightness(.7) contrast(0.2) opacity(0.5);
+  backdrop-filter: grayscale(1) invert(1) brightness(.7) contrast(0.2) opacity(0.5);
+
+  transition: opacity 200ms;
+  opacity: var(--opacity, 1);
+}
 `)
 
   /* ===== Glitch Effect on notifications & default avatars ===== */
-  settings.enableTheme && GM_addStyle(`
+  if (settings.enableTheme) {
+    GM_addStyle(`
 
 @media (prefers-reduced-motion: no-preference) {
 
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"] {
+  )[style*="/avatars/original/missing.png"],
+  .account__avatar:has(img[src*="avatars/original/missing.png"]) {
     animation: paths 10s step-end infinite;
     position: relative;
     --padding: -5px;
     --start: 5px;
+    overflow: visible;
   }
 
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:before,
+  ) img {
+    border-radius: inherit;
+  }
+
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:after {
+  )[style*="/avatars/original/missing.png"]::before,
+  :where(
+    .account__avatar, .account__avatar-overlay-overlay
+  )[style*="/avatars/original/missing.png"]::after,
+  .account__avatar:has(img[src*="/avatars/original/missing.png"])::before,
+  .account__avatar:has(img[src*="/avatars/original/missing.png"])::after {
     content: "";
     position: absolute;
     height: 105%;
     width: 105%;
     background-size: 110% 110%;
     background-image: inherit;
-    background-image: url(https://corteximplant.com/avatars/original/missing.png);
+    background-image: url(/avatars/original/missing.png);
     border-radius: inherit;
   }
 
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:before {
+  )[style*="/avatars/original/missing.png"]::before,
+  .account__avatar:has(img[src*="/avatars/original/missing.png"])::before {
     top: calc((10em / 6) + var(--padding));
     left: calc((15em / 6) + var(--padding) + var(--start));
     color: #6364ff;
@@ -3908,7 +4920,8 @@ span.relationship-tag {
   }
   :where(
     .account__avatar, .account__avatar-overlay-overlay
-  )[style*="https://corteximplant.com/avatars/original/missing.png"]:after {
+  )[style*="/avatars/original/missing.png"]::after,
+  .account__avatar:has(img[src*="/avatars/original/missing.png"])::after{
     top: calc((5em / 6) + var(--padding));
     left: calc((-30em / 6) + var(--padding) + var(--start));
     color: #1bc7fb;
@@ -3920,7 +4933,8 @@ span.relationship-tag {
   }
 
   /* WARNING: This relies on :has and thus won't work well in FF (as of Jan 2023) */
-  .column-link--transparent:has(i+i) {
+  .column-link--transparent:has(i+i),
+  .column-link--transparent:has(i>i) {
     position: relative;
     z-index: 2;
     --padding: 15px;
@@ -3931,14 +4945,17 @@ span.relationship-tag {
   }
 
   .column-link--transparent:has(i+i)::before,
-  .column-link--transparent:has(i+i)::after {
+  .column-link--transparent:has(i>i)::before,
+  .column-link--transparent:has(i+i)::after,
+  .column-link--transparent:has(i>i)::after {
     content: attr(title);
     position: absolute;
     width: 110%;
     z-index: -1;
   }
 
-  .column-link--transparent:has(i+i)::before {
+  .column-link--transparent:has(i+i)::before,
+  .column-link--transparent:has(i>i)::before {
     top: calc((10em / 60) + var(--padding));
     left: calc((15em / 60) + var(--padding) + var(--start));
     color: #6364ff;
@@ -3949,7 +4966,8 @@ span.relationship-tag {
       movement 20s step-end infinite;
   }
 
-  .column-link--transparent:has(i+i)::after {
+  .column-link--transparent:has(i+i)::after,
+  .column-link--transparent:has(i>i)::after {
     top: calc((5em / 60) + var(--padding));
     left: calc((-10em / 60) + var(--padding) + var(--start));
     color: #1bc7fb;
@@ -3959,7 +4977,8 @@ span.relationship-tag {
       font 14s step-end infinite,
       movement 16s step-end infinite;
   }
-  .column-link--transparent:has(i+i) span {
+  .column-link--transparent:has(i+i) span,
+  .column-link--transparent:has(i>i) span {
     animation: paths 10s step-end infinite;
   }
 
@@ -4103,6 +5122,7 @@ span.relationship-tag {
   }
 }
 `)
+  }
 
   // This relies on :has(), without it the styling has no effect due to the @supports query.
   // The statement is used to select a bunch of wrappers that
@@ -4117,10 +5137,10 @@ span.relationship-tag {
   /* Change disable overflow on elements restraining the images while hovering */
 
   /* Toots */
-  .status__content,
-  :is(.display-name, #fake),
-  .display-name__html,
-  .status__display-name,
+  :is(
+    .display-name,
+    .display-name__html,
+    #important),
 
   /* Poll Option */
   label.poll__option,
@@ -4148,9 +5168,7 @@ span.relationship-tag {
   .account__header__fields dt,
 
   /* Replying to a toot - body only */
-  .reply-indicator,
-  .reply-indicator__content,
-  .status__content,
+  .reply-indicator__content:not(.notification-group__embedded-status__content),
 
   /* Picture in picture player */
   .picture-in-picture__header__account,
@@ -4160,21 +5178,28 @@ span.relationship-tag {
   /* admin interface */
   .batch-table__row__content--with-image
 
-  /* FIXME: overflof-clip-margin has kinda bad support
+  /* FIXME: overflow-clip-margin has kinda bad support
    * this needs a fallback for safari
    * https://caniuse.com/?search=overflow-clip
    */
   {
+    /* overflow: unset; */
     overflow: clip;
     overflow-clip-margin: 5em;
+  }
+
+  .notification-group__main {
+    /* TODO: Collapsed notifications are currently broken */
+    overflow: unset;
+
+    .notification-group__embedded-status {
+      overflow: hidden;
+    }
   }
 
   /* some fixes where clip won't work: */
   .announcements__item__content {
     overflow-x: hidden;
-  }
-  .reply-indicator {
-    overflow-y: auto;
   }
 
   /* fix hovered emotes in a collapsed notification's 1st line */
@@ -4208,6 +5233,21 @@ span.relationship-tag {
     z-index: 102;
   }
 
+  :not(
+    .reply-indicator__header strong,
+    .emoji-button,
+    .reactions-bar__item__emoji
+  )>img.emojione:not(:hover) {
+    animation: keep-up-emote 400ms;
+  }
+
+  @keyframes keep-up-emote {
+    0%,
+    100% {
+      z-index: 102;
+    }
+  }
+
   @keyframes heartbeat {
     0%  { scale: 1    }
     25% { scale: 1    }
@@ -4221,7 +5261,7 @@ span.relationship-tag {
     .reply-indicator__header strong,
     .emoji-button,
     .reactions-bar__item__emoji
-  )>img.emojione[title*="heart"]:hover
+  )>img.emojione[title*="heart" i]:hover
   {
     animation: heartbeat 1.5s infinite;
   }
@@ -4231,7 +5271,7 @@ span.relationship-tag {
   GM_addStyle(`
   /* Dynamically sized Jonny Cyberdon - change to the custom.css style */
 
-body.layout-single-column:after {
+body.layout-single-column::after {
   content: "";
   position: fixed;
   left: 1vw;
@@ -4240,7 +5280,7 @@ body.layout-single-column:after {
   height: clamp(75px, 28.09vw + -255.06px, 200px);
   aspect-ratio: 1;
 
-  /* background-image: url(/system/site_uploads/files/000/000/007/original/5f3e778f1ff2569e.png);*/
+  /* background-image: url(/system/site_uploads/files/000/000/007/original/5f3e778f1ff2569e.png); */
   background-repeat: no-repeat;
   background-size: 100%;
   background-position: bottom;
