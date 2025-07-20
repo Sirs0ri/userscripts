@@ -3315,12 +3315,8 @@ body {
     box-sizing: border-box;
     background: var(--color-grey-2);
     border-radius: var(--border-radius-button);
-    /* TODO: remove old styles */
-
-    /* background: color-mix(in srgb, transparent 90%, rgb(255, 255, 255)); */
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid color-mix(in srgb, transparent 85%, white);
-    /* backdrop-filter: blur(10px) saturate(180%); */
   }
 
   :is(article[tabindex="-1"]:has(.load-more.load-gap), #important) {
@@ -3562,6 +3558,7 @@ body {
     transition: color 200ms
   }
   .account__section-headline :is(button, a):hover :is(div, span),
+  .notification__filter-bar button:hover svg,
   .notification__filter-bar button:hover span,
   .notification__filter-bar button:hover i {
     color: var(--color-white);
@@ -3954,6 +3951,28 @@ body {
     rotate: 0.75turn;
   }
 
+  /* Pinned posts */
+
+  .featured-carousel {
+    margin-inline: -30px;
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 5px,
+      #000 calc(100% - 5px),
+      transparent 100%
+      );
+  }
+  .featured-carousel__header,
+  .featured-carousel__slide {
+    margin-inline: 30px;
+  }
+  .featured-carousel__slide {
+    width: calc(100% - 60px);
+    flex-basis: calc(100% - 60px);
+    overflow: visible;
+  }
+
   /* Tabs below the account info */
 
   .account__action-bar-links {
@@ -4033,6 +4052,7 @@ body {
     dl {
       border-width: 1px;
       border-style: solid;
+      margin-inline: 0;
     }
 
     dl:not(.verified) {
