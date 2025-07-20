@@ -73,7 +73,7 @@
  *      Alternatively, you can turn off the glow effect entirely via the options found in the page footer.
  */
 
-(function () {
+;(function () {
   "use strict"
 
   // #region raw images
@@ -100,9 +100,15 @@
   const _desktopMinWidth = 1175
 
   const onResize = () => {
-    if (_currentInnerWidth < _desktopMinWidth && innerWidth >= _desktopMinWidth) {
+    if (
+      _currentInnerWidth < _desktopMinWidth &&
+      innerWidth >= _desktopMinWidth
+    ) {
       dispatchEvent(desktopViewVisible)
-    } else if (innerWidth < _desktopMinWidth && _currentInnerWidth >= _desktopMinWidth) {
+    } else if (
+      innerWidth < _desktopMinWidth &&
+      _currentInnerWidth >= _desktopMinWidth
+    ) {
       dispatchEvent(desktopViewHiddenEvent)
     }
     _currentInnerWidth = innerWidth
@@ -111,41 +117,45 @@
   addEventListener("resize", onResize)
 
   /** Register a handler to the "load" event, and when the vew switches from mobile to desktop */
-  function registerLoadHandlerDesktop (handler) {
-    addEventListener("load", evt => {
-      const ui = document.querySelector(".ui")
-
-      if (ui) {
-        handler(evt)
-        return
-      }
-
-      // Mastodon UI isn't loaded in yet, set up a MutationObserver to catch the mounting event
-      const appContainer = document.getElementById("mastodon")
-
-      if (!appContainer) {
-        return
-      }
-
-      const cb = (mutationList, observer) => {
+  function registerLoadHandlerDesktop(handler) {
+    addEventListener(
+      "load",
+      (evt) => {
         const ui = document.querySelector(".ui")
 
         if (ui) {
-          // console.log("ui found through mutation observer")
           handler(evt)
-          observer.disconnect()
           return
         }
 
-        console.warn("load event failed to execute with valid Mastodon UI")
-      }
+        // Mastodon UI isn't loaded in yet, set up a MutationObserver to catch the mounting event
+        const appContainer = document.getElementById("mastodon")
 
-      const observer = new MutationObserver(cb)
+        if (!appContainer) {
+          return
+        }
 
-      observer.observe(appContainer, { childList: true })
-    }, { once: true })
+        const cb = (mutationList, observer) => {
+          const ui = document.querySelector(".ui")
 
-    addEventListener("desktopViewVisible", evt => {
+          if (ui) {
+            // console.log("ui found through mutation observer")
+            handler(evt)
+            observer.disconnect()
+            return
+          }
+
+          console.warn("load event failed to execute with valid Mastodon UI")
+        }
+
+        const observer = new MutationObserver(cb)
+
+        observer.observe(appContainer, { childList: true })
+      },
+      { once: true }
+    )
+
+    addEventListener("desktopViewVisible", (evt) => {
       // Run the handler on the next frame, to give the DOM a chance to update
       setTimeout(() => {
         // console.log("desktopViewVisible event")
@@ -163,7 +173,7 @@
   // get account color
   const avatarLink = data.accounts[data.meta.me]?.avatar_static
 
-  function createElem (tagName, options = {}) {
+  function createElem(tagName, options = {}) {
     const elem = document.createElement(tagName)
 
     for (const [key, val] of Object.entries(options)) {
@@ -200,49 +210,57 @@
     {
       id: "hideCheckmarks",
       textLabel: "hide checkmarks",
-      textDescription: "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons on Mastodon <4.3.0",
+      textDescription:
+        "Disable the checkmarks Glitch-Fork adds to e.g. the fav- and boost-buttons on Mastodon <4.3.0",
       defaultvalue: true,
     },
     {
       id: "disableBouncyAnimations",
       textLabel: "disable bouncy animations",
-      textDescription: "Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it",
+      textDescription:
+        "Smooth out some animations that Glitch-Fork would otherwise make super bouncy, e.g. when expanding a post or faving it",
       defaultvalue: true,
     },
     {
       id: "highlightReplies",
       textLabel: "highlight replies",
-      textDescription: "Add an indicator to replies in the main timeline, similar to the one for boosts",
+      textDescription:
+        "Add an indicator to replies in the main timeline, similar to the one for boosts",
       defaultvalue: true,
     },
     {
       id: "enableGlowOnMedia",
       textLabel: "enable glow on media",
-      textDescription: "Enable a glow effect around media content embedded in posts",
+      textDescription:
+        "Enable a glow effect around media content embedded in posts",
       defaultvalue: true,
     },
     {
       id: "hoverImages",
       textLabel: "enlarge images on hover",
-      textDescription: "Enlarge images in posts to full size on hover, instead of cropping images to 16/9.",
+      textDescription:
+        "Enlarge images in posts to full size on hover, instead of cropping images to 16/9.",
       defaultvalue: true,
     },
     {
       id: "highlightMediaWithoutAlt",
       textLabel: "highlight media without alt text",
-      textDescription: "Highlight media without an alt text by adding a visible red bar underneath",
+      textDescription:
+        "Highlight media without an alt text by adding a visible red bar underneath",
       defaultvalue: true,
     },
     {
       id: "popoutComposeBox",
       textLabel: "growing compose box",
-      textDescription: "Make the compose box larger when focussed. This will have no effect in the Advanced View.",
+      textDescription:
+        "Make the compose box larger when focussed. This will have no effect in the Advanced View.",
       defaultvalue: false,
     },
     {
       id: "freezeTopPosition",
       textLabel: "Keep scrollposition in feeds",
-      textDescription: "When loading new posts on timelines, keep the previously first post in view, instead of staying scrolled all the way to the top. [Simple View only]",
+      textDescription:
+        "When loading new posts on timelines, keep the previously first post in view, instead of staying scrolled all the way to the top. [Simple View only]",
       defaultvalue: false,
     },
     {
@@ -254,7 +272,8 @@
     {
       id: "showOldPunks",
       textLabel: "[Advanced view] Bring back the old Cyberpunks",
-      textDescription: "Show the two cyberpunks chilling at the bottom of the compose area. When disabled, John Cyberdon will watch over your toots.",
+      textDescription:
+        "Show the two cyberpunks chilling at the bottom of the compose area. When disabled, John Cyberdon will watch over your toots.",
       defaultvalue: false,
     },
     /* data only, as long as there's no textLabel a setting will not have a GUI */
@@ -271,10 +290,12 @@
   // These preferences will be persisted in localStorage. When upgrading from a version that
   // still has preferences defined as booleans make sure to note them down before upgrading!
 
-  function loadSettings () {
+  function loadSettings() {
     const loaded = localStorage.getItem(`userscript-sirs0ri-settings-${user}`)
 
-    const settings = Object.fromEntries(allOptions.map(o => [o.id, o.defaultvalue]))
+    const settings = Object.fromEntries(
+      allOptions.map((o) => [o.id, o.defaultvalue])
+    )
 
     if (loaded == null) {
       settings._firstRun = true
@@ -288,7 +309,7 @@
     return settings
   }
 
-  function storeSettings (vals) {
+  function storeSettings(vals) {
     const str = JSON.stringify(vals)
 
     localStorage.setItem(`userscript-sirs0ri-settings-${user}`, str)
@@ -296,13 +317,13 @@
 
   let settingsWhenPopupOpened
 
-  function openSettings (evt) {
+  function openSettings(evt) {
     if (evt) evt.preventDefault()
     settingsWhenPopupOpened = { ...settings }
     document.body.classList.add("userscript-modal--active")
   }
 
-  function closeSettings (evt) {
+  function closeSettings(evt) {
     evt.preventDefault()
     document.body.classList.remove("userscript-modal--active")
   }
@@ -316,8 +337,9 @@
     openSettings()
   }
 
-  function onSettingChange (evt) {
-    if (allOptions.map(o => o.id).includes(evt.target.id)) settings[evt.target.id] = evt.target.checked
+  function onSettingChange(evt) {
+    if (allOptions.map((o) => o.id).includes(evt.target.id))
+      settings[evt.target.id] = evt.target.checked
 
     let needsReload = false
     for (const option of allOptions) {
@@ -330,17 +352,27 @@
 
     storeSettings(settings)
 
-    if (needsReload) document.querySelector(".userscript-modal-root").classList.add("needs-reload")
-    else document.querySelector(".userscript-modal-root").classList.remove("needs-reload")
+    if (needsReload)
+      document
+        .querySelector(".userscript-modal-root")
+        .classList.add("needs-reload")
+    else
+      document
+        .querySelector(".userscript-modal-root")
+        .classList.remove("needs-reload")
   }
 
   const _insertFooter = async (evt) => {
     let footer = document.querySelector(".link-footer")
 
     if (!footer) {
-      const isAdvancedUi = document.body.classList.contains("layout-multiple-columns")
+      const isAdvancedUi = document.body.classList.contains(
+        "layout-multiple-columns"
+      )
       if (!isAdvancedUi) {
-        console.warn("not using advanced UI, the footer *should* be here by now!")
+        console.warn(
+          "not using advanced UI, the footer *should* be here by now!"
+        )
         return
       }
 
@@ -372,13 +404,17 @@
       if (!footer) return
     }
 
-    const insert = createElem("p", { innerHTML: "<strong>Sirs0ri's userscript</strong>: " })
+    const insert = createElem("p", {
+      innerHTML: "<strong>Sirs0ri's userscript</strong>: ",
+    })
     const separator = createElem("span", {
       innerHTML: " · ",
       ariaHidden: true,
     })
 
-    const settingsLinkEl = document.querySelector(".column-link[href='/settings/preferences']")
+    const settingsLinkEl = document.querySelector(
+      ".column-link[href='/settings/preferences']"
+    )
     const preferencesLink = createElem("a", {
       textContent: settingsLinkEl.title || settingsLinkEl.textContent,
       role: "button",
@@ -390,11 +426,14 @@
       target: "_blank",
     })
     const codeLink = createElem("a", {
-      textContent: document.querySelector(".link-footer [href*='github.com']").textContent,
+      textContent: document.querySelector(".link-footer [href*='github.com']")
+        .textContent,
       href: GM_info.script.downloadURL + "#bypass=true",
       target: "_blank",
     })
-    const versionSpan = createElem("span", { innerText: "v" + GM_info.script.version })
+    const versionSpan = createElem("span", {
+      innerText: "v" + GM_info.script.version,
+    })
 
     insert.appendChild(preferencesLink)
     insert.appendChild(separator.cloneNode(true))
@@ -408,19 +447,27 @@
   }
 
   const _insertSettingsModal = (evt) => {
-    const modalWrapper = createElem("div", { class: "modal-root userscript-modal-root" })
-    const modalModal = createElem("div", { class: "userscript-settings__modal" })
+    const modalWrapper = createElem("div", {
+      class: "modal-root userscript-modal-root",
+    })
+    const modalModal = createElem("div", {
+      class: "userscript-settings__modal",
+    })
 
     const _makeSettingsItem = (id, labelText, description) => {
       const wrapper = createElem("div", { class: "userscript-settings__item" })
 
-      wrapper.appendChild(createElem("input", {
-        id,
-        type: "checkbox",
-        checked: settings[id],
-        onclick: onSettingChange,
-      }))
-      wrapper.appendChild(createElem("label", { for: id, textContent: labelText }))
+      wrapper.appendChild(
+        createElem("input", {
+          id,
+          type: "checkbox",
+          checked: settings[id],
+          onclick: onSettingChange,
+        })
+      )
+      wrapper.appendChild(
+        createElem("label", { for: id, textContent: labelText })
+      )
       wrapper.appendChild(createElem("p", { textContent: description }))
 
       return wrapper
@@ -428,44 +475,53 @@
 
     const nav = createElem("nav")
 
-    nav.appendChild(createElem("a", {
-      role: "button",
-      tabindex: "0",
-      class: "glitch local-settings__navigation__item active",
-      title: "General",
-      "aria-label": "General",
-      innerHTML: `
+    nav.appendChild(
+      createElem("a", {
+        role: "button",
+        tabindex: "0",
+        class: "glitch local-settings__navigation__item active",
+        title: "General",
+        "aria-label": "General",
+        innerHTML: `
         <i role="img" class="fa fa-cogs fa-fw"></i>
         <span>General</span>`,
-    }))
+      })
+    )
 
     // const buttonsWrapper = createElem("div", {class: "footer"})
     const buttonsWrapper = createElem("footer")
 
-    buttonsWrapper.appendChild(createElem("p", {
-      class: "reload-needed-hint",
-      innerText: "Some of the settings you changed need the page to be reloaded to apply.",
-    }))
-    buttonsWrapper.appendChild(createElem("button", {
-      tabindex: "0",
-      title: "Reload",
-      "aria-label": "Reload",
-      class: "button reload-needed-hint",
-      innerHTML: `
+    buttonsWrapper.appendChild(
+      createElem("p", {
+        class: "reload-needed-hint",
+        innerText:
+          "Some of the settings you changed need the page to be reloaded to apply.",
+      })
+    )
+    buttonsWrapper.appendChild(
+      createElem("button", {
+        tabindex: "0",
+        title: "Reload",
+        "aria-label": "Reload",
+        class: "button reload-needed-hint",
+        innerHTML: `
         <i role="img" class="fa fa-refresh fa-fw"></i>
         <span>reload</span>`,
-      onclick: () => location.reload(),
-    }))
-    buttonsWrapper.appendChild(createElem("button", {
-      tabindex: "0",
-      title: "Close",
-      "aria-label": "Close",
-      class: "button",
-      innerHTML: `
+        onclick: () => location.reload(),
+      })
+    )
+    buttonsWrapper.appendChild(
+      createElem("button", {
+        tabindex: "0",
+        title: "Close",
+        "aria-label": "Close",
+        class: "button",
+        innerHTML: `
         <i role="img" class="fa fa-times fa-fw"></i>
         <span>Close</span>`,
-      onclick: closeSettings,
-    }))
+        onclick: closeSettings,
+      })
+    )
 
     nav.appendChild(buttonsWrapper)
 
@@ -475,31 +531,37 @@
       class: "userscript-settings__content",
     })
 
-    settingsWrapper.appendChild(createElem("p", {
-      class: "first-run-notice",
-      innerHTML: `Hi there choom! <br>
+    settingsWrapper.appendChild(
+      createElem("p", {
+        class: "first-run-notice",
+        innerHTML: `Hi there choom! <br>
         This userscript has a settings UI now! You're seeing this because you're
         running the new version of the script for the first time. <br>
 
         If you want to access this UI in the future, you'll be able to find it
         in the page's footer, next to the links to this instance's about page.`,
-    }))
+      })
+    )
 
     settingsWrapper.appendChild(createElem("h1", { innerText: "General" }))
 
     for (const option of allOptions) {
       if (option.textLabel) {
-        settingsWrapper.appendChild(_makeSettingsItem(option.id, option.textLabel, option.textDescription))
+        settingsWrapper.appendChild(
+          _makeSettingsItem(option.id, option.textLabel, option.textDescription)
+        )
       }
     }
 
     modalModal.appendChild(settingsWrapper)
 
-    modalWrapper.appendChild(createElem("div", {
-      class: "modal-root__overlay",
-      role: "presentation",
-      onclick: closeSettings,
-    }))
+    modalWrapper.appendChild(
+      createElem("div", {
+        class: "modal-root__overlay",
+        role: "presentation",
+        onclick: closeSettings,
+      })
+    )
 
     const modalContainer = createElem("div", {
       class: "modal-root__container",
@@ -948,14 +1010,18 @@ header.status__info {
       let target = evt.target
 
       if (evt.target.ownerSVGElement) {
-        const allButtons = document.querySelectorAll("button.icon-button.bookmark-icon")
+        const allButtons = document.querySelectorAll(
+          "button.icon-button.bookmark-icon"
+        )
 
-        target = [...allButtons].find(b => b.contains(evt.target))
+        target = [...allButtons].find((b) => b.contains(evt.target))
       }
 
       if (target == null) return
 
-      const closestBookmarkButton = target.closest("button.icon-button.bookmark-icon")
+      const closestBookmarkButton = target.closest(
+        "button.icon-button.bookmark-icon"
+      )
 
       if (closestBookmarkButton == null) return
 
@@ -1126,7 +1192,7 @@ body.layout-single-column.pinned .column-header > button.column-header__title::a
     let atTop = true
     let debounce = null
 
-    const scrollHandler = evt => {
+    const scrollHandler = (evt) => {
       const previousAtTop = atTop
 
       let pinned = false
@@ -1156,7 +1222,9 @@ body.layout-single-column.pinned .column-header > button.column-header__title::a
 
     const topChangeHandler = () => {
       if (atTop) {
-        const el = document.querySelector("body.layout-single-column .column[aria-label]")
+        const el = document.querySelector(
+          "body.layout-single-column .column[aria-label]"
+        )
         if (el == null) return
 
         document.body.classList.add("at-top")
@@ -1166,7 +1234,8 @@ body.layout-single-column.pinned .column-header > button.column-header__title::a
       }
     }
 
-    settings.freezeTopPosition && window.addEventListener("scroll", scrollHandler)
+    settings.freezeTopPosition &&
+      window.addEventListener("scroll", scrollHandler)
 
     settings.freezeTopPosition && topChangeHandler()
   }
@@ -1178,21 +1247,30 @@ body.layout-single-column.pinned .column-header > button.column-header__title::a
   /* Firefox animates the max-height from the image's original height to 100cqh for some reason,
    * every time the image is added to the DOM
    * This worakround only applies the transition on hover, meaning the images won't animate on load. */
-  const mouseoverHandler = e => {
+  const mouseoverHandler = (e) => {
     if (!["IMG", "CANVAS", "VIDEO"].includes(e.target.nodeName)) return
 
     let target
 
-    if (e.target.parentElement.classList.contains("media-gallery__item-thumbnail") ||
-        e.target.classList.contains("media-gallery__item-gifv-thumbnail")) {
+    if (
+      e.target.parentElement.classList.contains(
+        "media-gallery__item-thumbnail"
+      ) ||
+      e.target.classList.contains("media-gallery__item-gifv-thumbnail")
+    ) {
       target = e.target
-    } else if (e.target.nextElementSibling?.classList.contains("media-gallery__item-thumbnail")) {
+    } else if (
+      e.target.nextElementSibling?.classList.contains(
+        "media-gallery__item-thumbnail"
+      )
+    ) {
       target = e.target.nextElementSibling.querySelector("img")
     }
 
     if (!target) return
 
-    target.style.transition = "background 200ms, max-height 200ms, min-height 200ms"
+    target.style.transition =
+      "background 200ms, max-height 200ms, min-height 200ms"
   }
 
   if (settings.hoverImages) {
@@ -1418,14 +1496,20 @@ markiere medien ohne alt-text */
   const debugFocus = false
 
   const onLoadHandler = () => {
-    let composePanel = document.querySelector(".columns-area__panels__pane--compositional")
+    let composePanel = document.querySelector(
+      ".columns-area__panels__pane--compositional"
+    )
     const composeForm = document.querySelector(".compose-form")
     let backDrop = document.querySelector(".compose-form")
 
-    const textarea = document.querySelector(".compose-form textarea.autosuggest-textarea__textarea")
+    const textarea = document.querySelector(
+      ".compose-form textarea.autosuggest-textarea__textarea"
+    )
 
     if (!composePanel || !composeForm || !backDrop) {
-      console.warn("an element is missing, the popout compose box can't be initialized.")
+      console.warn(
+        "an element is missing, the popout compose box can't be initialized."
+      )
       console.log(composePanel)
       console.log(composeForm)
       console.log(backDrop)
@@ -1435,12 +1519,18 @@ markiere medien ohne alt-text */
     backDrop.classList.add("ignore-clicks")
 
     const handlerIn = (evt) => {
-      const composeElement = document.querySelector(".compose-form__highlightable")
+      const composeElement = document.querySelector(
+        ".compose-form__highlightable"
+      )
       if (!composeElement.contains(evt.target)) return
 
       debugFocus && console.log("in", evt)
       /* Ignore clicks on the buttons below the compose area */
-      if (evt.target.nodeName === "BUTTON" || evt.target.classList.contains("emoji-button")) return
+      if (
+        evt.target.nodeName === "BUTTON" ||
+        evt.target.classList.contains("emoji-button")
+      )
+        return
 
       /* Ignore FocusEvents where the focus was moved automatically, e.g. when restoring focus to the page.
        * This also keeps the input small when the user's first interaction is via the emote picker, but any
@@ -1450,7 +1540,9 @@ markiere medien ohne alt-text */
 
       debugFocus && console.log("in handled", evt)
 
-      composePanel = document.querySelector(".columns-area__panels__pane--compositional")
+      composePanel = document.querySelector(
+        ".columns-area__panels__pane--compositional"
+      )
       composePanel.classList.add("user-focus-within")
       setTimeout(() => {
         backDrop = document.querySelector(".compose-form")
@@ -1469,7 +1561,11 @@ markiere medien ohne alt-text */
       /* Ignore clicks that move focus within the compose area, e.g. to the buttons below */
       if (composeForm.contains(evt.relatedTarget)) return
       /* ignore events that remove focus from buttons that now have the .active class, i.e. after opening one of the menus */
-      if (evt.target.nodeName === "BUTTON" && evt.target.classList.contains("active")) return
+      if (
+        evt.target.nodeName === "BUTTON" &&
+        evt.target.classList.contains("active")
+      )
+        return
       /* ignore events that remove focus from the emoji-button, e.g. when opening the emoji picker */
       if (evt.target.classList.contains("emoji-button")) return
 
@@ -1722,7 +1818,10 @@ markiere medien ohne alt-text */
      * the fixed values and further explanation about this topic
      * can be found here -> https://en.wikipedia.org/wiki/Luma_(video)
      */
-    const orderByLuminance = (rgbValues) => rgbValues.sort((p1, p2) => calculateLuminance(p2) - calculateLuminance(p1))
+    const orderByLuminance = (rgbValues) =>
+      rgbValues.sort(
+        (p1, p2) => calculateLuminance(p2) - calculateLuminance(p1)
+      )
 
     const buildRgb = (imageData) => {
       const targetLength = imageData.length / 4
@@ -1750,9 +1849,9 @@ markiere medien ohne alt-text */
        * Max is initialized to the minimum value posible
        * from there we procced to fin the maximum value for that color channel
        */
-      const rs = rgbValues.map(p => p.r)
-      const gs = rgbValues.map(p => p.g)
-      const bs = rgbValues.map(p => p.b)
+      const rs = rgbValues.map((p) => p.r)
+      const gs = rgbValues.map((p) => p.g)
+      const bs = rgbValues.map((p) => p.b)
 
       const rRange = Math.max(...rs) - Math.min(...rs)
       const gRange = Math.max(...gs) - Math.min(...gs)
@@ -1786,10 +1885,11 @@ markiere medien ohne alt-text */
 
       // Base case
       if (depth === MAX_DEPTH || rgbValues.length === 0) {
-        const color = rgbValues.reduce(
-          quantizationReducer,
-          { r: 0, g: 0, b: 0 },
-        )
+        const color = rgbValues.reduce(quantizationReducer, {
+          r: 0,
+          g: 0,
+          b: 0,
+        })
 
         color.r = Math.round(color.r / rgbValues.length)
         color.g = Math.round(color.g / rgbValues.length)
@@ -1819,10 +1919,7 @@ markiere medien ohne alt-text */
       const firstHalf = quantization(rgbValues, depth)
       const secndHalf = quantization(rgbValues2, depth)
 
-      return [
-        ...firstHalf,
-        ...secndHalf,
-      ]
+      return [...firstHalf, ...secndHalf]
     }
 
     const getColors = (link) => {
@@ -1864,7 +1961,9 @@ markiere medien ohne alt-text */
         const quantColors = orderByLuminance(quantization(rgbArray, 0))
 
         document.body.classList.add("meow")
-        const style = `body {\n${quantColors.map((p, i) => `--color-${i}: rgb(${p.r}, ${p.g}, ${p.b});`).join("\n")}\n}`
+        const style = `body {\n${quantColors
+          .map((p, i) => `--color-${i}: rgb(${p.r}, ${p.g}, ${p.b});`)
+          .join("\n")}\n}`
         GM_addStyle(style)
 
         // Store colors for the next page load
