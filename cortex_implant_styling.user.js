@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.9.0-b2
+// @version      1.9.0-b3
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -5343,7 +5343,7 @@ body.layout-single-column::after {
   height: clamp(75px, 28.09vw + -255.06px, 200px);
   aspect-ratio: 1;
 
-  /* background-image: url(/system/site_uploads/files/000/000/007/original/5f3e778f1ff2569e.png); */
+  background-image: url(/system/site_uploads/files/000/000/010/original/4a1cd5692e3551a9.png);
   background-repeat: no-repeat;
   background-size: 100%;
   background-position: bottom;
