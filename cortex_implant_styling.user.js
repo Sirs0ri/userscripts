@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.9.0-b3
+// @version      1.9.0-b4
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -911,6 +911,11 @@ body.skin-mastodon-light {
 :root {
   scrollbar-gutter: stable;
   margin-right: 0 !important;
+}
+
+#mastodon {
+  /* make sure modals can display above this */
+  isolation: isolate;
 }
 
 p {
@@ -4003,10 +4008,14 @@ body {
   .featured-carousel__slide {
     margin-inline: 30px;
   }
+  :is(.featured-carousel__slides, #important) {
+    background: none;
+    border: none;
+  }
   .featured-carousel__slide {
     width: calc(100% - 60px);
     flex-basis: calc(100% - 60px);
-    overflow: visible;
+    overflow: visible
   }
 
   /* Tabs below the account info */
