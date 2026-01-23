@@ -2832,7 +2832,7 @@ body {
         grid-column: span 2 / -1;
 
         pointer-events: none;
-        translate: 0 -38px;
+        translate: -38px 0px;
       }
     }
   }
