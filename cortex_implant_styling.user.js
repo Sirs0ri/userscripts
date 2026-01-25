@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CortexImplant CSS Improvements
 // @namespace    http://tampermonkey.net/
-// @version      1.9.0-b4
+// @version      1.9.0-b5
 // @description  Change the styling for the mastodon instance I'm on
 // @author       @Sirs0ri
 // @updateURL    https://raw.githubusercontent.com/Sirs0ri/userscripts/develop/cortex_implant_styling.user.js
@@ -22,8 +22,6 @@
 /*
  * == TODO ==
  *    - vanilla flavor:
- *      - post actions have a broken layout
- *      - header has a border-bottom
  *      - Profile view is broken
  *    - 4.3.0 fixes
  *      - [ ] mastodon's wrapped .status in .status__wrapper's - does this break anything?
@@ -994,6 +992,10 @@ header.status__info {
 }
 
 /* compose box submit button */
+.compose-form__submit {
+  width: 100%;
+}
+
 .compose-form__submit button[type="submit"] {
   line-height: 1;
   padding: 8px;
@@ -1024,23 +1026,27 @@ header.status__info {
     GM_addStyle(`
 @media screen and (min-width: 1175px) {
 
-  .status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status > .status__info)::before {
-    color: #606984;
-    font-size: 14px;
-    grid-column: 1 / -1;
-    place-self: start;
-    content: "\\21B6  Replying to a conversation";
-    border: 1px solid;
-    border-radius: 100vmax;
-    padding: 1px 8px;
-  }
+  /* vanilla has its own indicators */
+  .flavour-glitch {
 
-  .status__wrapper-reply:not(.status--in-thread):not(.muted):has(.status__info:not(aside + .status > .status__info)) {
-    --extra-top-spacing: 32px;
-  }
+    .status__wrapper-reply:not(.status--in-thread):not(.muted) .status__info:not(aside + .status > .status__info)::before {
+      color: #606984;
+      font-size: 14px;
+      grid-column: 1 / -1;
+      place-self: start;
+      content: "\\21B6  Replying to a conversation";
+      border: 1px solid;
+      border-radius: 100vmax;
+      padding: 1px 8px;
+    }
 
-  .status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span::after {
-    content: " a reply"
+    .status__wrapper-reply:not(.status--in-thread):not(.muted):has(.status__info:not(aside + .status > .status__info)) {
+      --extra-top-spacing: 32px;
+    }
+
+    .status__wrapper-reply:not(.status--in-thread):not(.muted) aside.status__prepend > span::after {
+      content: " a reply"
+    }
   }
 }
 `)
@@ -2423,8 +2429,9 @@ article > .account > .account__wrapper {
 
 @media screen and (min-width: 1175px) {
 
-  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::before {
+  .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::before {
     content: "";
+    pointer-events: none;
     object-fit: contain;
     background: url(${logoSvg});
     display: block;
@@ -2437,6 +2444,12 @@ article > .account > .account__wrapper {
     margin-inline: -10px;
     max-width: calc(100% + 20px);
     background-size: calc(100% - 20px);
+
+  }
+
+  body.flavour-vanilla .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::before {
+    position: absolute;
+    width: calc(100% + 20px);
   }
 
   @keyframes move-background {
@@ -2444,7 +2457,7 @@ article > .account > .account__wrapper {
     100% { background-position: 600% 50%; }
   }
 
-  body.flavour-glitch .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::after {
+  .columns-area__panels__pane--navigational .columns-area__panels__pane__inner::after {
     content: "";
     -webkit-mask-image: url(${logoSvg});
     display: block;
@@ -2479,6 +2492,13 @@ article > .account > .account__wrapper {
   }
   body.flavour-glitch .navigation-panel::before {
     content: "";
+  }
+  body.flavour-vanilla .navigation-panel__logo {
+    margin-bottom: 0;
+  }
+  body.flavour-vanilla .navigation-panel__menu::before {
+    content: "";
+    display: block;
   }
 }
 `)
@@ -2576,6 +2596,7 @@ body {
 
   /* Glowy horizontal lines */
   .navigation-panel::before,
+  body.flavour-vanilla .navigation-panel__menu::before,
   :is(#fake, .compose-panel, .navigation-panel) hr {
     box-shadow: var(--neon-box-shadow);
     border-top: 1px solid var(--color-grey-9);
@@ -2833,6 +2854,11 @@ body {
 
         pointer-events: none;
         translate: 0 -38px;
+
+        .flavour-vanilla & {
+          translate: 0;
+          grid-column: -3;
+        }
       }
     }
   }
@@ -3239,16 +3265,19 @@ body {
     --color-privacy: var(--color-yellow, white);
   }
 
+/* this should be the default style, but it'c hanged in out custom.css */
   .detailed-status__meta {
-    flex-wrap: wrap;
+    display: block;
   }
 
+/*
   .detailed-status__meta__line {
     display: contents;
   }
   .detailed-status__meta__line:not(:last-child)::after {
     content: "·";
   }
+*/
 
   .status-unlisted,
   .status-public,
